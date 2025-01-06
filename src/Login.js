@@ -1,44 +1,70 @@
-    import React, { useState } from 'react';
-    import './Login.css';
-    import Header from './components/Header';
+import React, { useState } from 'react';
+import './Login.css';
+import Header from './components/Header';
+import axios from 'axios';
 
-    function Login() {
-        const [username, setUsername] = useState('');
-        const [password, setPassword] = useState('');
+function Login() {
+    const [ auth, setAuth ] = useState({ username: '', password: ''})
 
-        const handleSubmit = (e) => {
-            e.preventDefault();
-            console.log('Username:', username);
-            console.log('Password:', password);
-        };
+    const handleSubmit = async (e) => {
 
-        return (
-            <div>
-                <Header />
-                <div className="Login">
-                    <h2>Login</h2>
-                    <form onSubmit={handleSubmit}>
+        e.preventDefault();
+
+        try{
+            const resp = await axios.post(`http://localhost:3000/api/v1/auth/signin`, {
+                username: auth.username,
+                password: auth.password
+            });
+            const { access_token } = resp.data;
+            localStorage.setItem('token', JSON.stringify(access_token));
+    
+            if (access_token) {
+                alert("Inicio de sesión exitoso");
+                window.location.replace('/');
+            } else {
+                console.log("Usuario no existe")
+            }
+        } catch (error){
+            console.error('Error en el login:', error);
+        }
+    };
+
+    const handleChange = (e) => {
+        setAuth({
+            ...auth,
+            [e.target.name]: e.target.value
+        })
+    }
+
+    return (
+        <div>
+            <Header />
+            <div className="Login">
+                <h2>Login</h2>
+                <form onSubmit={handleSubmit}>
                     <div>
                         <label>Username:</label>
                         <input
                             type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            name="username"
+                            value={auth.username}
+                            onChange={handleChange}
                         />
                     </div>
                     <div>
                         <label>Password:</label>
                         <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                            type="password"
+                            name="password"
+                            value={auth.password}
+                            onChange={handleChange}
                         />
                     </div>
                     <button type="submit">Login</button>
-                    </form>
-                </div>
+                </form>
             </div>
-        );
-    }
+        </div>
+    );
+}
 
-    export default Login;
+export default Login;

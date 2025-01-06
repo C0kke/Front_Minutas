@@ -1,23 +1,18 @@
-import logo from './logo.svg';
 import './App.css';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <div className="Top-header">
+          <p>Gerónimo Mendez #1851, Barrio industrial, Coquimbo</p>
+          <p>+569 7615 9518 / +569 4785 4598</p>
+        </div>
+        <img src='/LOGO_GM_EXPRESS.png' className="App-logo" alt="logo" />
       </header>
+
+      <p className="Main-text">This would be a main page of minutes planification project</p>
+      
     </div>
   );
 }

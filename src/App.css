@@ -1,24 +1,33 @@
 .App {
   text-align: center;
+  background-image: url("../public/frontis_casino.jpg");
+  background-size: auto;
+  background-position: top;
+  height: 800px;
 }
 
 .App-logo {
-  height: 40vmin;
-  pointer-events: none;
+  height: 5em;
+  position: relative;
+  top: 0;
+  left: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.Top-header {
+  background-color: rgb(42, 42, 102);
+  justify-content: space-around;
+  width: 100%;
+  position: sticky;
+  font-size: 12px;
+  display: flex;
 }
 
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+  background-color: #ffffff;
+  min-height: 10vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: start;
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
@@ -26,13 +35,4 @@
 
 .App-link {
   color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }

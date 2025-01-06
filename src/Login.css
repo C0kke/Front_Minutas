@@ -1,0 +1,46 @@
+.Login {
+    text-align: center;
+    margin-top: 50px;
+    background-color: rgb(42, 42, 102);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    margin: 50px auto;
+  }
+  
+  .Login form {
+    display: inline-block;
+    text-align: left;
+  }
+  
+  .Login div {
+    margin-bottom: 10px;
+  }
+  
+  .Login label {
+    margin-right: 10px;
+  }
+  
+  .Login input {
+    padding: 5px;
+    font-size: 16px;
+    border: 1px solid #61dafb; /* Borde verde claro */
+    border-radius: 5px;
+    width: 100%;
+  }
+  
+  .Login button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #61dafb; /* Fondo verde claro */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    width: 100%;
+  }
+  
+  .Login h2 {
+    color: #61dafb; /* Título verde claro */
+  }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Login.css';
-import Header from './components/Header';
+import Header from '../components/Header';
 import axios from 'axios';
 
 function Login() {
@@ -16,7 +16,7 @@ function Login() {
                 password: auth.password
             });
             const { access_token } = resp.data;
-            localStorage.setItem('token', JSON.stringify(access_token));
+            localStorage.setItem('token', access_token);
     
             if (access_token) {
                 alert("Inicio de sesión exitoso");

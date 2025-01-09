@@ -5,6 +5,7 @@ import Login from './auth/Login';
 import Platos from './views/Platos';
 import Home from './views/Home'
 import Minutas from './views/CrearMinuta';
+import UserProfile from './views/Perfil';
 
 function AppRouter() {
   const token = localStorage.getItem('token');
@@ -17,6 +18,7 @@ function AppRouter() {
         <Route path="/view" element={token ? <App /> : <Navigate to="/" />} />
         <Route path="/platos" element={token ? <Platos /> : <Navigate to="/" />} />
         <Route path="/crear-minuta" element={token ? <Minutas /> : <Navigate to="/" />} />
+        <Route path="/perfil" element={token ? <UserProfile /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );

@@ -17,6 +17,8 @@ function Login() {
             });
             const { access_token } = resp.data;
             localStorage.setItem('token', access_token);
+            console.log(resp)
+            localStorage.setItem('id_user', resp.data.id );
     
             if (access_token) {
                 window.location.replace('/home');

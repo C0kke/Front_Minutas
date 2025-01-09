@@ -1,14 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import Header from "../components/Header";
 import Modal from 'react-modal';
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+import { useNavigate } from 'react-router-dom';
+import { TextField, Box, InputLabel, MenuItem, FormControl, Select } from '@mui/material';
 
 Modal.setAppElement('#root');
+
+const categorias = [
+    "PLATO DE FONDO",
+    "VEGETARIANO",
+    "VEGANA",
+    "GUARNICIÓN",
+    "HIPOCALORICO",
+    "ENSALADA",
+    "SOPA",
+    "POSTRES",
+]
 
 const Platos = () => {
     const [platos, setPlatos] = useState([]);
     const [selectedPlato, setSelectedPlato] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('Todas');
     const [ingredientes, setIngredientes] = useState([]);
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -43,8 +57,24 @@ const Platos = () => {
         };
 
         fetchPlatos();
-    }, [navigate]); // Añade navigate como dependencia  
+    }, []);
+
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value);
+    };
     
+    const handleCategoryChange = (event) => {
+        setSelectedCategory(event.target.value);
+    };
+
+    const filteredPlatos = useMemo(() => {
+        return platos.filter(plato => {
+            const nombreCoincide = plato.nombre && plato.nombre.trim().toUpperCase().includes(searchTerm.trim().toUpperCase());
+            const categoriaCoincide = selectedCategory === "Todas" || plato.categoria === selectedCategory;
+            return nombreCoincide && categoriaCoincide;
+        });
+    }, [platos, searchTerm, selectedCategory]);
+
     const openModal = async (plato) => {
         setSelectedPlato(plato);
         setModalIsOpen(true);
@@ -54,7 +84,7 @@ const Platos = () => {
 
         const token = localStorage.getItem('token')?.trim();
         if (!token) {
-            console.error("Token no encontrado en localStorage. Redirigiendo al login.");
+            alert("Sesión inválida. Redirigiendo...");
             setError(new Error("No autorizado. Inicie sesión."));
             setLoading(false);
             navigate("/"); // Redirige al login si no hay token
@@ -70,9 +100,9 @@ const Platos = () => {
             console.error("Error fetching ingredientes:", err);
             setError(err);
             if (err.response?.status === 401) {
-                console.error("Token inválido o expirado. Redirigiendo al login.");
+                alert("Su sesión ha expirado. Redirigiendo...");
                 localStorage.removeItem('token');
-                navigate("/"); // Redirige al login si el token es inválido
+                navigate("/");
             }
         } finally {
             setLoading(false);
@@ -94,8 +124,34 @@ const Platos = () => {
     return (
         <div>
             <Header />
+            <Box sx={{ display: 'flex', alignItems: 'center', margin: '16px' }}>
+                <TextField
+                    label="Buscar plato"
+                    variant="outlined"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    sx={{ flexGrow: 1, marginRight: '16px' }}
+                />
+                <FormControl sx={{ m: 1, minWidth: 120 }}>
+                    <InputLabel id="categoria-select-label">Categoría</InputLabel>
+                    <Select
+                        labelId="categoria-select-label"
+                        id="categoria-select"
+                        value={selectedCategory}
+                        label="Categoría"
+                        onChange={handleCategoryChange}
+                    >
+                        <MenuItem value="Todas">Todas</MenuItem>
+                        {categorias.map((categoria) => (
+                            <MenuItem key={categoria} value={categoria}> {/* key corregida */}
+                                {categoria}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Box>
             <div className="ListaPLatos">
-                {platos.map((plato) => (
+                {filteredPlatos.map((plato) => (
                     <div key={plato._id} onClick={() => openModal(plato)} style={{ cursor: 'pointer', border: '1px solid black', margin: '5px', padding: '10px' }}>
                         {plato.nombre}
                     </div>

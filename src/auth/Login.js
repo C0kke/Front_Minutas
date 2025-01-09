@@ -39,29 +39,31 @@ function Login() {
     return (
         <div>
             <Header />
-            <div className="Login">
-                <h2>Login</h2>
-                <form onSubmit={handleSubmit}>
-                    <div>
-                        <label>Username:</label>
-                        <input
-                            type="text"
-                            name="username"
-                            value={auth.username}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div>
-                        <label>Password:</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={auth.password}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <button type="submit">Login</button>
-                </form>
+            <div className="ActualBody">
+                <div className="Login">
+                    <h2>Login</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div>
+                            <label>Username:</label>
+                            <input
+                                type="text"
+                                name="username"
+                                value={auth.username}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label>Password:</label>
+                            <input
+                                type="password"
+                                name="password"
+                                value={auth.password}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
             </div>
         </div>
     );

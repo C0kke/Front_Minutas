@@ -1,11 +1,18 @@
 body {
-    font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.ActualBody {
+  padding-top: 30px;
+  background-image: url("../../public/frontis_casino.jpg");
+  background-repeat: no-repeat;
+  background-position: top;
+  padding-bottom: 100px;
 }
   
 .Login {
     text-align: center;
-    margin-top: 50px;
-    background-color: rgb(42, 42, 102);
+    background-color: rgba(42, 42, 102, 95%);
     color: white;
     padding: 50px;
     border-radius: 10px;

@@ -19,8 +19,8 @@ function Login() {
             localStorage.setItem('token', access_token);
     
             if (access_token) {
+                window.location.replace('/home');
                 alert("Inicio de sesión exitoso");
-                window.location.replace('/');
             } else {
                 console.log("Usuario no existe")
             }

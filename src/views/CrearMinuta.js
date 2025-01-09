@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import Table from '@mui/material/Table';
+import React, { useState, useEffect, useMemo } from 'react'; // Import useMemo
+  import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
@@ -38,6 +38,22 @@ const filas = [
   "POSTRE",
 ];
 
+const tipoPlatoPorFila = {
+  "PROTEINA 1": "PLATO DE FONDO",
+  "PROTEINA 2": "PLATO DE FONDO",
+  "PROTEINA 3": "PLATO DE FONDO",
+  "VEGETARIANA": "VEGETARIANO",
+  "VEGANA": "VEGANA",
+  "GUARNICION 1": "GUARNICIÓN",
+  "GUARNICION 2": "GUARNICIÓN",
+  "HIPOCALÓRICO": "HIPOCALORICO",
+  "ENSALADA 1": "ENSALADA",
+  "ENSALADA 2": "ENSALADA",
+  "ENSALADA 3": "ENSALADA",
+  "SOPA DEL DÍA": "SOPA",
+  "POSTRE": "POSTRES",
+};
+
 const Minutas = () => {
   const [platos, setPlatos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +79,8 @@ const Minutas = () => {
               });
               const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
               setPlatos(platosFiltrados);
+              console.log("Platos recibidos:", platosFiltrados); // Imprime los platos
+
           } catch (error) {
               console.error("Error al obtener platos:", error);
               if (error.response && error.response.status === 401) {
@@ -94,42 +112,47 @@ const Minutas = () => {
     }));
   };
 
+  const opcionesFiltradasPorFila = useMemo(() => {
+    const opciones = {};
+    filas.forEach(fila => {
+        const tipoPlatoFiltrado = tipoPlatoPorFila[fila];
+        opciones[fila] = platos.filter(plato => plato.categoria === tipoPlatoFiltrado);
+    });
+    return opciones;
+}, [platos]);
+
   return (
-      <div>
-          <Header />
-          <TableContainer component={Paper} className="Minuta">
-              <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                  <TableHead>
-                      <TableRow>
-                          {encabezados.map((encabezado) => (
-                              <TableCell key={encabezado} align="center">{encabezado}</TableCell>
-                          ))}
-                      </TableRow>
-                  </TableHead>
-                  <TableBody>
-                      {filas.map((fila) => (
-                          <TableRow key={fila} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                              <TableCell component="th" scope="row" align="center">{fila}</TableCell>
-                              {encabezados.slice(1).map((encabezado) => (
-                                  <TableCell key={encabezado} align="center">
-                                      <Autocomplete
-                                          disablePortal
-                                          id={`${encabezado}-${fila}`}
-                                          options={platos}
-                                          getOptionLabel={(option) => option.nombre} 
-                                          value={platos.find(p => p._id === data[encabezado]?.[fila]) || null}
-                                          onChange={(event, newValue) => handleAutocompleteChange(event, newValue, fila, encabezado)}
-                                          sx={{ width: 300 }}
-                                          renderInput={(params) => <TextField {...params} label="Seleccionar plato" size="small" />}
-                                      />
-                                  </TableCell>
-                              ))}
-                          </TableRow>
-                      ))}
-                  </TableBody>
-              </Table>
-          </TableContainer>
-      </div>
+    <div>
+        <Header />
+        <TableContainer component={Paper} className="Minuta">
+            <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <TableHead>{/* ... */}</TableHead>
+                <TableBody>
+                    {filas.map((fila) => (
+                        <TableRow key={fila} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                            <TableCell component="th" scope="row" align="center">{fila}</TableCell>
+                            {encabezados.slice(1).map((encabezado) => {
+                                return (
+                                    <TableCell key={encabezado} align="center">
+                                        <Autocomplete
+                                            disablePortal
+                                            id={`${encabezado}-${fila}`}
+                                            options={opcionesFiltradasPorFila[fila]} // Usa las opciones filtradas
+                                            getOptionLabel={(option) => option.nombre}
+                                            value={opcionesFiltradasPorFila[fila].find(p => p._id === data[encabezado]?.[fila]) || null}
+                                            onChange={(event, newValue) => handleAutocompleteChange(event, newValue, fila, encabezado)}
+                                            sx={{ width: 300 }}
+                                            renderInput={(params) => <TextField {...params} label={`Seleccionar ${tipoPlatoPorFila[fila]}`} size="small" />}
+                                        />
+                                    </TableCell>
+                                );
+                            })}
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    </div>
   );
 }
 

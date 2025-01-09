@@ -1,0 +1,13 @@
+.Minuta {
+    width: 60%; /* Ocupa el 60% del ancho del contenedor padre */
+    margin: 0 auto; /* Centra horizontalmente */
+    border-collapse: collapse; /* Colapsa los bordes de las celdas */
+    border: 1px solid #ddd; /* Añade un borde a la tabla */
+  }
+  
+  .Minuta th,
+  .Minuta td {
+    border: 1px solid #ddd; /* Añade bordes a las celdas */
+    padding: 8px; /* Espaciado interno para las celdas */
+    text-align: left; /* Alinea el texto a la izquierda (o al centro si prefieres) */
+  }

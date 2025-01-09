@@ -23,12 +23,13 @@ const Platos = () => {
                 setError(new Error("No autorizado. Inicie sesión."));
                 setLoading(false);
                 return;
-            }
+            }   
             try {
                 const response = await axios.get('http://localhost:3000/api/v1/plato', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setPlatos(response.data);
+                const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
+                setPlatos(platosFiltrados);
             } catch (error) {
                 console.error("Error al obtener platos:", error);
                 if (error.response && error.response.status === 401) {
@@ -42,8 +43,8 @@ const Platos = () => {
         };
 
         fetchPlatos();
-    }, [navigate]); // Añade navigate como dependencia
-
+    }, [navigate]); // Añade navigate como dependencia  
+    
     const openModal = async (plato) => {
         setSelectedPlato(plato);
         setModalIsOpen(true);
@@ -61,7 +62,7 @@ const Platos = () => {
         }
 
         try {
-            const response = await axios.get(`http://localhost:3000/api/v1/ingredientexplato?id_plato=${plato._id}`, {
+            const response = await axios.get(`http://localhost:3000/api/v1/ingredientexplato/plato/${plato._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setIngredientes(response.data);
@@ -119,9 +120,9 @@ const Platos = () => {
                         {error && <div>Error: {error.message}</div>}
                         {!loading && !error && ingredientes.length > 0 && (
                             <ul>
-                                {ingredientes.map((ingrediente) => (
+                                {ingredientes.filter(ingrediente => ingrediente.porcion_neta !== 0).map((ingrediente) => (
                                     <li key={ingrediente._id}>
-                                        {ingrediente.nombreIngrediente} - Cantidad: {ingrediente.porcion_neta} {ingrediente.unidadmedida}
+                                        {ingrediente.id_ingrediente.nombreIngrediente}: {ingrediente.porcion_neta}{ingrediente.id_ingrediente.unidadmedida ? ` ${ingrediente.id_ingrediente.unidadmedida}` : ''}
                                     </li>
                                 ))}
                             </ul>

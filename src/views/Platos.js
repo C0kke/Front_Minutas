@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import "./Platos.css"
 import Header from "../components/Header";
-import Minutas from "./CrearMinuta"
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Box, InputLabel, MenuItem, FormControl, Select } from '@mui/material';
@@ -115,7 +114,8 @@ const Platos = () => {
     };
 
     const actualizarIngredientes = () => {
-        window.location.replace('crear-minuta')
+        //window.location.replace('crear-minuta')
+        navigate("../crear-minuta")
     }
     if (loading) {
         return <div>Cargando platos...</div>;

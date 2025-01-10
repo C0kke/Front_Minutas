@@ -4,7 +4,9 @@ import './Header.css';
 const Header = () => {
   return (
     <header className="App-header">
-      <img src='/LOGO_GM_EXPRESS.png' className="App-logo" alt="logo" />
+      <a href='/home'>
+        <img src='/LOGO_GM_EXPRESS.png' className="App-logo" alt="logo" />
+      </a>
     </header>
   );
 };

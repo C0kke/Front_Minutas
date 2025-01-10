@@ -1,0 +1,17 @@
+.PlatoCard {
+    cursor: pointer; 
+    border: 1px solid black; 
+    margin: 5px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.Descontinuado {
+    left: 0;
+}
+
+.ButtonContainer {
+    display: flex;
+    justify-content: space-between;
+}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import "./Platos.css"
 import Header from "../components/Header";
+import Minutas from "./CrearMinuta"
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Box, InputLabel, MenuItem, FormControl, Select } from '@mui/material';
@@ -42,8 +44,7 @@ const Platos = () => {
                 const response = await axios.get('http://localhost:3000/api/v1/plato', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
-                setPlatos(platosFiltrados);
+                setPlatos(response.data);
             } catch (error) {
                 console.error("Error al obtener platos:", error);
                 if (error.response && error.response.status === 401) {
@@ -113,6 +114,9 @@ const Platos = () => {
         setModalIsOpen(false);
     };
 
+    const actualizarIngredientes = () => {
+        window.location.replace('crear-minuta')
+    }
     if (loading) {
         return <div>Cargando platos...</div>;
     }
@@ -143,7 +147,7 @@ const Platos = () => {
                     >
                         <MenuItem value="Todas">Todas</MenuItem>
                         {categorias.map((categoria) => (
-                            <MenuItem key={categoria} value={categoria}> {/* key corregida */}
+                            <MenuItem key={categoria} value={categoria}>
                                 {categoria}
                             </MenuItem>
                         ))}
@@ -152,8 +156,9 @@ const Platos = () => {
             </Box>
             <div className="ListaPLatos">
                 {filteredPlatos.map((plato) => (
-                    <div key={plato._id} onClick={() => openModal(plato)} style={{ cursor: 'pointer', border: '1px solid black', margin: '5px', padding: '10px' }}>
+                    <div key={plato._id} onClick={() => openModal(plato)} className='PlatoCard' style={plato.descontinuado? {color : 'red', border: '1px solid red'} : {color : 'inert'}}>
                         {plato.nombre}
+                        <div className='Descontinuado'>{plato.descontinuado ? 'descontinuado' : ''}</div>
                     </div>
                 ))}
             </div>
@@ -186,7 +191,10 @@ const Platos = () => {
                         {!loading && !error && ingredientes.length === 0 && (
                             <p>Este plato no tiene ingredientes registrados.</p>
                         )}
-                        <button onClick={closeModal}>Cerrar</button>
+                        <div className='ButtonContainer'>
+                            <button onClick={closeModal}>Cerrar</button>
+                            <button onClick={actualizarIngredientes}>Actualizar Ingredientes</button>
+                        </div>
                     </div>
                 )}
             </Modal>

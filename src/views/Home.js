@@ -1,23 +1,30 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import './Home.css'; // Asegúrate de importar el CSS
 
 const Home = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+    <div className="home-container">
       <h1>Bienvenido a la Gestión de Minutas</h1>
       <p>Selecciona una opción:</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <button onClick={() => navigate("/crear-minuta")}>
+      <div className="buttons-container">
+        <button className="home-button" onClick={() => navigate("/crear-minuta")}>
           Crear Minuta Semanal
         </button>
-        <button onClick={() => navigate("/historial-minutas")}>
+        <button className="home-button" onClick={() => navigate("/historial-minutas")}>
           Ver Historial de Minutas
         </button>
-        <button onClick={() => navigate("/perfil")}>Ver Perfil</button>
-        <button onClick={() => navigate("/ingredientes")}>Ver Ingredientes</button>
-        <button onClick={() => navigate("/platos")}>Ver Platos</button>
+        <button className="home-button" onClick={() => navigate("/perfil")}>
+          Ver Perfil
+        </button>
+        <button className="home-button" onClick={() => navigate("/ingredientes")}>
+          Ver Ingredientes
+        </button>
+        <button className="home-button" onClick={() => navigate("/platos")}>
+          Ver Platos
+        </button>
       </div>
     </div>
   );

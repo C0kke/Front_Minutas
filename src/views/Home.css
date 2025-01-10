@@ -1,0 +1,71 @@
+/* Global Styles */
+body {
+    font-family: 'Arial, sans-serif';
+    background-image: url("../../public/frontis_casino.jpg");
+    background-size: cover;
+    background-position: center;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #fff;
+  }
+  
+  /* Home Container */
+  .home-container {
+    text-align: center;
+    padding: 50px;
+    max-width: 800px;
+    background-color: rgba(230, 236, 241, 0.915);
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    margin: 20px;
+  }
+  
+  .home-container h1 {
+    font-size: 3rem;
+    color: #2E8B57; /* Manzana verde */
+    margin-bottom: 30px;
+  }
+  
+  .home-container p {
+    font-size: 1.2rem;
+    color: #1E3A5F; /* Azul marino */
+    margin-bottom: 30px;
+  }
+  
+  /* Buttons Container */
+  .buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+  
+  /* Button Styles */
+  .home-button {
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    color: white;
+    background-color: #2E8B57; /* Manzana verde */
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+    width: 90%;
+    max-width: 400px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  .home-button:hover {
+    background-color: #1E3A5F; /* Azul marino */
+    transform: translateY(-3px);
+  }
+  
+  .home-button:active {
+    background-color: #164057; /* Azul marino oscuro */
+    transform: translateY(0);
+  }
+  

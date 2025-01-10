@@ -1,61 +1,68 @@
-body {
-  font-family: 'Montserrat', sans-serif;
+/* Login Container */
+.Login {
+  text-align: center;
+  background-color: rgba(230, 236, 241, 0.915); /* Fondo semitransparente */
+  color: #2E8B57; /* Verde manzana */
+  padding: 50px;
+  border-radius: 15px; /* Bordes más redondeados */
+  width: 400px;
+  margin: 50px auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Sombra */
 }
 
-.ActualBody {
-  padding-top: 30px;
-  background-image: url("../../public/frontis_casino.jpg");
-  background-repeat: no-repeat;
-  background-position: top;
-  padding-bottom: 100px;
+/* Formulario */
+.Login form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-  
-.Login {
-    text-align: center;
-    background-color: rgba(42, 42, 102, 95%);
-    color: white;
-    padding: 50px;
-    border-radius: 10px;
-    width: 300px;
-    margin: 50px auto;
-    height: 100%;
-  }
-  
-  .Login form {
-    display: inline-block;
-    text-align: left;
-  }
-  
-  .Login div {
-    margin-bottom: 25px;
-  }
-  
-  .Login label {
-    margin-right: 10px;
-    font-size: 18px;
-  }
-  
-  .Login input {
-    padding: 10px;
-    margin: 5px 0;
-    font-size: 16px;
-    border: 1px solid #61dafb; /* Borde verde claro */
-    border-radius: 5px;
-    width: 100%;
-  }
-  
-  .Login button {
-    padding: 15px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    background-color: #36ff40; /* Fondo verde claro */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    width: 100%;
-  }
-  
-  .Login h2 {
-    font-size: 48px;
-    padding: 10px 0 40px 0;
-  }
+
+.Login div {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.Login label {
+  font-size: 18px;
+  color: #1E3A5F; /* Azul marino */
+  display: block;
+  margin-bottom: 5px;
+}
+
+.Login input {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #2E8B57; /* Verde manzana */
+  border-radius: 5px;
+  width: 100%;
+  box-sizing: border-box; /* Asegura que el padding no expanda el input */
+}
+
+.Login button {
+  padding: 15px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #2E8B57; /* Verde manzana */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  width: 100%;
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.Login button:hover {
+  background-color: #1E3A5F; /* Azul marino */
+  transform: translateY(-2px); /* Efecto de elevación */
+}
+
+.Login button:active {
+  background-color: #164057; /* Azul marino oscuro */
+  transform: translateY(0);
+}
+
+/* Título */
+.Login h2 {
+  font-size: 36px;
+  margin-bottom: 20px;
+  color: #1E3A5F; /* Azul marino */
+}

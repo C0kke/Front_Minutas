@@ -29,12 +29,13 @@ const Platos = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const [pageSize] = useState(10); // Number of dishes per page
+    const [pageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1); // Nuevo estado para el número total de páginas
+    const [totalPages, setTotalPages] = useState(1);
     const navigate = useNavigate();
 
-    const token = localStorage.getItem('token')?.trim();     
+    const token = localStorage.getItem('token')?.trim();    
+    localStorage.removeItem('id_plato') 
     useEffect(() => {
         const fetchPlatos = async () => {
             if (!token) {
@@ -110,7 +111,7 @@ const Platos = () => {
             alert("Sesión inválida. Redirigiendo...");
             setError(new Error("No autorizado. Inicie sesión."));
             setLoading(false);
-            navigate("/"); // Redirige al login si no hay token
+            navigate("/");
             return;
         }
 
@@ -137,8 +138,8 @@ const Platos = () => {
     };
 
     const actualizarIngredientes = () => {
-        //window.location.replace('crear-minuta')
-        navigate("../crear-minuta")
+        localStorage.setItem('id_plato', selectedPlato._id);
+        navigate("../crear-minuta");
     }
     if (loading) {
         return <div>Cargando platos...</div>;
@@ -193,10 +194,10 @@ const Platos = () => {
             variant="contained"
             sx={{
                 backgroundColor: '#2E8B57',
-                '&:hover': { // Estilos para el hover
-                    backgroundColor: '#1A5230', // Un verde más oscuro al pasar el mouse
+                '&:hover': {
+                    backgroundColor: '#1A5230', 
                 },
-                color: 'white' //Color del texto
+                color: 'white'
             }}
         >
             {'<'}

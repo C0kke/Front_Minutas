@@ -11,12 +11,13 @@ body {
 .App-header {
     background-color: #ffffff;
     min-height: 10vh;
+    min-width: 500px;
     display: flex;
-    flex-direction: column;
-    align-items: start;
     justify-content: center;
     font-size: calc(10px + 2vmin);
     color: white;
+    width: 60%;
+    margin: 20px auto;
 }
 
 .Top-header {

@@ -1,64 +1,89 @@
-import React, { useState, useEffect, useMemo } from 'react'; // Import useMemo
-  import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import Autocomplete from '@mui/material/Autocomplete';
-import './CrearMinuta.css';
+import React, { useState, useEffect, useMemo } from 'react';
+import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from 'dayjs';
+import isLeapYear from 'dayjs/plugin/isLeapYear';
+import weekday from 'dayjs/plugin/weekday';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import isoWeek from 'dayjs/plugin/isoWeek'; // Importa el plugin isoWeek
+import 'dayjs/locale/es';
+import './styles/CrearMinuta.css';
 import Header from '../components/Header';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+dayjs.extend(isLeapYear);
+dayjs.extend(isoWeek); // Extiende el plugin isoWeek
+dayjs.extend(weekday);
+dayjs.extend(localizedFormat);
+dayjs.locale('es');
+
 const encabezados = [
-  "", 
-  "LUNES 06 de enero",
-  "MARTES 07 de enero",
-  "MIERCOLES 08 de enero",
-  "JUEVES 09 de enero",
-  "VIERNES 10 de enero",
+    "",
+    "LUNES",
+    "MARTES",
+    "MIERCOLES",
+    "JUEVES",
+    "VIERNES",
 ];
 
 const filas = [
-  "PROTEINA 1",
-  "PROTEINA 2",
-  "PROTEINA 3",
-  "VEGETARIANA",
-  "VEGANA",
-  "GUARNICION 1",
-  "GUARNICION 2",
-  "HIPOCALÓRICO",
-  "ENSALADA 1",
-  "ENSALADA 2",
-  "ENSALADA 3",
-  "SOPA DEL DÍA",
-  "POSTRE",
+    "PROTEINA 1",
+    "PROTEINA 2",
+    "PROTEINA 3",
+    "VEGETARIANA",
+    "VEGANA",
+    "GUARNICION 1",
+    "GUARNICION 2",
+    "HIPOCALÓRICO",
+    "ENSALADA 1",
+    "ENSALADA 2",
+    "ENSALADA 3",
+    "SOPA DEL DÍA",
+    "POSTRE",
 ];
 
 const tipoPlatoPorFila = {
-  "PROTEINA 1": "PLATO DE FONDO",
-  "PROTEINA 2": "PLATO DE FONDO",
-  "PROTEINA 3": "PLATO DE FONDO",
-  "VEGETARIANA": "VEGETARIANO",
-  "VEGANA": "VEGANA",
-  "GUARNICION 1": "GUARNICIÓN",
-  "GUARNICION 2": "GUARNICIÓN",
-  "HIPOCALÓRICO": "HIPOCALORICO",
-  "ENSALADA 1": "ENSALADA",
-  "ENSALADA 2": "ENSALADA",
-  "ENSALADA 3": "ENSALADA",
-  "SOPA DEL DÍA": "SOPA",
-  "POSTRE": "POSTRES",
+    "PROTEINA 1": "PLATO DE FONDO",
+    "PROTEINA 2": "PLATO DE FONDO",
+    "PROTEINA 3": "PLATO DE FONDO",
+    "VEGETARIANA": "VEGETARIANO",
+    "VEGANA": "VEGANA",
+    "GUARNICION 1": "GUARNICIÓN",
+    "GUARNICION 2": "GUARNICIÓN",
+    "HIPOCALÓRICO": "HIPOCALORICO",
+    "ENSALADA 1": "ENSALADA",
+    "ENSALADA 2": "ENSALADA",
+    "ENSALADA 3": "ENSALADA",
+    "SOPA DEL DÍA": "SOPA",
+    "POSTRE": "POSTRES",
 };
 
+const generateWeekDays = (year, week) => {
+  // Calcula el primer día del año *en formato ISO*
+  const firstDayOfYear = dayjs().year(year).startOf('year').isoWeekday(1); // Importante: isoWeekday(1)
+
+  // Calcula el primer día de la semana
+  const firstDayOfWeek = firstDayOfYear.add(week - 1, 'week');
+
+  const weekDays = [];
+  for (let i = 0; i < 5; i++) {
+      weekDays.push(firstDayOfWeek.add(i, 'day'));
+  }
+  return weekDays;
+};
+
+
 const Minutas = () => {
+  const navigate = useNavigate();
+  const currentYear = dayjs().year();
+  const [year, setYear] = useState(currentYear);
+  const [week, setWeek] = useState(dayjs().week());
+  const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));
   const [platos, setPlatos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
   const [data, setData] = useState({});
 
   useEffect(() => {
@@ -69,8 +94,8 @@ const Minutas = () => {
               console.error("Token no encontrado en localStorage. Redirigiendo al login.");
               setError(new Error("No autorizado. Inicie sesión."));
               setLoading(false);
-              navigate("/"); // Redirección al login
-              return; // Importante: detener la ejecución de fetchPlatos
+              navigate("/");
+              return;
           }
 
           try {
@@ -79,14 +104,14 @@ const Minutas = () => {
               });
               const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
               setPlatos(platosFiltrados);
-              console.log("Platos recibidos:", platosFiltrados); // Imprime los platos
+              console.log("Platos recibidos:", platosFiltrados); 
 
           } catch (error) {
               console.error("Error al obtener platos:", error);
               if (error.response && error.response.status === 401) {
                   console.error("Token inválido. Redirigiendo al login.");
                   localStorage.removeItem('token');
-                  navigate("/"); // Redirección al login en caso de token inválido
+                  navigate("/"); 
               } else if (error.response) {
                 setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
               } else if (error.request) {
@@ -102,6 +127,20 @@ const Minutas = () => {
       fetchPlatos();
   }, [navigate]);
 
+  const handleYearChange = (event) => {
+    const newYear = parseInt(event.target.value, 10) || currentYear;
+    setYear(newYear);
+    setWeekDays(generateWeekDays(newYear, week));
+  };
+
+  const handleWeekChange = (event) => {
+    const newWeek = parseInt(event.target.value, 10);
+    if (newWeek > 0 && newWeek < 53) {
+        setWeek(newWeek);
+        setWeekDays(generateWeekDays(year, newWeek));
+    }
+  };
+
   const handleAutocompleteChange = (event, value, row, col) => {
     setData(prevData => ({
         ...prevData,
@@ -115,45 +154,101 @@ const Minutas = () => {
   const opcionesFiltradasPorFila = useMemo(() => {
     const opciones = {};
     filas.forEach(fila => {
-        const tipoPlatoFiltrado = tipoPlatoPorFila[fila];
-        opciones[fila] = platos.filter(plato => plato.categoria === tipoPlatoFiltrado);
+        let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
+        let opcionesFiltradas = platos.filter(plato => plato.categoria === tipoPlatoFiltrado);
+
+        if (tipoPlatoFiltrado === "PLATO DE FONDO") {
+            opcionesFiltradas = platos.filter(plato => plato.categoria === tipoPlatoFiltrado || plato.categoria === "LEGUMBRES");
+
+            const platosDeFondoSeleccionados = new Set();
+            encabezados.slice(1).forEach(encabezado => {
+                filas.filter(f => tipoPlatoPorFila[f] === "PLATO DE FONDO").forEach(filaInterna =>{
+                    if(data[encabezado] && data[encabezado][filaInterna]){
+                        platosDeFondoSeleccionados.add(data[encabezado][filaInterna])
+                    }
+                })
+            });
+            opcionesFiltradas = opcionesFiltradas.filter(plato => !platosDeFondoSeleccionados.has(plato._id));
+        }
+
+        opciones[fila] = opcionesFiltradas;
     });
     return opciones;
-}, [platos]);
+  }, [platos, data]);
+
+  const getValueForAutocomplete = (row, col) => {
+      const platoId = data[col]?.[row];
+      return platos.find(p => p._id === platoId) || null;
+  };
+
+  const isOptionDisabled = (option, row) => {
+    if (tipoPlatoPorFila[row] !== "PLATO DE FONDO") {
+        return false;
+    }
+
+    const platosDeFondoSeleccionados = new Set();
+    encabezados.slice(1).forEach(encabezado => {
+        filas.filter(f => tipoPlatoPorFila[f] === "PLATO DE FONDO").forEach(filaInterna =>{
+            if(data[encabezado] && data[encabezado][filaInterna]){
+                platosDeFondoSeleccionados.add(data[encabezado][filaInterna])
+            }
+        })
+    });
+    return platosDeFondoSeleccionados.has(option._id);
+  };
 
   return (
     <div>
         <Header />
-        <TableContainer component={Paper} className="Minuta">
-            <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                <TableHead>{/* ... */}</TableHead>
-                <TableBody>
-                    {filas.map((fila) => (
-                        <TableRow key={fila} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                            <TableCell component="th" scope="row" align="center">{fila}</TableCell>
-                            {encabezados.slice(1).map((encabezado) => {
-                                return (
-                                    <TableCell key={encabezado} align="center">
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'white', padding: 2, borderRadius: 1, margin: '20px auto', width: '80%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <Typography variant="h6" gutterBottom>Generador de Encabezados de Semana</Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Año" type="number" value={year} onChange={handleYearChange} inputProps={{ min: 1900, max: 2100 }} sx={{ width: 100 }} />
+                    <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} inputProps={{ min: 1, max: 52 }} sx={{ width: 150 }} />
+                </Box>
+            </LocalizationProvider>
+
+            <TableContainer component={Paper} sx={{width: '100%'}} className='Minuta'>
+                <Table sx={{ width: '100%', borderCollapse: 'collapse' }} aria-label="simple table">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell key="empty-cell"></TableCell>
+                            {weekDays.map((day) => (
+                                <TableCell key={day.toString()} align="center" className="Minuta th">
+                                    {day.format('dddd DD [de] MMMM')}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filas.map((fila) => (
+                            <TableRow key={fila} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                <TableCell component="th" scope="row" align="center">{fila}</TableCell>
+                                {encabezados.slice(1).map((encabezado, index) => (
+                                    <TableCell key={`${encabezado}-${fila}`} align="center">
                                         <Autocomplete
                                             disablePortal
                                             id={`${encabezado}-${fila}`}
-                                            options={opcionesFiltradasPorFila[fila]} // Usa las opciones filtradas
+                                            options={opcionesFiltradasPorFila[fila]}
                                             getOptionLabel={(option) => option.nombre}
-                                            value={opcionesFiltradasPorFila[fila].find(p => p._id === data[encabezado]?.[fila]) || null}
+                                            value={getValueForAutocomplete(fila, encabezado)}
                                             onChange={(event, newValue) => handleAutocompleteChange(event, newValue, fila, encabezado)}
+                                            isOptionEqualToValue={(option, value) => option?._id === value?._id}
+                                            getOptionDisabled={(option) => isOptionDisabled(option, fila)}
                                             sx={{ width: 300 }}
                                             renderInput={(params) => <TextField {...params} label={`Seleccionar ${tipoPlatoPorFila[fila]}`} size="small" />}
                                         />
                                     </TableCell>
-                                );
-                            })}
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
     </div>
-  );
+);
 }
 
 export default Minutas;

@@ -1,7 +1,7 @@
 /* Global Styles */
 body {
     font-family: 'Arial, sans-serif';
-    background-image: url("../../public/frontis_casino.jpg");
+    background-image: url("../../../public/frontis_casino.jpg");
     background-size: cover;
     background-position: center;
     margin: 0;

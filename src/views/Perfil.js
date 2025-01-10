@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import './perfil.css'; // Importa el CSS aquí
+import './styles/perfil.css'; // Importa el CSS aquí
+import Header from "../components/Header";
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
@@ -46,7 +47,9 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="profile-container">
+    <div>
+      <Header/>
+      <div className="profile-container">
       <img
         src={user.profilePicture || "https://via.placeholder.com/150"}
         alt="Perfil"
@@ -70,6 +73,7 @@ const UserProfile = () => {
         >
           Cerrar Sesión
         </button>
+      </div>
       </div>
     </div>
   );

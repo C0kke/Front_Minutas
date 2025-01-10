@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import './menuhistorico.css'; // Para los estilos personalizados
+import './styles/menuhistorico.css';
+import Header from '../components/Header';
 
 const MinutaLista = () => {
   const [minutas, setMinutas] = useState([]);
@@ -76,81 +77,84 @@ const MinutaLista = () => {
   }
 
   return (
-    <div className="minuta-lista-container">
-      <div className="filter-container">
-        <h2>Selecciona una Semana</h2>
-        <input
-          type="text"
-          className="filter-input"
-          placeholder="Filtrar por semana..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)} // Actualiza el filtro
-        />
-      </div>
+    <div>
+      <Header/>
+      <div className="minuta-lista-container">
+        <div className="filter-container">
+          <h2>Selecciona una Semana</h2>
+          <input
+            type="text"
+            className="filter-input"
+            placeholder="Filtrar por semana..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)} // Actualiza el filtro
+          />
+        </div>
 
-      <div className="weeks-container">
-        {/* Mostrar las semanas filtradas */}
-        {filter && filteredWeeks.length > 0 ? (
-          <div className="filtered-weeks">
-            {filteredWeeks.map((semana) => (
-              <button
-                key={semana}
-                onClick={() => handleSemanaClick(semana)}
-                className="week-button"
-              >
-                Semana {semana}
-              </button>
-            ))}
+        <div className="weeks-container">
+          {/* Mostrar las semanas filtradas */}
+          {filter && filteredWeeks.length > 0 ? (
+            <div className="filtered-weeks">
+              {filteredWeeks.map((semana) => (
+                <button
+                  key={semana}
+                  onClick={() => handleSemanaClick(semana)}
+                  className="week-button"
+                >
+                  Semana {semana}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p>No hay semanas que coincidan con el filtro.</p>
+          )}
+        </div>
+
+        {selectedSemana && (
+          <div className="minuta-details">
+            <h3>Minutas de la Semana {selectedSemana}</h3>
+            <table className="Minuta">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {minutas[selectedSemana]?.map((minuta) => (
+                  <tr
+                    key={minuta._id}
+                    onClick={() => handleMinutaClick(minuta)} // Al hacer clic en la fila, se selecciona la minuta
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <td>{minuta.nombre}</td>
+                    <td>{new Date(minuta.fecha).toLocaleDateString()}</td>
+                    <td>{minuta.estado}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <p>No hay semanas que coincidan con el filtro.</p>
+        )}
+
+        {selectedMinuta && (
+          <div className="platos-lista">
+            <h4>Platos de la Minuta: {selectedMinuta.nombre}</h4>
+            <ul>
+              {selectedMinuta.listaplatos.length === 0 ? (
+                <p>No hay platos disponibles para este día.</p>
+              ) : (
+                selectedMinuta.listaplatos.map((plato) => (
+                  <li key={plato._id}>
+                    {plato.nombre} - {plato.descripcion}
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
         )}
       </div>
-
-      {selectedSemana && (
-        <div className="minuta-details">
-          <h3>Minutas de la Semana {selectedSemana}</h3>
-          <table className="Minuta">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {minutas[selectedSemana]?.map((minuta) => (
-                <tr
-                  key={minuta._id}
-                  onClick={() => handleMinutaClick(minuta)} // Al hacer clic en la fila, se selecciona la minuta
-                  style={{ cursor: 'pointer' }}
-                >
-                  <td>{minuta.nombre}</td>
-                  <td>{new Date(minuta.fecha).toLocaleDateString()}</td>
-                  <td>{minuta.estado}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {selectedMinuta && (
-        <div className="platos-lista">
-          <h4>Platos de la Minuta: {selectedMinuta.nombre}</h4>
-          <ul>
-            {selectedMinuta.listaplatos.length === 0 ? (
-              <p>No hay platos disponibles para este día.</p>
-            ) : (
-              selectedMinuta.listaplatos.map((plato) => (
-                <li key={plato._id}>
-                  {plato.nombre} - {plato.descripcion}
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };

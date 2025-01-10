@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import "./Platos.css"
+import "./styles/Platos.css"
 import Header from "../components/Header";
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';

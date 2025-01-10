@@ -9,8 +9,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para un efecto de elevación */
 }
 
-.Minuta th,
-.Minuta td {
+.Minuta th, .Minuta td {
   border: 1px solid #ddd; /* Bordes de las celdas */
   padding: 15px; /* Espaciado interno más amplio */
   text-align: left; /* Alineación del texto */
@@ -19,11 +18,17 @@
 }
 
 .Minuta th {
-  background-color: #2E8B57; /* Fondo verde manzana */
-  color: white; /* Texto blanco */
-  text-transform: uppercase; /* Texto en mayúsculas */
-  font-weight: bold; /* Texto en negrita */
-  letter-spacing: 1px; /* Espaciado entre letras */
+  background-color: #2E8B57;
+  color: white;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 1px;
+  width: 120px; /* Ancho fijo para las celdas de encabezado */
+  overflow: hidden; /* Oculta el texto que se desborda */
+  text-overflow: ellipsis; /* Agrega puntos suspensivos si el texto se recorta */
+  padding: 10px; /* Ajuste del padding */
+  text-align: center; /* Centra el texto */
+  white-space: nowrap; /* Evita el salto de línea */
 }
 
 .Minuta tr:nth-child(even) {

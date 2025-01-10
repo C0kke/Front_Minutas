@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./ingredientes.css"; // Asegúrate de que los estilos estén en este archivo
+import "./styles/ingredientes.css"; // Asegúrate de que los estilos estén en este archivo
+import Header from "../components/Header";
 
 const IngredienteList = () => {
   const [ingredientes, setIngredientes] = useState([]);
@@ -34,32 +35,35 @@ const IngredienteList = () => {
   }
 
   return (
-    <div className="ingrediente-list-container">
-      <div className="ingrediente-details">
-        <table className="Ingrediente">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Unidad de Medida</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ingredientes.length > 0 ? (
-              ingredientes.map((ingrediente, index) => (
-                <tr key={index}>
-                  <td>{ingrediente.nombreIngrediente}</td>
-                  <td>{ingrediente.unidadmedida}</td>
-                </tr>
-              ))
-            ) : (
+    <div>
+      <Header/>
+      <div className="ingrediente-list-container">
+        <div className="ingrediente-details">
+          <table className="Ingrediente">
+            <thead>
               <tr>
-                <td colSpan="2" style={{ textAlign: "center" }}>
-                  No se encontraron ingredientes.
-                </td>
+                <th>Nombre</th>
+                <th>Unidad de Medida</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {ingredientes.length > 0 ? (
+                ingredientes.map((ingrediente, index) => (
+                  <tr key={index}>
+                    <td>{ingrediente.nombreIngrediente}</td>
+                    <td>{ingrediente.unidadmedida}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="2" style={{ textAlign: "center" }}>
+                    No se encontraron ingredientes.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

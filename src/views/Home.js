@@ -13,7 +13,7 @@ const Home = () => {
         <button className="home-button" onClick={() => navigate("/crear-minuta")}>
           Crear Minuta Semanal
         </button>
-        <button className="home-button" onClick={() => navigate("/historial-minutas")}>
+        <button className="home-button" onClick={() => navigate("/menuhistorico")}>
           Ver Historial de Minutas
         </button>
         <button className="home-button" onClick={() => navigate("/perfil")}>

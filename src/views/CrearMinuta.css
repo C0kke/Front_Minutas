@@ -1,13 +1,46 @@
 .Minuta {
-    width: 60%; /* Ocupa el 60% del ancho del contenedor padre */
-    margin: 0 auto; /* Centra horizontalmente */
-    border-collapse: collapse; /* Colapsa los bordes de las celdas */
-    border: 1px solid #ddd; /* Añade un borde a la tabla */
-  }
-  
-  .Minuta th,
-  .Minuta td {
-    border: 1px solid #ddd; /* Añade bordes a las celdas */
-    padding: 8px; /* Espaciado interno para las celdas */
-    text-align: left; /* Alinea el texto a la izquierda (o al centro si prefieres) */
-  }
+  width: 80%; /* Ajustado para ser más amplio */
+  margin: 20px auto; /* Añade un margen superior e inferior para espaciado */
+  border-collapse: collapse; /* Colapsa los bordes de las celdas */
+  border: 1px solid #ddd; /* Bordes principales de la tabla */
+  border-radius: 10px; /* Bordes redondeados */
+  overflow: hidden; /* Oculta cualquier desbordamiento */
+  background-color: #f9f9f9; /* Fondo claro */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para un efecto de elevación */
+}
+
+.Minuta th,
+.Minuta td {
+  border: 1px solid #ddd; /* Bordes de las celdas */
+  padding: 15px; /* Espaciado interno más amplio */
+  text-align: left; /* Alineación del texto */
+  font-size: 16px; /* Tamaño de fuente cómodo */
+  color: #333; /* Color del texto */
+}
+
+.Minuta th {
+  background-color: #2E8B57; /* Fondo verde manzana */
+  color: white; /* Texto blanco */
+  text-transform: uppercase; /* Texto en mayúsculas */
+  font-weight: bold; /* Texto en negrita */
+  letter-spacing: 1px; /* Espaciado entre letras */
+}
+
+.Minuta tr:nth-child(even) {
+  background-color: #f2f2f2; /* Fondo alternativo para filas pares */
+}
+
+.Minuta tr:hover {
+  background-color: #e6f7e6; /* Fondo al pasar el cursor */
+}
+
+.Minuta td a {
+  color: #1E3A5F; /* Azul marino */
+  text-decoration: none; /* Sin subrayado */
+  font-weight: bold; /* Negrita */
+}
+
+.Minuta td a:hover {
+  text-decoration: underline; /* Subrayado al pasar el cursor */
+  color: #2E8B57; /* Verde manzana */
+}

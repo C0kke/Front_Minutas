@@ -1,3 +1,13 @@
+.FilterBox {
+    display: flex; 
+    align-items: center; 
+    margin: 16px;
+    background-color: rgba(230, 236, 241, 0.915);
+    width: 50em;
+    padding: 10px 10px;
+    border-radius: 5px;
+}
+
 .PlatoCard {
     cursor: pointer; 
     border: 1px solid black; 
@@ -5,13 +15,77 @@
     padding: 10px;
     display: flex;
     justify-content: space-between;
+    background-color: rgba(230, 236, 241, 0.915);
+    color: #2E8B57; 
 }
 
 .Descontinuado {
     left: 0;
 }
 
-.ButtonContainer {
+.PaginationButtons {
     display: flex;
     justify-content: space-between;
+    padding: 0 10px;
+}
+
+.ReactModal__Overlay {
+    opacity: 0;
+    transition: opacity 200ms ease-in-out;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.ReactModal__Overlay--after-open{
+    opacity: 1;
+}
+
+.ReactModal__Overlay--before-close{
+    opacity: 0;
+}
+
+.ReactModal__Content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid #2E8B57;
+    background: #ffffff;
+    color: #2E8B57;
+    overflow: auto;
+    border-radius: 4px;
+    outline: none;
+    padding: 20px;
+}
+
+.ReactModal__Content .ButtonContainer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.ReactModal__Content .ModalButton { 
+    padding: 8px 16px;
+    border: 1px solid #2E8B57;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.ReactModal__Content .ModalButton {
+    color: #2E8B57;
+    background-color: white;
+}
+
+.ReactModal__Content .ModalButton:hover {
+    background-color: #2E8B57;
+    color: white;
 }

@@ -4,7 +4,7 @@ import "./Platos.css"
 import Header from "../components/Header";
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Box, InputLabel, MenuItem, FormControl, Select } from '@mui/material';
+import { TextField, Box, InputLabel, MenuItem, FormControl, Select, Button } from '@mui/material';
 
 Modal.setAppElement('#root');
 
@@ -28,11 +28,15 @@ const Platos = () => {
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const [pageSize] = useState(10); // Number of dishes per page
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1); // Nuevo estado para el número total de páginas
     const navigate = useNavigate();
 
+    const token = localStorage.getItem('token')?.trim();     
     useEffect(() => {
         const fetchPlatos = async () => {
-            const token = localStorage.getItem('token')?.trim();     
             if (!token) {
                 console.error("Token no encontrado en localStorage. Redirigiendo al login.");
                 setError(new Error("No autorizado. Inicie sesión."));
@@ -43,6 +47,7 @@ const Platos = () => {
                 const response = await axios.get('http://localhost:3000/api/v1/plato', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                setTotalPages(Math.ceil(response.data.length / pageSize));   
                 setPlatos(response.data);
             } catch (error) {
                 console.error("Error al obtener platos:", error);
@@ -57,14 +62,16 @@ const Platos = () => {
         };
 
         fetchPlatos();
-    }, []);
+    }, [currentPage]);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
+        setCurrentPage(1);
     };
     
     const handleCategoryChange = (event) => {
         setSelectedCategory(event.target.value);
+        setCurrentPage(1);
     };
 
     const filteredPlatos = useMemo(() => {
@@ -75,6 +82,22 @@ const Platos = () => {
         });
     }, [platos, searchTerm, selectedCategory]);
 
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const displayedDishes = useMemo(() => {
+        return filteredPlatos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    }, [filteredPlatos, currentPage, pageSize]);
+    
     const openModal = async (plato) => {
         setSelectedPlato(plato);
         setModalIsOpen(true);
@@ -128,7 +151,7 @@ const Platos = () => {
     return (
         <div>
             <Header />
-            <Box sx={{ display: 'flex', alignItems: 'center', margin: '16px' }}>
+            <Box className='FilterBox'>
                 <TextField
                     label="Buscar plato"
                     variant="outlined"
@@ -155,24 +178,51 @@ const Platos = () => {
                 </FormControl>
             </Box>
             <div className="ListaPLatos">
-                {filteredPlatos.map((plato) => (
+                {displayedDishes.map((plato) => (
                     <div key={plato._id} onClick={() => openModal(plato)} className='PlatoCard' style={plato.descontinuado? {color : 'red', border: '1px solid red'} : {color : 'inert'}}>
                         {plato.nombre}
                         <div className='Descontinuado'>{plato.descontinuado ? 'descontinuado' : ''}</div>
                     </div>
                 ))}
             </div>
+        <div className="PaginationButtons">
+    
+        <Button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            variant="contained"
+            sx={{
+                backgroundColor: '#2E8B57',
+                '&:hover': { // Estilos para el hover
+                    backgroundColor: '#1A5230', // Un verde más oscuro al pasar el mouse
+                },
+                color: 'white' //Color del texto
+            }}
+        >
+            {'<'}
+        </Button>
+
+        <Button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            variant="contained"
+            sx={{
+                backgroundColor: '#2E8B57',
+                '&:hover': {
+                    backgroundColor: '#1A5230',
+                },
+                color: 'white'
+            }}
+        >
+            {'>'}
+        </Button>
+        </div>
 
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
-                style={{
-                    overlay: { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
-                    content: {
-                        top: '50%', left: '50%', right: 'auto', bottom: 'auto',
-                        marginRight: '-50%', transform: 'translate(-50%, -50%)'
-                    }
-                }}
+                className="ReactModal__Content"
+                overlayClassName="ReactModal__Overlay"
             >
                 {selectedPlato && (
                     <div>
@@ -192,8 +242,8 @@ const Platos = () => {
                             <p>Este plato no tiene ingredientes registrados.</p>
                         )}
                         <div className='ButtonContainer'>
-                            <button onClick={closeModal}>Cerrar</button>
-                            <button onClick={actualizarIngredientes}>Actualizar Ingredientes</button>
+                            <Button className='ModalButton' onClick={closeModal} variant="outlined">Cerrar</Button>
+                            <Button className='ModalButton' onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
                         </div>
                     </div>
                 )}

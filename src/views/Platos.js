@@ -139,7 +139,8 @@ const Platos = () => {
 
     const actualizarIngredientes = () => {
         localStorage.setItem('id_plato', selectedPlato._id);
-        navigate("../crear-minuta");
+        navigate("/editar-ingredientes");
+    
     }
     if (loading) {
         return <div>Cargando platos...</div>;

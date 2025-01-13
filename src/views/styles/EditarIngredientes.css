@@ -1,0 +1,36 @@
+.MainContainer {
+    width: 150%;
+    margin-left: -25%;
+    min-height: 100vh; /* Asegura que el contenedor principal ocupe al menos la altura de la pantalla */
+    display: flex; /* Para centrar verticalmente si el contenido es menor que la altura de la pantalla */
+    flex-direction: column; /* Para que el header y el contenido se apilen verticalmente */
+    align-items: stretch; /* Estira los elementos hijos para que ocupen todo el ancho */
+}
+
+.MainContainer > .MuiBox-root {
+    flex-grow: 1; /* Permite que el Box crezca y ocupe el espacio disponible */
+    display: flex;
+    flex-direction: column; /* Asegura que el contenido del Box se apile verticalmente */
+    justify-content: space-between;
+}
+
+.ingredient-list-container {
+    overflow-y: auto;
+    max-height: 60vh;
+    padding: 2rem;
+}
+
+.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #eee; /* Color de fondo mientras se carga la imagen */
+    height: 100%;
+}
+
+/* Opcional: Para controlar el tamaño de la imagen dentro del contenedor */
+.image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Ajusta la imagen al contenedor sin distorsionarla */
+}

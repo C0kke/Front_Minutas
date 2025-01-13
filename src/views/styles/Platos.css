@@ -2,25 +2,36 @@
     display: flex; 
     align-items: center; 
     margin: 16px;
-    background-color: rgba(230, 236, 241, 0.915);
+    background-color: rgba(230, 236, 241, 0.915); /* Fondo suave */
     width: 50em;
     padding: 10px 10px;
-    border-radius: 5px;
+    border-radius: 8px; /* Bordes redondeados */
+    border: 1px solid #2E8B57; /* Borde verde */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra ligera */
 }
+
 
 .PlatoCard {
     cursor: pointer; 
-    border: 1px solid black; 
+    border: 1px solid #2E8B57; /* Borde verde */
     margin: 5px;
     padding: 10px;
     display: flex;
     justify-content: space-between;
-    background-color: rgba(230, 236, 241, 0.915);
-    color: #2E8B57; 
+    background-color: rgba(230, 236, 241, 0.915); /* Fondo suave */
+    color: #2E8B57; /* Texto verde */
+    border-radius: 5px; /* Bordes redondeados */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Animación suave */
+}
+
+.PlatoCard:hover {
+    transform: scale(1.02); /* Ampliación ligera al pasar el cursor */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra más marcada */
 }
 
 .Descontinuado {
-    left: 0;
+    color: #FF6347; /* Color rojo para descontinuado */
+    font-weight: bold;
 }
 
 .PaginationButtons {
@@ -32,7 +43,7 @@
 .ReactModal__Overlay {
     opacity: 0;
     transition: opacity 200ms ease-in-out;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo negro semi-transparente */
     z-index: 1000;
     position: fixed;
     top: 0;
@@ -41,11 +52,11 @@
     bottom: 0;
 }
 
-.ReactModal__Overlay--after-open{
+.ReactModal__Overlay--after-open {
     opacity: 1;
 }
 
-.ReactModal__Overlay--before-close{
+.ReactModal__Overlay--before-close {
     opacity: 0;
 }
 
@@ -57,13 +68,14 @@
     bottom: auto;
     margin-right: -50%;
     transform: translate(-50%, -50%);
-    border: 1px solid #2E8B57;
-    background: #ffffff;
-    color: #2E8B57;
+    border: 1px solid #2E8B57; /* Borde verde */
+    background: #ffffff; /* Fondo blanco */
+    color: #2E8B57; /* Texto verde */
     overflow: auto;
-    border-radius: 4px;
+    border-radius: 8px; /* Bordes redondeados */
     outline: none;
     padding: 20px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra marcada */
 }
 
 .ReactModal__Content .ButtonContainer {
@@ -74,18 +86,18 @@
 
 .ReactModal__Content .ModalButton { 
     padding: 8px 16px;
-    border: 1px solid #2E8B57;
+    border: 1px solid #2E8B57; /* Borde verde */
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s;
 }
 
 .ReactModal__Content .ModalButton {
-    color: #2E8B57;
-    background-color: white;
+    color: #2E8B57; /* Texto verde */
+    background-color: white; /* Fondo blanco */
 }
 
 .ReactModal__Content .ModalButton:hover {
-    background-color: #2E8B57;
-    color: white;
+    background-color: #2E8B57; /* Fondo verde al pasar el cursor */
+    color: white; /* Texto blanco */
 }

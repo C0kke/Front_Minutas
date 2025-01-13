@@ -29,12 +29,13 @@ const Platos = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const [pageSize] = useState(10); // Number of dishes per page
+    const [pageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1); // Nuevo estado para el número total de páginas
+    const [totalPages, setTotalPages] = useState(1);
     const navigate = useNavigate();
 
-    const token = localStorage.getItem('token')?.trim();     
+    const token = localStorage.getItem('token')?.trim();    
+    localStorage.removeItem('id_plato') 
     useEffect(() => {
         const fetchPlatos = async () => {
             if (!token) {
@@ -82,6 +83,10 @@ const Platos = () => {
         });
     }, [platos, searchTerm, selectedCategory]);
 
+    const displayedDishes = useMemo(() => {
+        return filteredPlatos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    }, [filteredPlatos, currentPage, pageSize]);
+
     const handleNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -94,10 +99,7 @@ const Platos = () => {
         }
     };
 
-    const displayedDishes = useMemo(() => {
-        return filteredPlatos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    }, [filteredPlatos, currentPage, pageSize]);
-    
+
     const openModal = async (plato) => {
         setSelectedPlato(plato);
         setModalIsOpen(true);
@@ -110,7 +112,7 @@ const Platos = () => {
             alert("Sesión inválida. Redirigiendo...");
             setError(new Error("No autorizado. Inicie sesión."));
             setLoading(false);
-            navigate("/"); // Redirige al login si no hay token
+            navigate("/");
             return;
         }
 
@@ -137,8 +139,9 @@ const Platos = () => {
     };
 
     const actualizarIngredientes = () => {
-        //window.location.replace('crear-minuta')
-        navigate("../crear-minuta")
+        localStorage.setItem('id_plato', selectedPlato._id);
+        navigate("/editar-ingredientes");
+    
     }
     if (loading) {
         return <div>Cargando platos...</div>;
@@ -185,38 +188,38 @@ const Platos = () => {
                     </div>
                 ))}
             </div>
-        <div className="PaginationButtons">
-    
-        <Button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            variant="contained"
-            sx={{
-                backgroundColor: '#2E8B57',
-                '&:hover': { // Estilos para el hover
-                    backgroundColor: '#1A5230', // Un verde más oscuro al pasar el mouse
-                },
-                color: 'white' //Color del texto
-            }}
-        >
-            {'<'}
-        </Button>
 
-        <Button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            variant="contained"
-            sx={{
-                backgroundColor: '#2E8B57',
-                '&:hover': {
-                    backgroundColor: '#1A5230',
-                },
-                color: 'white'
-            }}
-        >
-            {'>'}
-        </Button>
-        </div>
+            <div className="PaginationButtons">
+                <Button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    variant="contained"
+                    sx={{
+                        backgroundColor: '#2E8B57',
+                        '&:hover': {
+                            backgroundColor: '#1A5230', 
+                        },
+                        color: 'white'
+                    }}
+                >
+                    {'<'}
+                </Button>
+
+                <Button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages || displayedDishes.length < pageSize}
+                    variant="contained"
+                    sx={{
+                        backgroundColor: '#2E8B57',
+                        '&:hover': {
+                            backgroundColor: '#1A5230',
+                        },
+                        color: 'white'
+                    }}
+                >
+                    {'>'}
+                </Button>
+            </div>
 
             <Modal
                 isOpen={modalIsOpen}

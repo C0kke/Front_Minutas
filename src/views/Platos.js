@@ -83,6 +83,10 @@ const Platos = () => {
         });
     }, [platos, searchTerm, selectedCategory]);
 
+    const displayedDishes = useMemo(() => {
+        return filteredPlatos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    }, [filteredPlatos, currentPage, pageSize]);
+
     const handleNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -95,10 +99,7 @@ const Platos = () => {
         }
     };
 
-    const displayedDishes = useMemo(() => {
-        return filteredPlatos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    }, [filteredPlatos, currentPage, pageSize]);
-    
+
     const openModal = async (plato) => {
         setSelectedPlato(plato);
         setModalIsOpen(true);
@@ -187,38 +188,38 @@ const Platos = () => {
                     </div>
                 ))}
             </div>
-        <div className="PaginationButtons">
-    
-        <Button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            variant="contained"
-            sx={{
-                backgroundColor: '#2E8B57',
-                '&:hover': {
-                    backgroundColor: '#1A5230', 
-                },
-                color: 'white'
-            }}
-        >
-            {'<'}
-        </Button>
 
-        <Button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            variant="contained"
-            sx={{
-                backgroundColor: '#2E8B57',
-                '&:hover': {
-                    backgroundColor: '#1A5230',
-                },
-                color: 'white'
-            }}
-        >
-            {'>'}
-        </Button>
-        </div>
+            <div className="PaginationButtons">
+                <Button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    variant="contained"
+                    sx={{
+                        backgroundColor: '#2E8B57',
+                        '&:hover': {
+                            backgroundColor: '#1A5230', 
+                        },
+                        color: 'white'
+                    }}
+                >
+                    {'<'}
+                </Button>
+
+                <Button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages || displayedDishes.length < pageSize}
+                    variant="contained"
+                    sx={{
+                        backgroundColor: '#2E8B57',
+                        '&:hover': {
+                            backgroundColor: '#1A5230',
+                        },
+                        color: 'white'
+                    }}
+                >
+                    {'>'}
+                </Button>
+            </div>
 
             <Modal
                 isOpen={modalIsOpen}

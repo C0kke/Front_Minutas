@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button } from '@mui/material';
+import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
@@ -78,20 +78,21 @@ const generateWeekDays = (year, week) => {
 
 
 const Minutas = () => {
-const [sucursal, setSucursal] = useState('Centro'); 
-  const navigate = useNavigate();
-  const currentYear = dayjs().year();
-  const [year, setYear] = useState(currentYear);
-  const [week, setWeek] = useState(dayjs().week());
-  const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));
-  const [platos, setPlatos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [data, setData] = useState({});
-  const handleSucursalChange = (e) => {
-    setSucursal(e.target.value);  // Actualiza el estado con el valor del input
-  };
+    const [sucursal, setSucursal] = useState(''); // Sucursal seleccionada
+    const [sucursales, setSucursales] = useState([]); // Lista de sucursales
+    const navigate = useNavigate();
+    const currentYear = dayjs().year();
+    const [year, setYear] = useState(currentYear);
+    const [week, setWeek] = useState(dayjs().week());
+    const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));
+    const [platos, setPlatos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [data, setData] = useState({});
+    
   useEffect(() => {
+
+
       const fetchPlatos = async () => {
           const token = localStorage.getItem('token')?.trim();
 
@@ -131,6 +132,50 @@ const [sucursal, setSucursal] = useState('Centro');
 
       fetchPlatos();
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchSucursales = async () => {
+      const token = localStorage.getItem('token')?.trim();
+  
+      if (!token) {
+        console.error("Token no encontrado en localStorage. Redirigiendo al login.");
+        setError(new Error("No autorizado. Inicie sesión."));
+        setLoading(false);
+        navigate("/");
+        return;
+      }
+  
+      try {
+        const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSucursales(response.data); // Asigna las sucursales al estado
+        console.log("Sucursales recibidas:", response.data);
+      } catch (error) {
+        console.error("Error al cargar las sucursales:", error);
+        if (error.response && error.response.status === 401) {
+          console.error("Token inválido. Redirigiendo al login.");
+          localStorage.removeItem('token');
+          navigate("/");
+        } else if (error.response) {
+          setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
+        } else if (error.request) {
+          setError(new Error("No se recibió respuesta del servidor."));
+        } else {
+          setError(new Error("Error al configurar la solicitud."));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchSucursales();
+  }, [navigate]);
+
+  const handleSucursalChange = (event) => {
+    setSucursal(event.target.value );
+  };
+
 
   const handleYearChange = (event) => {
     const newYear = parseInt(event.target.value, 10) || currentYear;
@@ -255,13 +300,24 @@ const handleCrearMinuta = async () => {
     />
                     <TextField label="Año" type="number" value={year} onChange={handleYearChange} inputProps={{ min: 1900, max: 2100 }} sx={{ width: 100 }} />
                     <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} inputProps={{ min: 1, max: 52 }} sx={{ width: 150 }} />
-                    <TextField 
-         label="Sucursal" 
-         type="text" 
-         value={sucursal}  // Ahora tiene el valor "Centro" por defecto
-         onChange={handleSucursalChange}  // Actualiza el estado cuando el valor cambie
-         sx={{ width: 200 }}  
-    />
+                    <FormControl sx={{ width: 200 }}>
+      <InputLabel>Sucursal</InputLabel>
+      {loading ? (
+        <CircularProgress size={24} /> // Indicador de carga mientras se obtienen los datos
+      ) : (
+        <Select
+          value={sucursal}
+          onChange={handleSucursalChange}
+          label="Sucursal"
+        >
+          {sucursales.map((s) => (
+            <MenuItem key={s._id} value={s._id}>
+              {s.nombresucursal} {/* Cambia "nombre" por el campo correspondiente */}
+            </MenuItem>
+          ))}
+        </Select>
+      )}
+    </FormControl>
       <Button 
                     variant="contained" 
                     sx={{ marginTop: 2 }} 

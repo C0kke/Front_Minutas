@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete } from '@mui/material';
+import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
@@ -60,6 +60,8 @@ const tipoPlatoPorFila = {
     "POSTRE": "POSTRES",
 };
 
+
+
 const generateWeekDays = (year, week) => {
   // Calcula el primer día del año *en formato ISO*
   const firstDayOfYear = dayjs().year(year).startOf('year').isoWeekday(1); // Importante: isoWeekday(1)
@@ -76,6 +78,7 @@ const generateWeekDays = (year, week) => {
 
 
 const Minutas = () => {
+const [sucursal, setSucursal] = useState('Centro'); 
   const navigate = useNavigate();
   const currentYear = dayjs().year();
   const [year, setYear] = useState(currentYear);
@@ -85,7 +88,9 @@ const Minutas = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState({});
-
+  const handleSucursalChange = (e) => {
+    setSucursal(e.target.value);  // Actualiza el estado con el valor del input
+  };
   useEffect(() => {
       const fetchPlatos = async () => {
           const token = localStorage.getItem('token')?.trim();
@@ -150,6 +155,43 @@ const Minutas = () => {
         },
     }));
   };
+  const generateMinutaData = () => {
+    const platosSeleccionados = [];
+    Object.values(data).forEach(rowData => {
+        Object.values(rowData).forEach(platoId => {
+            if (platoId) {
+                platosSeleccionados.push(platoId);
+            }
+        });
+    });
+
+    return {
+        nombre: `Minuta Semana ${week}`,
+        fecha: dayjs().toISOString(),
+        semana: week,
+        id_sucursal: sucursal, // Puedes mapear esto si necesitas el id real de la sucursal
+        estado: "Activo",
+        listaplatos: platosSeleccionados,
+    };
+};
+
+const handleCrearMinuta = async () => {
+    const minutaData = generateMinutaData();
+    try {
+        const token = localStorage.getItem('token')?.trim();
+        const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            }
+        });
+        console.log('Minuta creada:', response.data);
+        // Puedes hacer algo después de la creación exitosa, como redirigir o mostrar un mensaje
+    } catch (error) {
+        console.error('Error al crear minuta:', error);
+        // Maneja el error, muestra un mensaje al usuario si es necesario
+    }
+};
 
   const opcionesFiltradasPorFila = useMemo(() => {
     const opciones = {};
@@ -204,10 +246,33 @@ const Minutas = () => {
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Typography variant="h6" gutterBottom>Generador de Encabezados de Semana</Typography>
                 <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField 
+        label="Nombre" 
+        type="text" 
+        value={`Minuta Semana ${week}`} 
+        sx={{ width: 160 }} 
+        
+    />
                     <TextField label="Año" type="number" value={year} onChange={handleYearChange} inputProps={{ min: 1900, max: 2100 }} sx={{ width: 100 }} />
                     <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} inputProps={{ min: 1, max: 52 }} sx={{ width: 150 }} />
+                    <TextField 
+         label="Sucursal" 
+         type="text" 
+         value={sucursal}  // Ahora tiene el valor "Centro" por defecto
+         onChange={handleSucursalChange}  // Actualiza el estado cuando el valor cambie
+         sx={{ width: 200 }}  
+    />
+      <Button 
+                    variant="contained" 
+                    sx={{ marginTop: 2 }} 
+                    onClick={handleCrearMinuta}
+                >
+                    Crear Minuta
+                </Button>
                 </Box>
+
             </LocalizationProvider>
+            
 
             <TableContainer component={Paper} sx={{width: '100%'}} className='Minuta'>
                 <Table sx={{ width: '100%', borderCollapse: 'collapse' }} aria-label="simple table">

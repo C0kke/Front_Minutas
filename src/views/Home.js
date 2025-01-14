@@ -25,6 +25,9 @@ const Home = () => {
         <button className="home-button" onClick={() => navigate("/platos")}>
           Ver Platos
         </button>
+        <button className="home-button" onClick={() => navigate("/calculoingrediente")}>
+          Generar Reporte
+        </button>
       </div>
     </div>
   );

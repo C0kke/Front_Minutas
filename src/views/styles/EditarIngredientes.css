@@ -5,6 +5,9 @@
     display: flex; /* Para centrar verticalmente si el contenido es menor que la altura de la pantalla */
     flex-direction: column; /* Para que el header y el contenido se apilen verticalmente */
     align-items: stretch; /* Estira los elementos hijos para que ocupen todo el ancho */
+
+    border-radius: 2px; /* Bordes redondeados */
+   
 }
 
 .MainContainer > .MuiBox-root {
@@ -12,12 +15,19 @@
     display: flex;
     flex-direction: column; /* Asegura que el contenido del Box se apile verticalmente */
     justify-content: space-between;
+    border: 3px solid #000; /* Borde negro grueso */
+    border-radius: 2px; /* Bordes redondeados */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Sombra más notable */
 }
 
 .ingredient-list-container {
-    overflow-y: auto;
+    overflow-y: auto; /* Permite desplazarse verticalmente si hay mucho contenido */
     max-height: 60vh;
     padding: 2rem;
+    border: 2px solid #2e8b57; /* Borde verde grueso */
+    border-radius: 12px; /* Bordes redondeados */
+    background-color: #f9f9f9; /* Fondo neutro */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Sombra más notable */
 }
 
 .image-container {
@@ -26,6 +36,9 @@
     align-items: center;
     background-color: #eee; /* Color de fondo mientras se carga la imagen */
     height: 100%;
+    border: 2px solid #000; /* Borde negro grueso */
+    border-radius: 12px; /* Bordes redondeados */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Sombra más notable */
 }
 
 /* Opcional: Para controlar el tamaño de la imagen dentro del contenedor */
@@ -33,4 +46,6 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain; /* Ajusta la imagen al contenedor sin distorsionarla */
+    border: 2px solid #2e8b57; /* Borde verde grueso */
+    border-radius: 12px; /* Bordes redondeados para las imágenes */
 }

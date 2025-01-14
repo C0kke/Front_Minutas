@@ -13,8 +13,9 @@ import Header from '../components/Header';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+// Formato de fechas y semanas
 dayjs.extend(isLeapYear);
-dayjs.extend(isoWeek); // Extiende el plugin isoWeek
+dayjs.extend(isoWeek);
 dayjs.extend(weekday);
 dayjs.extend(localizedFormat);
 dayjs.locale('es');
@@ -60,13 +61,8 @@ const tipoPlatoPorFila = {
     "POSTRE": "POSTRES",
 };
 
-
-
 const generateWeekDays = (year, week) => {
-  // Calcula el primer día del año *en formato ISO*
-  const firstDayOfYear = dayjs().year(year).startOf('year').isoWeekday(1); // Importante: isoWeekday(1)
-
-  // Calcula el primer día de la semana
+  const firstDayOfYear = dayjs().year(year).startOf('year').isoWeekday(1);
   const firstDayOfWeek = firstDayOfYear.add(week - 1, 'week');
 
   const weekDays = [];
@@ -76,66 +72,65 @@ const generateWeekDays = (year, week) => {
   return weekDays;
 };
 
-
 const Minutas = () => {
-    const [sucursal, setSucursal] = useState(''); // Sucursal seleccionada
-    const [sucursales, setSucursales] = useState([]); // Lista de sucursales
-    const navigate = useNavigate();
-    const currentYear = dayjs().year();
-    const [year, setYear] = useState(currentYear);
-    const [week, setWeek] = useState(dayjs().week());
-    const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));
-    const [platos, setPlatos] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [data, setData] = useState({});
-    
+  const [sucursal, setSucursal] = useState('');
+  const [sucursales, setSucursales] = useState([]);
+  const [platos, setPlatos] = useState([]);
+
+  const currentYear = dayjs().year();
+  const [year, setYear] = useState(currentYear);
+  const [week, setWeek] = useState(dayjs().week());
+  const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState({});
+  const navigate = useNavigate(); 
+
+  const token = localStorage.getItem('token')?.trim();
+  
+  // Obtención de Platos
   useEffect(() => {
+    const fetchPlatos = async () => {
+      if (!token) {
+          console.error("Token no encontrado en localStorage. Redirigiendo al login.");
+          setError(new Error("No autorizado. Inicie sesión."));
+          setLoading(false);
+          navigate("/");
+          return;
+      }
 
+      try {
+          const response = await axios.get('http://localhost:3000/api/v1/plato', {
+              headers: { Authorization: `Bearer ${token}` }
+          });
+          const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
+          setPlatos(platosFiltrados);
+          console.log("Platos recibidos:", platosFiltrados); 
+      } catch (error) {
+        console.error("Error al obtener platos:", error);
+        if (error.response && error.response.status === 401) {
+          console.error("Token inválido. Redirigiendo al login.");
+          localStorage.removeItem('token');
+          navigate("/"); 
+        } else if (error.response) {
+          setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
+        } else if (error.request) {
+          setError(new Error("No se recibió respuesta del servidor."));
+        } else {
+          setError(new Error("Error al configurar la solicitud."));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const fetchPlatos = async () => {
-          const token = localStorage.getItem('token')?.trim();
-
-          if (!token) {
-              console.error("Token no encontrado en localStorage. Redirigiendo al login.");
-              setError(new Error("No autorizado. Inicie sesión."));
-              setLoading(false);
-              navigate("/");
-              return;
-          }
-
-          try {
-              const response = await axios.get('http://localhost:3000/api/v1/plato', {
-                  headers: { Authorization: `Bearer ${token}` }
-              });
-              const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
-              setPlatos(platosFiltrados);
-              console.log("Platos recibidos:", platosFiltrados); 
-
-          } catch (error) {
-              console.error("Error al obtener platos:", error);
-              if (error.response && error.response.status === 401) {
-                  console.error("Token inválido. Redirigiendo al login.");
-                  localStorage.removeItem('token');
-                  navigate("/"); 
-              } else if (error.response) {
-                setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
-              } else if (error.request) {
-                setError(new Error("No se recibió respuesta del servidor."));
-              } else {
-                setError(new Error("Error al configurar la solicitud."));
-              }
-          } finally {
-              setLoading(false);
-          }
-      };
-
-      fetchPlatos();
+    fetchPlatos();
   }, [navigate]);
 
+  // Obtención de Sucursales
   useEffect(() => {
     const fetchSucursales = async () => {
-      const token = localStorage.getItem('token')?.trim();
   
       if (!token) {
         console.error("Token no encontrado en localStorage. Redirigiendo al login.");
@@ -144,12 +139,12 @@ const Minutas = () => {
         navigate("/");
         return;
       }
-  
+    
       try {
         const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setSucursales(response.data); // Asigna las sucursales al estado
+        setSucursales(response.data); 
         console.log("Sucursales recibidas:", response.data);
       } catch (error) {
         console.error("Error al cargar las sucursales:", error);
@@ -176,7 +171,6 @@ const Minutas = () => {
     setSucursal(event.target.value );
   };
 
-
   const handleYearChange = (event) => {
     const newYear = parseInt(event.target.value, 10) || currentYear;
     setYear(newYear);
@@ -192,51 +186,66 @@ const Minutas = () => {
   };
 
   const handleAutocompleteChange = (event, value, row, col) => {
-    setData(prevData => ({
-        ...prevData,
-        [col]: {
-            ...prevData[col],
-            [row]: value ? value._id : null,
-        },
-    }));
+    setData(prevData => {
+        const newData = { ...prevData };
+        if (!newData[col]) { 
+            newData[col] = {};
+        }
+        newData[col][row] = value ? value._id : null;
+        return newData;
+    });
   };
-  const generateMinutaData = () => {
-    const platosSeleccionados = [];
-    Object.values(data).forEach(rowData => {
-        Object.values(rowData).forEach(platoId => {
+
+  const handleCrearMinuta = async () => {
+
+    const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
+
+    console.log(`primer dia: ${firstDayOfWeek}`);
+    for (let i = 1; i < encabezados.length; i++) { 
+      const dia = encabezados[i];
+      const platosSeleccionados = [];
+
+      console.log(`Procesando día: ${dia} (Índice: ${i-1})`); // Log con índice corregido
+      console.log("Data antes de la verificación:", data);
+      console.log(`Data para ${dia} antes de la verificación:`, data ? data[dia] : "Data es null o undefined");
+
+      if (data && data[dia]) {
+        console.log(`Data para ${dia}:`, data[dia]);
+        Object.values(data[dia]).forEach(platoId => {
             if (platoId) {
                 platosSeleccionados.push(platoId);
             }
         });
-    });
 
-    return {
-        nombre: `Minuta Semana ${week}`,
-        fecha: dayjs().toISOString(),
-        semana: week,
-        id_sucursal: sucursal, // Puedes mapear esto si necesitas el id real de la sucursal
-        estado: "Activo",
-        listaplatos: platosSeleccionados,
+        console.log(`Lista de platos para ${dia}: ${platosSeleccionados}`);
+        const fechaDia = firstDayOfWeek.add(i - 1, 'day').toISOString(); // Usar i - 1 para el cálculo de la fecha
+        console.log(`Fecha para ${dia}: ${fechaDia}`);
+
+        const minutaDia = {
+            nombre: `Minuta ${dia} Semana ${week}`,
+            fecha: fechaDia,
+            semana: week,
+            id_sucursal: sucursal,
+            estado: "Activo",
+            listaplatos: platosSeleccionados,
+        };
+
+        console.log(`menu dia: ${minutaDia}`);
+        try {
+          const token = localStorage.getItem('token')?.trim();
+          const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaDia, {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+              }
+          });
+          console.log(`Minuta para ${dia} (${fechaDia}) creada:`, response.data);
+        } catch (error) {
+          console.error(`Error al crear minuta para ${dia} (${fechaDia}):`, error);
+        }
+      }
     };
-};
-
-const handleCrearMinuta = async () => {
-    const minutaData = generateMinutaData();
-    try {
-        const token = localStorage.getItem('token')?.trim();
-        const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            }
-        });
-        console.log('Minuta creada:', response.data);
-        // Puedes hacer algo después de la creación exitosa, como redirigir o mostrar un mensaje
-    } catch (error) {
-        console.error('Error al crear minuta:', error);
-        // Maneja el error, muestra un mensaje al usuario si es necesario
-    }
-};
+  };
 
   const opcionesFiltradasPorFila = useMemo(() => {
     const opciones = {};
@@ -298,9 +307,9 @@ const handleCrearMinuta = async () => {
         sx={{ width: 160 }} 
         
     />
-                    <TextField label="Año" type="number" value={year} onChange={handleYearChange} inputProps={{ min: 1900, max: 2100 }} sx={{ width: 100 }} />
-                    <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} inputProps={{ min: 1, max: 52 }} sx={{ width: 150 }} />
-                    <FormControl sx={{ width: 200 }}>
+      <TextField label="Año" type="number" value={year} onChange={handleYearChange} inputProps={{ min: 1900, max: 2100 }} sx={{ width: 100 }} />
+      <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} inputProps={{ min: 1, max: 52 }} sx={{ width: 150 }} />
+      <FormControl sx={{ width: 200 }}>
       <InputLabel>Sucursal</InputLabel>
       {loading ? (
         <CircularProgress size={24} /> // Indicador de carga mientras se obtienen los datos

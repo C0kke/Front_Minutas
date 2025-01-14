@@ -4,7 +4,8 @@ import "./styles/Platos.css"
 import Header from "../components/Header";
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Box, InputLabel, MenuItem, FormControl, Select, Button } from '@mui/material';
+import { TextField, Box, InputLabel, MenuItem, FormControl, Select, Button, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 Modal.setAppElement('#root');
 
@@ -100,6 +101,11 @@ const Platos = () => {
     };
 
 
+    const handleDescontinuarClick = () => {
+        selectedPlato.descontinuado = !selectedPlato.descontinuado;
+        closeModal();
+    };
+    
     const openModal = async (plato) => {
         setSelectedPlato(plato);
         setModalIsOpen(true);
@@ -143,6 +149,7 @@ const Platos = () => {
         navigate("/editar-ingredientes");
     
     }
+
     if (loading) {
         return <div>Cargando platos...</div>;
     }
@@ -182,7 +189,7 @@ const Platos = () => {
             </Box>
             <div className="ListaPLatos">
                 {displayedDishes.map((plato) => (
-                    <div key={plato._id} onClick={() => openModal(plato)} className='PlatoCard' style={plato.descontinuado? {color : 'red', border: '1px solid red'} : {color : 'inert'}}>
+                    <div key={plato._id} onClick={() => openModal(plato)} className='PlatoCard' style={plato.descontinuado? {color : 'red', border: '1px solid red'} : {color : '#2E8B57'}}>
                         {plato.nombre}
                         <div className='Descontinuado'>{plato.descontinuado ? 'descontinuado' : ''}</div>
                     </div>
@@ -227,6 +234,13 @@ const Platos = () => {
                 className="ReactModal__Content"
                 overlayClassName="ReactModal__Overlay"
             >
+                <IconButton
+                    aria-label="close"
+                    onClick={closeModal}
+                    sx={{ position: 'absolute', right: 8, top: 8 }}
+                >
+                    <CloseIcon />
+                </IconButton>
                 {selectedPlato && (
                     <div>
                         <h2>Ingredientes de {selectedPlato.nombre}</h2>
@@ -245,8 +259,10 @@ const Platos = () => {
                             <p>Este plato no tiene ingredientes registrados.</p>
                         )}
                         <div className='ButtonContainer'>
-                            <Button className='ModalButton' onClick={closeModal} variant="outlined">Cerrar</Button>
-                            <Button className='ModalButton' onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
+                        <Button variant="contained" color={selectedPlato.descontinuado ? "success" : "error"} onClick={handleDescontinuarClick}>
+                            {selectedPlato.descontinuado ? 'Continuar' : 'Descontinuar'}
+                        </Button>                            
+                    <Button className='ModalButton' onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
                         </div>
                     </div>
                 )}

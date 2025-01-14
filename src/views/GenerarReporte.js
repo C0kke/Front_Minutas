@@ -48,14 +48,16 @@ const GenerarReporte = () => {
     if (fechaInicio && fechaFin && sucursal) {
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:3000/api/v1/menudiario', {
+        const response = await axios.get('http://localhost:3000/api/v1/menudiario/generar-reporte/platos-entre-fechas',  {
+          params: {
+            fechaInicio: fechaInicio,
+            fechaFin: fechaFin,
+          },
           headers: {
               Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
           }
         });
-        const data = await response.json();
-        setPlatos(data.platos); // Asume que la respuesta contiene un array de platos
+        setPlatos(response.data); // Asume que la respuesta contiene un array de platos
       } catch (error) {
         console.error("Error al obtener platos:", error);
       } finally {

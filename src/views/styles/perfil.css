@@ -24,7 +24,7 @@ body {
   
   /* Profile Image */
   .profile-image {
-    border-radius: 50%;
+    border-radius: 25%;
     width: 120px;
     height: 120px;
     margin-bottom: 20px;
@@ -40,7 +40,7 @@ body {
   
   .profile-email {
     margin: 5px 0;
-    font-size: 1rem;
+    font-size: 1.2rem;
     color: #666;
   }
   
@@ -52,7 +52,7 @@ body {
     background-color: #4caf50;
     color: white;
     border-radius: 5px;
-    font-size: 0.9rem;
+    font-size: 1.2rem;
   }
   
   /* About Me Section */

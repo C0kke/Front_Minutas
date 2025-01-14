@@ -51,17 +51,18 @@ const UserProfile = () => {
       <Header/>
       <div className="profile-container">
       <img
-        src={user.profilePicture || "https://via.placeholder.com/150"}
+        src={
+          user.profilePicture || 
+          user.role === "admin" ? 
+          "/logo_admin.png" :
+          "/logo_user.png"
+        }
         alt="Perfil"
         className="profile-image"
       />
       <h2 className="profile-name">{user.name}</h2>
       <p className="profile-email">{user.email}</p>
       <p className="profile-role">{user.role}</p>
-      <div className="profile-about">
-        <h3>Acerca de mí</h3>
-        <p>{user.bio || "Sin descripción"}</p>
-      </div>
       <div className="profile-buttons">
         <button
           className="profile-button logout"

@@ -8,8 +8,12 @@ import {
   CircularProgress,
   TextField,
   Button,
+  Box,
+  Typography,
 } from "@mui/material";
 import './styles/GenerarReporte.css'; // Asegúrate de tener los estilos
+import axios from "axios";
+import Header from '../components/Header'
 
 const GenerarReporte = () => {
   const [fechaInicio, setFechaInicio] = useState("");
@@ -20,16 +24,16 @@ const GenerarReporte = () => {
   const [platos, setPlatos] = useState([]);
   const [platosConCantidad, setPlatosConCantidad] = useState([{ platoId: "", cantidad: 0 }]);
   const navigate = useNavigate();
+  const token = localStorage.getItem('token')?.trim();
 
-  // Cargar las sucursales desde la API o servicio
   useEffect(() => {
     const fetchSucursales = async () => {
       setLoading(true);
       try {
-        // Asegúrate de tener el endpoint correcto para obtener las sucursales
-        const response = await fetch("/api/sucursales"); // Cambia la URL por la correcta
-        const data = await response.json();
-        setSucursales(data); // Asumiendo que la respuesta tiene un array de sucursales
+        const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
+          headers: { Authorization: `Bearer ${token}` }
+        });          
+        setSucursales(response.data);
       } catch (error) {
         console.error("Error al obtener sucursales:", error);
       } finally {
@@ -40,14 +44,16 @@ const GenerarReporte = () => {
     fetchSucursales();
   }, []);
 
-  // Cargar los platos o menús según las fechas seleccionadas
   const handleFechaChange = async () => {
     if (fechaInicio && fechaFin && sucursal) {
       setLoading(true);
       try {
-        const response = await fetch(
-          `/api/menudiario?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}&sucursalId=${sucursal}`
-        ); // Cambia la URL por la correcta
+        const response = await axios.get('http://localhost:3000/api/v1/menudiario', {
+          headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+          }
+        });
         const data = await response.json();
         setPlatos(data.platos); // Asume que la respuesta contiene un array de platos
       } catch (error) {
@@ -77,101 +83,109 @@ const GenerarReporte = () => {
     };
 
     console.log("Datos para generar reporte:", reportData);
-    navigate("/reportes-generados"); // Cambia esta URL si es necesario
+    navigate("/reportes-generados");
+  };
+
+  const handleSucursalChange = (event) => {
+    setSucursal(event.target.value );
   };
 
   return (
-    <div className="reporte-container">
-      <h1>Generar Reporte</h1>
-      <form onSubmit={(e) => e.preventDefault()}>
-        <div className="form-group">
-          <TextField
-            label="Fecha de Inicio"
-            type="date"
-            value={fechaInicio}
-            onChange={(e) => setFechaInicio(e.target.value)}
-            fullWidth
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-        </div>
+    <Box>
+      <Header />
+        <div className="report-container">
+            <Box className="report-content">
+                <Typography variant="h4" gutterBottom>Generar Reporte</Typography>
+                <form onSubmit={(e) => e.preventDefault()}>
+                    <div className="form-group">
+                        <TextField
+                            label="Fecha de Inicio"
+                            type="date"
+                            value={fechaInicio}
+                            onChange={(e) => setFechaInicio(e.target.value)}
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </div>
 
-        <div className="form-group">
-          <TextField
-            label="Fecha de Fin"
-            type="date"
-            value={fechaFin}
-            onChange={(e) => setFechaFin(e.target.value)}
-            fullWidth
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-        </div>
+                    <div className="form-group">
+                        <TextField
+                            label="Fecha de Fin"
+                            type="date"
+                            value={fechaFin}
+                            onChange={(e) => setFechaFin(e.target.value)}
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </div>
 
-        <div className="form-group">
-          <FormControl sx={{ width: 200 }}>
-            <InputLabel>Sucursal</InputLabel>
-            {loading ? (
-              <CircularProgress size={24} />
-            ) : (
-              <Select
-                value={sucursal}
-                onChange={(e) => setSucursal(e.target.value)}
-                label="Sucursal"
-              >
-                {sucursales.map((s) => (
-                  <MenuItem key={s._id} value={s._id}>
-                    {s.nombresucursal}
-                  </MenuItem>
-                ))}
-              </Select>
-            )}
-          </FormControl>
-        </div>
+                    <div className="form-group">
+                        <FormControl sx={{ width: '100%' }}> {/* Ancho al 100% */}
+                            <InputLabel>Sucursal</InputLabel>
+                            {loading ? (
+                                <CircularProgress size={24} />
+                            ) : (
+                                <Select
+                                    value={sucursal}
+                                    onChange={handleSucursalChange}
+                                    label="Sucursal"
+                                >
+                                    {sucursales.map((s) => (
+                                        <MenuItem key={s._id} value={s._id}>
+                                            {s.nombresucursal}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            )}
+                        </FormControl>
+                    </div>
 
-        <div className="form-group">
-          <Button variant="contained" onClick={handleFechaChange}>
-            Cargar Platos
-          </Button>
-        </div>
+                    <div className="form-group">
+                        <Button variant="contained" onClick={handleFechaChange}>
+                            Cargar Platos
+                        </Button>
+                    </div>
 
-        {loading ? (
-          <CircularProgress size={24} />
-        ) : (
-          platos.length > 0 && (
-            <div className="form-group">
-              <h3>Platos para el Reporte</h3>
-              {platos.map((plato, index) => (
-                <div key={index} className="plato-input">
-                  <input
-                    type="text"
-                    value={plato.nombre} // Cambia "nombre" por el campo correspondiente
-                    readOnly
-                  />
-                  <input
-                    type="number"
-                    value={platosConCantidad[index]?.cantidad || 0}
-                    onChange={(e) => handlePlatoChange(index, "cantidad", e.target.value)}
-                    placeholder="Cantidad"
-                  />
-                </div>
-              ))}
-              <Button variant="outlined" onClick={addPlato}>
-                Agregar Plato
-              </Button>
-            </div>
-          )
-        )}
+                    {loading ? (
+                        <CircularProgress size={24} />
+                    ) : (
+                        platos.length > 0 && (
+                            <div className="form-group">
+                                <Typography variant="h6" gutterBottom>Platos para el Reporte</Typography>
+                                {platos.map((plato, index) => (
+                                    <div key={index} className="plato-input">
+                                        <TextField
+                                            value={plato.nombre}
+                                            InputProps={{ readOnly: true }}
+                                            variant="outlined"
+                                            label="Nombre del plato"
+                                            sx={{ flexGrow: 1, marginRight: '1rem' }}
+                                        />
+                                        <TextField
+                                            type="number"
+                                            value={platosConCantidad[index]?.cantidad || 0}
+                                            onChange={(e) => handlePlatoChange(index, "cantidad", e.target.value)}
+                                            label="Cantidad"
+                                            variant="outlined"
+                                        />
+                                    </div>
+                                ))}
+                                <Button variant="outlined" onClick={addPlato}>
+                                    Agregar Plato
+                                </Button>
+                            </div>
+                        )
+                    )}
 
-        <div className="form-group">
-          <Button variant="contained" color="primary" onClick={handleSubmit}>
-            Generar Reporte
-          </Button>
+                    <div className="form-group">
+                        <Button variant="contained" color="primary" onClick={handleSubmit}>
+                            Generar Reporte
+                        </Button>
+                    </div>
+                </form>
+            </Box>
         </div>
-      </form>
-    </div>
+    </Box>
   );
 };
 

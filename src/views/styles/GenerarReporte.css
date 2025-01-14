@@ -1,55 +1,68 @@
-/* Contenedor principal */
+/* GenerarReporte.css */
+
 .report-container {
-  width: 90%;
-  margin: 30px auto;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Título de la página */
-.report-container h1 {
-  font-size: 2rem;
-  color: #333;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-/* Contenedor de filtros y botones */
-.filter-container {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-/* Botones de acción */
-.filter-button {
-  padding: 12px 25px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.filter-button:hover {
-  background-color: #45a049;
-}
-
-/* Filtro de selección */
-.select-container {
-  display: flex;
-  gap: 20px;
+  flex-direction: column;
   align-items: center;
+  min-height: 50vh;
+  background-size: cover;
+  background-position: center;
+  padding: 2rem;
 }
 
-/* Form control de select */
+.report-content { /* Nuevo contenedor para el contenido principal */
+  background-color: white; /* Fondo blanco */
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 80%; /* Ancho del contenido */
+  max-width: 800px; /* Ancho máximo para pantallas grandes */
+}
+
+h1 {
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.form-group > button {
+  margin-left: 1rem;
+}
+
+.MuiTextField-root {
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
 .MuiFormControl-root {
-  width: 200px;
+  margin-bottom: 1rem;
+  width: 100%;
 }
 
-/* Tabla de reportes */
+.plato-input {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.plato-input > input[type="text"] {
+  flex: 1;
+  margin-right: 1rem;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #eee; /* Fondo claro para el campo de solo lectura */
+}
+
+.plato-input > input[type="number"] {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}

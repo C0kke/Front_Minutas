@@ -9,6 +9,8 @@ import MinutaLista from './views/MenuHistorico';
 import IngredienteList from './views/Ingredientes';
 import EditarIngredientes from './views/EditarIngrediente';
 
+import GenerarReporte from './views/GenerarReporte';
+
 function AppRouter() {
   const token = localStorage.getItem('token');
 
@@ -24,6 +26,7 @@ function AppRouter() {
         <Route path="/menuhistorico" element={token ? <MinutaLista /> : <Navigate to="/login" />} />
         <Route path="/listaingredientes" element={token ? <IngredienteList /> : <Navigate to="/login" />} />
         <Route path="/editar-ingredientes" element={<EditarIngredientes/>} />
+        <Route path="/calculoingrediente" element={token ? <GenerarReporte /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

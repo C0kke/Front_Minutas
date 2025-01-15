@@ -5,7 +5,7 @@ import Header from "../components/Header";
 
 const Home = () => {
   const navigate = useNavigate();
-
+  
   return (
     <div>
       <Header/>
@@ -27,6 +27,9 @@ const Home = () => {
           </button>
           <button className="home-button" onClick={() => navigate("/calculoingrediente")}>
             Generar Reporte
+          </button>
+          <button className="home-button" onClick={() => navigate("/aprobarmenu")}>
+            Aprobar Minuta
           </button>
         </div>
       </div>

@@ -1,20 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './styles/Aprobar.css';
+import { Box, Alert, Button } from '@mui/material';
+import Header from '../components/Header';
+import moment from 'moment'; // Ejemplo con moment.js
+import { useNavigate } from 'react-router-dom';
 
 const MenuSemanalAprobacion = () => {
   const [menusPendientes, setMenusPendientes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMenu, setSelectedMenu] = useState(null);
+  const [selectedMenu, setSelectedMenu] = useState(null);  
+  const [selectedSemana, setSelectedSemana] = useState(null);
+  const [error, setError] = useState(null);
+  const [loadingMenu, setLoadingMenu] = useState(false); // Para el indicador de carga del menú
+
+  const token = localStorage.getItem('token')?.trim();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch menús pendientes de aprobación
     const fetchMenusPendientes = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/v1/menudiario/verificar/no-aprobados'); // Asegúrate de que este endpoint exista
+        const response = await axios.get('http://localhost:3000/api/v1/menudiario/verificar/no-aprobados', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
         setMenusPendientes(response.data);
       } catch (error) {
         console.error('Error al cargar los menús pendientes:', error);
+        setError('Hubo un error al cargar los menús.');
       } finally {
         setLoading(false);
       }
@@ -23,58 +37,113 @@ const MenuSemanalAprobacion = () => {
     fetchMenusPendientes();
   }, []);
 
-  const handleMenuClick = (menu) => {
+  const agruparPorSemana = (menus) => {
+    const menusPorSemana = {};
+    menus.forEach(menu => {
+      const semana = moment(menu.fecha).week();
+      const año = moment(menu.fecha).year();
+      const key = `${año}-${semana}`;
+      if (!menusPorSemana[key]) {
+        menusPorSemana[key] = [];
+      }
+      menusPorSemana[key].push(menu);
+    });
+    return Object.entries(menusPorSemana).map(([key, menus]) => {
+      const [año, semana] = key.split('-');
+      return { _id: { año: parseInt(año), semana: parseInt(semana) }, menus };
+    });
+  };
+
+  const handleMenuClick = async (menu) => {
+    setLoadingMenu(true);
     setSelectedMenu(menu);
+    setLoadingMenu(false);
   };
 
   const handleAprobar = async () => {
-    if (selectedMenu) {
+    if (selectedSemana) {
       try {
-        await axios.patch(`/api/menus/${selectedMenu._id}`, { aprobado: true }); // Endpoint para aprobar
-        setMenusPendientes(prevState => prevState.filter(menu => menu._id !== selectedMenu._id));
+        await Promise.all(selectedSemana.menus.map(async (menu) => {
+          await axios.patch(`http://localhost:3000/api/v1/menudiario/Verificar/aprobado/${menu._id}`, 
+            { aprobado: true },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }));
+
+        setMenusPendientes(prevState => prevState.map(menu => 
+          selectedSemana.menus.some(m => m._id === menu._id) ? { ...menu, aprobado: true } : menu
+        ));
+        alert(`Minuta de la semana ${selectedSemana._id.semana} aprobado exitosamente`)
         setSelectedMenu(null);
+        setSelectedSemana(null);
+        setError(null);
+        navigate('/home');
       } catch (error) {
         console.error('Error al aprobar el menú:', error);
+        setError('Hubo un error al aprobar el menú.');
       }
     }
+  };
+
+  const handleSemanaClick = (semana) => {
+    if(!selectedSemana) {
+      setSelectedSemana(semana);
+      return;
+    }
+    setSelectedSemana(null);
   };
 
   if (loading) {
     return <div>Cargando menús...</div>;
   }
 
-  return (
-    <div>
-      <h1>Menús Pendientes de Aprobación</h1>
-      {menusPendientes.length === 0 ? (
-        <p>No hay menús pendientes de aprobación.</p>
-      ) : (
-        <div>
-          <ul>
-            {menusPendientes.map(menu => (
-              <li key={menu._id}>
-                <span>{new Date(menu.fecha).toLocaleDateString()} - {menu.aprobado ? 'Aprobado' : 'Pendiente'}</span>
-                {!menu.aprobado && (
-                  <button onClick={() => handleMenuClick(menu)}>Ver Menú</button>
-                )}
-              </li>
-            ))}
-          </ul>
+  const menusAgrupados = agruparPorSemana(menusPendientes);
 
-          {selectedMenu && (
-            <div>
-              <h2>Menú Diario: {new Date(selectedMenu.fecha).toLocaleDateString()}</h2>
-              <ul>
-                {selectedMenu.listaplatos.map((plato, index) => (
-                  <li key={index}>{plato}</li> // Aquí puedes agregar más detalles sobre el plato si los tienes
-                ))}
-              </ul>
-              <button onClick={handleAprobar}>Aprobar Menú</button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+  return (
+    <Box>
+      <Header />
+      <div className='menu-pendiente'>
+        <h1>Menús Pendientes de Aprobación</h1>
+
+        {error && <Alert severity="error">{error}</Alert>}
+
+        {menusPendientes.length === 0 ? (
+          <p>No hay menús pendientes de aprobación.</p>
+        ) : (
+          <div>
+            <ul>
+              {menusAgrupados.map(semana => (
+                <li key={`${semana._id.año}-${semana._id.semana}`}>
+                  <Button 
+                    onClick={() => handleSemanaClick(semana)} 
+                    className='semanaContainer'
+                    sx={{
+                      width: '15rem',
+                      height: '3rem',
+                      color: 'white',
+                      backgroundColor: '#2e8b57',
+                      borderRadius: '25px'
+                    }}  
+                  >
+                    Semana {semana._id.semana} - {semana._id.año}
+                  </Button>
+                  {selectedSemana && selectedSemana._id.semana === semana._id.semana && (
+                    <ul>
+                      {semana.menus.map(menu => (
+                        <li key={menu._id}>
+                          <span>{moment(menu.fecha).format('DD/MM/YYYY')} - {menu.aprobado ? 'Aprobado' : 'Pendiente'}</span>
+                        </li>
+                      ))}
+                      <button onClick={() => handleAprobar(selectedSemana._id.semana)}>Aprobar Menú</button> 
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </Box>
   );
 };
 

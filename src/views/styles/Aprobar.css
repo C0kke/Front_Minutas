@@ -1,35 +1,11 @@
-* Colores Base */
-:root {
-  --color-primary: #007BFF; /* Color primario (azul claro) */
-  --color-secondary: #28A745; /* Color secundario (verde) */
-  --color-tertiary: #FFC107; /* Color terciario (amarillo) */
-  --color-background: #F4F7FC; /* Fondo claro */
-  --color-header: #343A40; /* Color de encabezado (gris oscuro) */
-  --color-text: #212529; /* Texto principal (negro suave) */
-  --color-text-muted: #6C757D; /* Texto secundario (gris claro) */
-  --color-accent: #17A2B8; /* Color de acento (azul oscuro) */
-  --color-danger: #DC3545; /* Color de alerta (rojo) */
-  --color-success: #28A745; /* Color de éxito (verde) */
-}
-
-/* Estilos Globales */
-body {
-  font-family: 'Arial', sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-text);
-  margin: 0;
-  padding: 0;
-}
-
 h1, h2, h3, h4, h5, h6 {
   font-weight: bold;
-  color: var(--color-header);
 }
 
 /* Menú Pendiente de Aprobación */
 .menu-pendiente {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: white;
+  color: green;
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -41,7 +17,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .menu-pendiente button {
-  background-color: var(--color-success);
+  background-color: green;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -55,6 +31,12 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 0.8;
 }
 
+.semanaContainer {
+  width: 2rem;
+  height: 1em;
+  color: white;
+  background-color: #2e8b57; /* Fondo suave */
+}
 /* Vista de Menú Diario */
 .menu-diario {
   background-color: white;

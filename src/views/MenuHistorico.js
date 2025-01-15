@@ -56,11 +56,18 @@ const MinutaLista = () => {
 
   const handleSemanaClick = (semana) => {
     setSelectedSemana(semana);
-    setSelectedMinuta(null); // Reset the minuta when changing weeks
+    setSelectedMinuta(null); // Resetea la minuta seleccionada
   };
-
+  
   const handleMinutaClick = (minuta) => {
-    setSelectedMinuta(minuta); // Set the selected minuta to show dishes
+    if (minuta.listaplatos && minuta.listaplatos.length > 0) {
+      setSelectedMinuta(minuta);
+    } else {
+      setSelectedMinuta({
+        ...minuta,
+        listaplatos: [], // Asegúrate de asignar un array vacío si no hay platos
+      });
+    }
   };
 
   // Filtrar las semanas basadas en la entrada del filtro
@@ -138,22 +145,22 @@ const MinutaLista = () => {
           </div>
         )}
 
-        {selectedMinuta && (
-          <div className="platos-lista">
-            <h4>Platos de la Minuta: {selectedMinuta.nombre}</h4>
-            <ul>
-              {selectedMinuta.listaplatos.length === 0 ? (
-                <p>No hay platos disponibles para este día.</p>
-              ) : (
-                selectedMinuta.listaplatos.map((plato) => (
-                  <li key={plato._id}>
-                    {plato.nombre} - {plato.descripcion}
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-        )}
+{selectedMinuta && (
+  <div className="platos-lista">
+    <h4>Platos de la Minuta: {selectedMinuta?.nombre}</h4>
+    <ul>
+      {selectedMinuta?.listaplatos?.length === 0 ? (
+        <p>No hay platos disponibles para este día.</p>
+      ) : (
+        selectedMinuta?.listaplatos.map((plato, index) => (
+          <li key={`${plato._id}-${index}`}> {/* Usa una clave única */}
+            {plato.nombre} - {plato.descripcion}
+          </li>
+        ))
+      )}
+    </ul>
+  </div>
+)}
       </div>
     </div>
   );

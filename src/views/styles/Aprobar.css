@@ -1,0 +1,129 @@
+* Colores Base */
+:root {
+  --color-primary: #007BFF; /* Color primario (azul claro) */
+  --color-secondary: #28A745; /* Color secundario (verde) */
+  --color-tertiary: #FFC107; /* Color terciario (amarillo) */
+  --color-background: #F4F7FC; /* Fondo claro */
+  --color-header: #343A40; /* Color de encabezado (gris oscuro) */
+  --color-text: #212529; /* Texto principal (negro suave) */
+  --color-text-muted: #6C757D; /* Texto secundario (gris claro) */
+  --color-accent: #17A2B8; /* Color de acento (azul oscuro) */
+  --color-danger: #DC3545; /* Color de alerta (rojo) */
+  --color-success: #28A745; /* Color de éxito (verde) */
+}
+
+/* Estilos Globales */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+  color: var(--color-header);
+}
+
+/* Menú Pendiente de Aprobación */
+.menu-pendiente {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.menu-pendiente h2 {
+  font-size: 24px;
+}
+
+.menu-pendiente button {
+  background-color: var(--color-success);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.menu-pendiente button:hover {
+  background-color: var(--color-success);
+  opacity: 0.8;
+}
+
+/* Vista de Menú Diario */
+.menu-diario {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.menu-diario h3 {
+  color: var(--color-accent);
+  margin-bottom: 15px;
+}
+
+.menu-diario ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.menu-diario ul li {
+  padding: 8px 0;
+  font-size: 16px;
+  color: var(--color-text-muted);
+}
+
+/* Botones y Acciones */
+.button {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: var(--color-accent);
+  opacity: 0.8;
+}
+
+.button-danger {
+  background-color: var(--color-danger);
+}
+
+.button-danger:hover {
+  background-color: var(--color-danger);
+  opacity: 0.8;
+}
+
+/* Layout General */
+.container {
+  width: 80%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  background-color: var(--color-header);
+  color: white;
+  padding: 15px;
+  text-align: center;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Estilos de Carga */
+.loading {
+  text-align: center;
+  font-size: 18px;
+  color: var(--color-text-muted);
+  margin-top: 20px;}

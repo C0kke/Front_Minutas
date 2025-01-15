@@ -9,6 +9,7 @@ import IngredienteList from './views/Ingredientes';
 import EditarIngredientes from './views/EditarIngrediente';
 
 import GenerarReporte from './views/GenerarReporte';
+import MenuSemanalAprobacion from './views/Aprobar';
 
 function AppRouter() {
   const token = localStorage.getItem('token');
@@ -25,6 +26,7 @@ function AppRouter() {
         <Route path="/listaingredientes" element={token ? <IngredienteList /> : <Navigate to="/login" />} />
         <Route path="/editar-ingredientes" element={<EditarIngredientes/>} />
         <Route path="/calculoingrediente" element={token ? <GenerarReporte /> : <Navigate to="/login" />} />
+        <Route path="/aprobarmenu" element={token ? <MenuSemanalAprobacion /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './Login.css';
-import Header from '../components/Header';
 import axios from 'axios';
 
 function Login() {
@@ -40,7 +39,9 @@ function Login() {
 
     return (
         <div>
-            <Header />
+            <header>
+                <img src='/LOGO_GM_EXPRESS.png' className="app-logo" alt="logo" />
+            </header>
             <div className="ActualBody">
                 <div className="Login">
                     <h2>Iniciar Sesión</h2>

@@ -10,6 +10,17 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Sombra */
 }
 
+.app-logo {
+  height: 10em;
+  background-color: #ffffff;
+  width: 80%;
+  margin: 20px auto;
+  display: flex;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
 /* Formulario */
 .Login form {
   display: flex;
@@ -65,4 +76,8 @@
   font-size: 36px;
   margin-bottom: 20px;
   color: #1E3A5F; /* Azul marino */
+}
+
+.Login header {
+  background-color: white;
 }

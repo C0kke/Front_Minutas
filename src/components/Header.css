@@ -1,31 +1,133 @@
-.App-logo {
-    height: 5em;
-    position: relative;
-    top: 0;
-    left: 0;
+/* Header.css */
+.app-header {
+    background-color: #ffffff;
+    min-height: 10vh;
+    width: 800px;
+    max-width: 90%;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; 
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    border-radius: 8px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.profile-container { 
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5rem;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.info-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.logout-button {
+    padding: 0.5rem;
+    font-size: 1rem;
+    color: white;
+    background-color: #dc3545;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #c82333;
 }
 
 body {
-    font-family: 'Montserrat', sans-serif;
-}
-.App-header {
-    background-color: #ffffff;
-    min-height: 10vh;
-    min-width: 500px;
+    font-family: 'Arial, sans-serif';
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
-    width: 60%;
-    margin: 20px auto;
-}
-
-.Top-header {
-    background-color: rgb(42, 42, 102);
-    justify-content: space-around;
-    width: 100%;
-    position: sticky;
-    font-size: 12px;
-    display: flex;
+    align-items: center;
+    min-height: 100vh;
 }
   
+.profile-image {
+    border-radius: 25%;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 20px;
+    object-fit: cover;
+}
+  
+.profile-name {
+    margin: 10px 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+  
+.profile-email {
+    margin: 5px 0;
+    font-size: 1.2rem;
+    color: #666;
+}
+  
+.profile-role {
+    margin: 5px 0;
+    padding: 5px 10px;
+    display: inline-block;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 5px;
+    font-size: 1.2rem;
+}
+
+@media (max-width: 900px) { /* Ajusta este valor según necesites */
+    .app-header {
+        width: 95%; /* O un valor fijo si prefieres */
+        padding: 1rem 1.5rem; /* Reduce el padding si es necesario */
+        flex-direction: column; /* Cambia a columna para apilar elementos */
+        align-items: center; /* Centra los elementos verticalmente */
+        justify-content: center;
+    }
+    .header-content{
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    .profile-container{
+        margin-top: 10px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 600px) { /* Ajusta este valor según necesites */
+    .app-header {
+        width: 98%;
+        padding: 1rem 1rem;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .header-content{
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    .profile-container{
+        margin-top: 10px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+}

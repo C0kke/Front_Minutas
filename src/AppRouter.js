@@ -4,7 +4,6 @@ import Login from './auth/Login';
 import Platos from './views/Platos';
 import Home from './views/Home'
 import Minutas from './views/CrearMinuta';
-import UserProfile from './views/Perfil';
 import MinutaLista from './views/MenuHistorico';
 import IngredienteList from './views/Ingredientes';
 import EditarIngredientes from './views/EditarIngrediente';
@@ -22,7 +21,6 @@ function AppRouter() {
         <Route path="/login" element={<Login/>} />
         <Route path="/platos" element={token ? <Platos /> : <Navigate to="/login" />} />
         <Route path="/crear-minuta" element={token ? <Minutas /> : <Navigate to="/login" />} />
-        <Route path="/perfil" element={token ? <UserProfile /> : <Navigate to="/login" />} />
         <Route path="/menuhistorico" element={token ? <MinutaLista /> : <Navigate to="/login" />} />
         <Route path="/listaingredientes" element={token ? <IngredienteList /> : <Navigate to="/login" />} />
         <Route path="/editar-ingredientes" element={<EditarIngredientes/>} />

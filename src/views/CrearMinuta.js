@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
+
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import isLeapYear from 'dayjs/plugin/isLeapYear';
 import weekday from 'dayjs/plugin/weekday';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
-import isoWeek from 'dayjs/plugin/isoWeek'; // Importa el plugin isoWeek
+import isoWeek from 'dayjs/plugin/isoWeek';
 import 'dayjs/locale/es';
+
 import './styles/CrearMinuta.css';
 import Header from '../components/Header';
 import axios from 'axios';
@@ -92,25 +94,15 @@ const Minutas = () => {
   // Obtención de Platos
   useEffect(() => {
     const fetchPlatos = async () => {
-      if (!token) {
-          console.error("Token no encontrado en localStorage. Redirigiendo al login.");
-          setError(new Error("No autorizado. Inicie sesión."));
-          setLoading(false);
-          navigate("/");
-          return;
-      }
-
       try {
           const response = await axios.get('http://localhost:3000/api/v1/plato', {
               headers: { Authorization: `Bearer ${token}` }
           });
           const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
           setPlatos(platosFiltrados);
-          console.log("Platos recibidos:", platosFiltrados); 
       } catch (error) {
         console.error("Error al obtener platos:", error);
         if (error.response && error.response.status === 401) {
-          console.error("Token inválido. Redirigiendo al login.");
           localStorage.removeItem('token');
           navigate("/"); 
         } else if (error.response) {
@@ -130,26 +122,14 @@ const Minutas = () => {
 
   // Obtención de Sucursales
   useEffect(() => {
-    const fetchSucursales = async () => {
-  
-      if (!token) {
-        console.error("Token no encontrado en localStorage. Redirigiendo al login.");
-        setError(new Error("No autorizado. Inicie sesión."));
-        setLoading(false);
-        navigate("/");
-        return;
-      }
-    
+    const fetchSucursales = async () => {    
       try {
         const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSucursales(response.data); 
-        console.log("Sucursales recibidas:", response.data);
       } catch (error) {
-        console.error("Error al cargar las sucursales:", error);
         if (error.response && error.response.status === 401) {
-          console.error("Token inválido. Redirigiendo al login.");
           localStorage.removeItem('token');
           navigate("/");
         } else if (error.response) {
@@ -205,21 +185,14 @@ const Minutas = () => {
       const dia = encabezados[i];
       const platosSeleccionados = [];
 
-      console.log(`Procesando día: ${dia} (Índice: ${i-1})`); // Log con índice corregido
-      console.log("Data antes de la verificación:", data);
-      console.log(`Data para ${dia} antes de la verificación:`, data ? data[dia] : "Data es null o undefined");
-
       if (data && data[dia]) {
-        console.log(`Data para ${dia}:`, data[dia]);
         Object.values(data[dia]).forEach(platoId => {
             if (platoId) {
                 platosSeleccionados.push(platoId);
             }
         });
 
-        console.log(`Lista de platos para ${dia}: ${platosSeleccionados}`);
-        const fechaDia = firstDayOfWeek.add(i - 1, 'day').toISOString(); // Usar i - 1 para el cálculo de la fecha
-        console.log(`Fecha para ${dia}: ${fechaDia}`);
+        const fechaDia = firstDayOfWeek.add(i - 1, 'day').toISOString();
 
         const minutaDia = {
             nombre: `Minuta ${dia} Semana ${week}`,
@@ -228,9 +201,9 @@ const Minutas = () => {
             id_sucursal: sucursal,
             estado: "Activo",
             listaplatos: platosSeleccionados,
+            aprobado: false,
         };
 
-        console.log(`menu dia: ${minutaDia}`);
         try {
           const token = localStorage.getItem('token')?.trim();
           const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaDia, {
@@ -253,18 +226,36 @@ const Minutas = () => {
         let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
         let opcionesFiltradas = platos.filter(plato => plato.categoria === tipoPlatoFiltrado);
 
-        if (tipoPlatoFiltrado === "PLATO DE FONDO") {
-            opcionesFiltradas = platos.filter(plato => plato.categoria === tipoPlatoFiltrado || plato.categoria === "LEGUMBRES");
-
-            const platosDeFondoSeleccionados = new Set();
-            encabezados.slice(1).forEach(encabezado => {
-                filas.filter(f => tipoPlatoPorFila[f] === "PLATO DE FONDO").forEach(filaInterna =>{
-                    if(data[encabezado] && data[encabezado][filaInterna]){
-                        platosDeFondoSeleccionados.add(data[encabezado][filaInterna])
-                    }
-                })
+        if (fila === "SOPA DEL DÍA") {
+          opcionesFiltradas = [
+              ...opcionesFiltradas,
+              ...platos.filter(plato => plato.categoria === "CREMAS") 
+          ];
+        }
+        
+        if (tipoPlatoFiltrado === "ENSALADA") {
+          opcionesFiltradas = encabezados.slice(1).reduce((accumulator, encabezado) => {
+            const platosSeleccionadosEnEsteDia = new Set();
+            filas.filter(f => tipoPlatoPorFila[f] === tipoPlatoFiltrado).forEach(filaInterna => {
+              if (data[encabezado] && data[encabezado][filaInterna]) {
+                platosSeleccionadosEnEsteDia.add(data[encabezado][filaInterna]);
+              }
             });
-            opcionesFiltradas = opcionesFiltradas.filter(plato => !platosDeFondoSeleccionados.has(plato._id));
+            if(encabezado === encabezados[weekDays.indexOf(dayjs(dayjs().year(year).isoWeek(week).startOf('isoWeek').add(encabezados.indexOf(encabezado)-1, 'day')))+1]){
+              return accumulator.filter(plato => !platosSeleccionadosEnEsteDia.has(plato._id));
+            }
+            return accumulator;
+          }, opcionesFiltradas);
+        } else if (tipoPlatoFiltrado === "PLATO DE FONDO") {
+          const platosDeFondoSeleccionados = new Set();
+          encabezados.slice(1).forEach(encabezado => {
+            filas.filter(f => tipoPlatoPorFila[f] === "PLATO DE FONDO").forEach(filaInterna =>{
+              if(data[encabezado] && data[encabezado][filaInterna]){
+                platosDeFondoSeleccionados.add(data[encabezado][filaInterna])
+              }
+            })
+          });
+          opcionesFiltradas = opcionesFiltradas.filter(plato => !platosDeFondoSeleccionados.has(plato._id));
         }
 
         opciones[fila] = opcionesFiltradas;
@@ -277,21 +268,30 @@ const Minutas = () => {
       return platos.find(p => p._id === platoId) || null;
   };
 
-  const isOptionDisabled = (option, row) => {
-    if (tipoPlatoPorFila[row] !== "PLATO DE FONDO") {
-        return false;
-    }
-
-    const platosDeFondoSeleccionados = new Set();
-    encabezados.slice(1).forEach(encabezado => {
+  const isOptionDisabled = (option, row, col) => {
+    const tipoPlato = tipoPlatoPorFila[row];
+    if (tipoPlato === "ENSALADA") { 
+      const platosSeleccionadosEnEsteDia = new Set();
+      filas.filter(f => tipoPlatoPorFila[f] === "ENSALADA").forEach(filaInterna =>{
+        if(data[col] && data[col][filaInterna]){
+            platosSeleccionadosEnEsteDia.add(data[col][filaInterna])
+        }
+      })
+      return platosSeleccionadosEnEsteDia.has(option._id);
+    } else if (tipoPlato === "PLATO DE FONDO") { 
+      const platosDeFondoSeleccionados = new Set();
+      encabezados.slice(1).forEach(encabezado => {
         filas.filter(f => tipoPlatoPorFila[f] === "PLATO DE FONDO").forEach(filaInterna =>{
-            if(data[encabezado] && data[encabezado][filaInterna]){
-                platosDeFondoSeleccionados.add(data[encabezado][filaInterna])
-            }
+          if(data[encabezado] && data[encabezado][filaInterna]){
+            platosDeFondoSeleccionados.add(data[encabezado][filaInterna])
+          }
         })
-    });
-    return platosDeFondoSeleccionados.has(option._id);
+      });
+      return platosDeFondoSeleccionados.has(option._id);
+    }
+    return false;
   };
+
 
   return (
     <div>
@@ -365,7 +365,7 @@ const Minutas = () => {
                                             value={getValueForAutocomplete(fila, encabezado)}
                                             onChange={(event, newValue) => handleAutocompleteChange(event, newValue, fila, encabezado)}
                                             isOptionEqualToValue={(option, value) => option?._id === value?._id}
-                                            getOptionDisabled={(option) => isOptionDisabled(option, fila)}
+                                            getOptionDisabled={(option) => isOptionDisabled(option, fila, encabezado)}                                            
                                             sx={{ width: 300 }}
                                             renderInput={(params) => <TextField {...params} label={`Seleccionar ${tipoPlatoPorFila[fila]}`} size="small" />}
                                         />

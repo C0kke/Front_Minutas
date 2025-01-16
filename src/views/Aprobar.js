@@ -3,7 +3,8 @@ import axios from 'axios';
 import './styles/Aprobar.css';
 import { Box, Alert, Button } from '@mui/material';
 import Header from '../components/Header';
-import moment from 'moment'; // Ejemplo con moment.js
+import TablaMinutaAprobacion from '../components/TablaMinuta';
+import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 
 const MenuSemanalAprobacion = () => {
@@ -25,6 +26,7 @@ const MenuSemanalAprobacion = () => {
             Authorization: `Bearer ${token}`,
           }
         });
+        console.log(response.data)
         setMenusPendientes(response.data);
       } catch (error) {
         console.error('Error al cargar los menús pendientes:', error);
@@ -128,14 +130,22 @@ const MenuSemanalAprobacion = () => {
                     Semana {semana._id.semana} - {semana._id.año}
                   </Button>
                   {selectedSemana && selectedSemana._id.semana === semana._id.semana && (
-                    <ul>
-                      {semana.menus.map(menu => (
-                        <li key={menu._id}>
-                          <span>{moment(menu.fecha).format('DD/MM/YYYY')} - {menu.aprobado ? 'Aprobado' : 'Pendiente'}</span>
-                        </li>
-                      ))}
-                      <button onClick={() => handleAprobar(selectedSemana._id.semana)}>Aprobar Menú</button> 
-                    </ul>
+                      <>
+                          <TablaMinutaAprobacion semana={selectedSemana} />
+                          <Button 
+                          onClick={() => handleAprobar()}
+                          sx={{
+                              mt: 2,
+                              backgroundColor: '#4CAF50',
+                              color: 'white',
+                              '&:hover': {
+                              backgroundColor: '#45a049',
+                              },
+                          }}
+                          >
+                          Aprobar Menú
+                          </Button>
+                      </>
                   )}
                 </li>
               ))}

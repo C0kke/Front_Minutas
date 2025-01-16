@@ -60,7 +60,6 @@ const GenerarReporte = () => {
       setLoading(true);
       try {
         const sucursalObj = sucursales.find(s => s._id === sucursal);
-        console.log(`Sucursal: ${sucursalObj.nombresucursal} id: ${sucursalObj._id}`);
 
         const response = await axios.get('http://localhost:3000/api/v1/menudiario/reporte/obtener-platos', {
           params: {
@@ -139,8 +138,10 @@ const GenerarReporte = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log('Reporte generado:', response.data);
-      navigate("/reportes-generados");
+      const sucursalObj = sucursales.find(s => s._id === sucursal);
+      console.log(response.data)
+      alert(`Reporte para ${sucursalObj.nombresucursal} generado correctamente en la ruta 'Downloads/archivos'`)
+      navigate("/home");
     } catch (error) {
       console.error("Error al generar el reporte:", error);
     }

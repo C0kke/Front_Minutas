@@ -10,10 +10,19 @@ import {
   Button,
   Box,
   Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  IconButton,
 } from "@mui/material";
-import './styles/GenerarReporte.css'; 
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import './styles/GenerarReporte.css';
 import axios from "axios";
 import Header from '../components/Header'
+import moment from 'moment';
+import 'moment-timezone';
+import CloseIcon from '@mui/icons-material/Close';
+
 
 const GenerarReporte = () => {
   const [fechaInicio, setFechaInicio] = useState("");
@@ -21,8 +30,8 @@ const GenerarReporte = () => {
   const [sucursal, setSucursal] = useState([]);
   const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [platosConCantidad, setPlatosConCantidad] = useState([]);
-  const [ingredientes, setIngredientes] = useState({});
+  const [platosPorFecha, setPlatosPorFecha] = useState({}); // Objeto para agrupar platos por fecha
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(null); // Fecha seleccionada para mostrar platos
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token')?.trim();
@@ -33,7 +42,7 @@ const GenerarReporte = () => {
       try {
         const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
           headers: { Authorization: `Bearer ${token}` }
-        });           
+        });
         setSucursales(response.data);
         console.log(response.data)
       } catch (error) {
@@ -50,10 +59,9 @@ const GenerarReporte = () => {
     if (fechaInicio && fechaFin && sucursal) {
       setLoading(true);
       try {
-        const sucursalObj = sucursales.find(s => s._id === sucursal); 
-  
-        console.log(`Sucursal: ${sucursalObj.nombresucursal} id: ${sucursalObj._id}`); 
-  
+        const sucursalObj = sucursales.find(s => s._id === sucursal);
+        console.log(`Sucursal: ${sucursalObj.nombresucursal} id: ${sucursalObj._id}`);
+
         const response = await axios.get('http://localhost:3000/api/v1/menudiario/reporte/obtener-platos', {
           params: {
             fechaInicio: fechaInicio,
@@ -64,30 +72,48 @@ const GenerarReporte = () => {
             Authorization: `Bearer ${token}`,
           }
         });
-        console.log(response.data[0].platos)
-        setPlatosConCantidad(response.data[0].platos.map(plato => ({ 
-          platoId: plato._id, 
-          nombre: plato.nombre, 
-          cantidad: 0 
-        })));
+
+        // Agrupar platos por fecha
+        const platosAgrupados = {};
+        response.data.forEach(menu => {
+            const fecha = moment(menu.fecha).tz("America/New_York").add(1, 'days').format("DD-MM-YYYY");
+          if (!platosAgrupados[fecha]) {
+            platosAgrupados[fecha] = [];
+          }
+          menu.platos.forEach(plato => {
+            // Verificar si el plato ya existe en la lista de esa fecha
+            const platoExistente = platosAgrupados[fecha].find(p => p.id === plato.id);
+            if (!platoExistente) {
+                platosAgrupados[fecha].push({
+                  id: plato.id,
+                  nombre: plato.nombre,
+                  cantidad: 0 // Puedes inicializar la cantidad si lo necesitas
+                });
+            }
+          });
+        });
+
+        setPlatosPorFecha(platosAgrupados);
+        console.log("Platos agrupados por fecha:", platosAgrupados);
 
       } catch (error) {
         console.error("Error al obtener platos:", error);
-        setPlatosConCantidad([])
+        setPlatosPorFecha({});
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const handlePlatoChange = (index, value) => {
-    const newPlatos = [...platosConCantidad];
-    newPlatos[index].cantidad = value; 
-    setPlatosConCantidad(newPlatos);
-    console.log(platosConCantidad)
-    if (value > 0) {
-      obtenerIngredientes(platosConCantidad[index].platoId); 
-    }
+  const handlePlatoChange = (fecha, platoId, value) => {
+    setPlatosPorFecha(prevPlatos => {
+      const nuevosPlatos = { ...prevPlatos };
+      const platoIndex = nuevosPlatos[fecha].findIndex(p => p.id === platoId);
+      if (platoIndex !== -1) {
+        nuevosPlatos[fecha][platoIndex].cantidad = value;
+      }
+      return nuevosPlatos;
+    });
   };
 
   const handleSubmit = async () => {
@@ -95,17 +121,26 @@ const GenerarReporte = () => {
       fechaInicio,
       fechaFin,
       sucursal,
-      platosConCantidad,
+      platosConCantidad: Object.entries(platosPorFecha).flatMap(([fecha, platos]) =>
+        platos.filter(plato => plato.cantidad > 0)
+          .map(plato => ({
+            fecha,
+            platoId: plato.id,
+            cantidad: plato.cantidad,
+          }))
+      ),
     };
 
+    console.log("Enviando reporte:", reportData);
+
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/reporte/calcular-ingredientes', reportData, {
+      const response = await axios.post('http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes', reportData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log('Reporte generado:', response.data); 
-      navigate("/reportes-generados"); 
+      console.log('Reporte generado:', response.data);
+      navigate("/reportes-generados");
     } catch (error) {
       console.error("Error al generar el reporte:", error);
     }
@@ -116,124 +151,126 @@ const GenerarReporte = () => {
     console.log(event.target.value)
   };
 
-  const obtenerIngredientes = async (platoId) => {
-    try {
-      const response = await axios.get(`http://localhost:3000/api/v1/ingredientexplato/plato/${platoId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setIngredientes(prevIngredientes => ({
-        ...prevIngredientes,
-        [platoId]: response.data // Guardar los ingredientes en el estado
-      }));
-    } catch (error) {
-      console.error("Error al obtener ingredientes:", error);
-    }
-  };
-
   return (
     <Box>
       <Header />
-        <div className="report-container">
-          <Box className="report-content">
-            <Typography variant="h4" gutterBottom>Generar Reporte</Typography>
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="form-group">
-                <TextField
-                  label="Fecha de Inicio"
-                  type="date"
-                  value={fechaInicio}
-                  onChange={(e) => setFechaInicio(e.target.value)}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </div>
+      <div className="report-container">
+        <Box className="report-content">
+          <Typography variant="h4" gutterBottom>Generar Reporte</Typography>
+          <form onSubmit={(e) => e.preventDefault()}>
+            <div className="form-group">
+              <TextField
+                label="Fecha de Inicio"
+                type="date"
+                value={fechaInicio}
+                onChange={(e) => setFechaInicio(e.target.value)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+            </div>
 
-              <div className="form-group">
-                <TextField
-                  label="Fecha de Fin"
-                  type="date"
-                  value={fechaFin}
-                  onChange={(e) => setFechaFin(e.target.value)}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </div>
+            <div className="form-group">
+              <TextField
+                label="Fecha de Fin"
+                type="date"
+                value={fechaFin}
+                onChange={(e) => setFechaFin(e.target.value)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+            </div>
 
-              <div className="form-group">
-                <FormControl sx={{ width: '100%' }}> 
-                  <InputLabel>Sucursal</InputLabel>
-                  {loading ? (
-                    <CircularProgress size={24} />
-                  ) : (
-                      <Select
-                        value={sucursal}
-                        onChange={handleSucursalChange}
-                        label="Sucursal"
-                      >
-                        {sucursales.map((s) => (
-                          <MenuItem key={s._id} value={s._id}>
-                            {s.nombresucursal}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                  )}
-                </FormControl>
-              </div>
-
-              <div className="form-group">
-                <Button variant="contained" onClick={handleFechaChange}>
-                  Cargar Platos
-                </Button>
-              </div>
-
-              {loading ? (
-                <CircularProgress size={24} />
-              ) : (
-                platosConCantidad.length > 0 && (
-                  <div className="form-group">
-                    <Typography variant="h6" gutterBottom>Platos para el Reporte</Typography>
-                    {platosConCantidad.map((plato, index) => (
-                      <div key={index} className="plato-input">
-                        <TextField
-                          value={plato.nombre || ''}
-                          InputProps={{ readOnly: true }}
-                          variant="outlined"
-                          label="Nombre del plato"
-                          sx={{ flexGrow: 1, marginRight: '1rem' }}
-                        />
-                        <TextField
-                          type="number"
-                          value={plato.cantidad || 0}
-                          onChange={(e) => handlePlatoChange(index, e.target.value)}
-                          label="Cantidad"
-                          variant="outlined"
-                        />
-                        {ingredientes[plato.platoId] && (
-                          <div className="ingredientes-list">
-                            <Typography variant="body2">Ingredientes:</Typography>
-                            <ul>
-                              {ingredientes[plato.platoId].map((ingrediente, i) => (
-                                <li key={i}>
-                                  {ingrediente.nombreingrediente} - {ingrediente.cantidad} {ingrediente.unidadmedida}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
+            <div className="form-group">
+              <FormControl sx={{ width: '100%' }}>
+                <InputLabel>Sucursal</InputLabel>
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  <Select
+                    value={sucursal}
+                    onChange={handleSucursalChange}
+                    label="Sucursal"
+                  >
+                    {sucursales.map((s) => (
+                      <MenuItem key={s._id} value={s._id}>
+                        {s.nombresucursal}
+                      </MenuItem>
                     ))}
-                  </div>
-                )
-              )}
+                  </Select>
+                )}
+              </FormControl>
+            </div>
 
-              <div className="form-group">
-                <Button variant="contained" color="primary" onClick={handleSubmit}>
-                  Generar Reporte
-                </Button>
-              </div>
-            </form>
-          </Box>
-        </div>
+            <div className="form-group">
+              <Button variant="contained" onClick={handleFechaChange}>
+                Cargar Platos
+              </Button>
+            </div>
+
+            {loading ? (
+              <CircularProgress size={24} />
+            ) : (
+              Object.keys(platosPorFecha).length > 0 && (
+                <div className="form-group">
+                  <Typography variant="h6" gutterBottom>Platos por Fecha</Typography>
+                  {Object.keys(platosPorFecha).map(fecha => (
+                    <Accordion key={fecha} expanded={fechaSeleccionada === fecha} onChange={() => setFechaSeleccionada(fechaSeleccionada === fecha ? null : fecha)}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography>{fecha}</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        {platosPorFecha[fecha].map((plato) => (
+                          <div key={plato.id} className="plato-input">
+                            <TextField
+                              value={plato.nombre || ''}
+                              InputProps={{ readOnly: true }}
+                              variant="outlined"
+                              label="Nombre del plato"
+                              sx={{ flexGrow: 1, marginRight: '1rem' }}
+                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <TextField
+                                type="number"
+                                value={plato.cantidad || 0}
+                                onChange={(e) => {
+                                  const value = parseInt(e.target.value);
+                                  if (value >= 0) {
+                                    handlePlatoChange(fecha, plato.id, value || 0);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (plato.cantidad === 0 && /^[0-9]$/.test(e.key)) {
+                                    e.target.value = '';
+                                  }
+                                }}
+                                label="Cantidad"
+                                variant="outlined"
+                                sx={{ width: '100px' }}
+                              />
+                              <IconButton
+                                onClick={() => handlePlatoChange(fecha, plato.id, 0)} // Establecer la cantidad a 0
+                                size="small"
+                              >
+                                <CloseIcon />
+                              </IconButton>
+                            </Box>
+                          </div>
+                        ))}
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </div>
+              )
+            )}
+
+            <div className="form-group">
+              <Button variant="contained" color="primary" onClick={handleSubmit}>
+                Generar Reporte
+              </Button>
+            </div>
+          </form>
+        </Box>
+      </div>
     </Box>
   );
 };

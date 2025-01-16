@@ -150,29 +150,33 @@ const Minutas = () => {
 
   // Obtener platos disponibles por fecha
   useEffect(() => {
-    const obtenerPlatosDisponibles = async () => {
-      const days = generateWeekDays(year, week);
-      const newPlatosDisponibles = {};
+  const obtenerPlatosDisponibles = async () => {
+    const days = generateWeekDays(year, week);
+    const newPlatosDisponibles = {};
 
-      for (const day of days) {
-        const fechaFormateada = day.format('YYYY-MM-DD');
-        try {
-          const response = await axios.get(
-            `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          newPlatosDisponibles[day.format('dddd').toUpperCase()] = response.data;
-        } catch (error) {
-          console.error("Error al obtener platos disponibles:", error);
-          // Manejar el error, posiblemente mostrando un mensaje al usuario
-        }
-      }
+    for (const day of days) {
+      const fechaFormateada = day.format('YYYY-MM-DD');
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const nombreDia = day.format('dddd')
+                          .toUpperCase()
+                          .normalize("NFD")
+                          .replace(/[\u0300-\u036f]/g, "");
 
-      setPlatosDisponibles(newPlatosDisponibles);
-    };
+        newPlatosDisponibles[nombreDia] = response.data;
+        newPlatosDisponibles[day.format('dddd').toUpperCase()] = response.data;
+      } catch (error) {
+        console.error("Error al obtener platos disponibles:", error);
+      }
+    }
 
-    obtenerPlatosDisponibles();
-  }, [year, week]);
+    setPlatosDisponibles(newPlatosDisponibles);
+  };
+  obtenerPlatosDisponibles();
+}, [year, week]);
 
   const handleSucursalChange = (event) => {
     setSucursal(event.target.value);
@@ -294,11 +298,11 @@ const Minutas = () => {
               gap: 3,
               height: '5rem',
               alignItems: 'center',
-              p: 2, // Añadimos padding al contenedor
-              mb: 2, // Añadimos margin-bottom para separar de la tabla
-              backgroundColor: '#f5f5f5', // Fondo gris claro
-              border: '1px solid #ddd', // Borde sutil
-              borderRadius: '4px', // Bordes redondeados
+              p: 2, 
+              mb: 2, 
+              backgroundColor: '#f5f5f5',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
             }}
           >
             <TextField label="Nombre" type="text" value={`Minuta Semana ${week}`} sx={{ width: '15rem' }} />
@@ -331,9 +335,9 @@ const Minutas = () => {
               variant="contained"
               sx={{
                 height: '3rem',
-                borderRadius: '4px', // Bordes redondeados consistentes
-                px: 3, // Aumentamos el padding horizontal
-                fontSize: '1rem', // Aumentamos el tamaño de la fuente
+                borderRadius: '4px', 
+                px: 3, 
+                fontSize: '1rem',
               }}
               onClick={handleCrearMinuta}
             >

@@ -27,8 +27,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .menu-pendiente button:hover {
-  background-color: var(--color-success);
-  opacity: 0.8;
+  background-color: #135f34;
 }
 
 .semanaContainer {
@@ -50,10 +49,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 15px;
 }
 
-.menu-diario ul {
-  list-style-type: none;
-  padding: 0;
-}
 
 .menu-diario ul li {
   padding: 8px 0;
@@ -61,7 +56,6 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-muted);
 }
 
-/* Botones y Acciones */
 .button {
   background-color: var(--color-accent);
   color: white;
@@ -74,7 +68,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .button:hover {
-  background-color: var(--color-accent);
+  background-color: #135f34;
   opacity: 0.8;
 }
 

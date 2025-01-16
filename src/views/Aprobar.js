@@ -122,7 +122,7 @@ const MenuSemanalAprobacion = () => {
                       height: '3rem',
                       color: 'white',
                       backgroundColor: '#2e8b57',
-                      borderRadius: '25px'
+                      borderRadius: '25px',
                     }}  
                   >
                     Semana {semana._id.semana} - {semana._id.año}

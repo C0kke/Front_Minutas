@@ -99,7 +99,7 @@ const GenerarReporte = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/reporte/calcular-ingredientes', reportData, {
+      const response = await axios.post('http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes', reportData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

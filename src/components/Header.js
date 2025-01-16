@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import './Header.css';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from 'axios';
 
 const Header = () => {
+    const location = useLocation(); // Obtenemos la ubicación actual usando React Router
   
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-
   const handleError = (error) => {
     console.error(`Error al cargar los datos del usuario: ${error}`);
     alert("Error en la sesión. Redirigiendo al inicio de sesión.");
@@ -40,7 +40,7 @@ const Header = () => {
       handleError(new Error('Usuario no encontrado'));
     }
   }, []);
-
+    
   return (
     <header className="app-header">
       <div className="header-content">

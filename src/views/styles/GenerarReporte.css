@@ -1,69 +1,74 @@
-/* GenerarReporte.css */
-
 .report-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 50vh;
-  background-size: cover;
-  background-position: center;
-  padding: 2rem;
+  padding: 20px;
 }
 
-.report-content { 
-  background-color: white; 
-  padding: 2rem;
+.report-content {
+  background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 80%; 
-  max-width: 800px; 
-}
-
-h1 {
-  margin-bottom: 2rem;
-  font-size: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
 .form-group {
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  width: 100%;
-}
-
-.form-group > button {
-  margin-left: 1rem;
-}
-
-.MuiTextField-root {
-  margin-bottom: 1rem;
-  width: 100%;
-}
-
-.MuiFormControl-root {
-  margin-bottom: 1rem;
-  width: 100%;
+  margin-bottom: 20px;
 }
 
 .plato-input {
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 10px;
 }
 
-.plato-input > input[type="text"] {
-  flex: 1;
-  margin-right: 1rem;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #eee; /* Fondo claro para el campo de solo lectura */
+.plato-input .MuiTextField-root {
+  margin-right: 10px;
 }
 
-.plato-input > input[type="number"] {
-  width: 80px;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.MuiButton-containedPrimary {
+  background-color: #82C91E; /* Verde principal */
+  color: #ffffff; /* Texto blanco */
+}
+
+.MuiButton-containedPrimary:hover {
+  background-color: #6db80e; /* Verde un poco más oscuro al hover */
+}
+
+.MuiButton-outlinedPrimary {
+  color: #82C91E; /* Texto verde */
+  border-color: #82C91E; /* Borde verde */
+}
+
+.MuiButton-outlinedPrimary:hover {
+  background-color: rgba(130, 201, 30, 0.1); /* Fondo verde claro al hover */
+  border-color: #6db80e; /* Borde verde un poco más oscuro al hover */
+}
+
+.MuiTypography-h4 {
+  color: #14375A; /* Azul oscuro para títulos */
+  margin-bottom: 20px;
+}
+
+.MuiTypography-h6 {
+  color: #14375A; /* Azul oscuro para subtítulos */
+  margin-bottom: 10px;
+}
+
+.MuiAccordionSummary-root {
+  background-color: rgba(130, 201, 30, 0.1); /* Fondo verde claro para el acordeón */
+  border: 1px solid #82C91E;
+}
+
+.MuiAccordionSummary-content {
+  margin: 12px 0; /* Ajuste de los márgenes verticales, si es necesario */
+}
+
+.MuiAccordionSummary-content .MuiTypography-root {
+    color: #14375A; /* Azul oscuro para la fecha en el acordeón */
+}
+
+.MuiAccordion-root:before {
+    height: 0; /* Elimina la línea horizontal que aparece arriba del acordeón */
+}
+
+.MuiIconButton-root {
+    color: #14375A;
 }

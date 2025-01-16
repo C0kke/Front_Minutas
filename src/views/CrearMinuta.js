@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -85,6 +86,9 @@ const Minutas = () => {
   const [week, setWeek] = useState(dayjs().week());
   const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));
 
+  const [diasFeriados, setDiasFeriados] = useState([]);
+  const [diaFeriadoSeleccionado, setDiaFeriadoSeleccionado] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState({});
@@ -149,25 +153,33 @@ const Minutas = () => {
   }, [navigate]);
 
   // Obtener platos disponibles por fecha
-  useEffect(() => {
+ useEffect(() => {
   const obtenerPlatosDisponibles = async () => {
     const days = generateWeekDays(year, week);
     const newPlatosDisponibles = {};
 
     for (const day of days) {
       const fechaFormateada = day.format('YYYY-MM-DD');
+
+      // Verificar si el día es feriado
+      if (diasFeriados.includes(fechaFormateada)) {
+        console.log(`El día ${fechaFormateada} es feriado. No se obtendrán platos disponibles.`);
+        newPlatosDisponibles[day.format('dddd').toUpperCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")] = []; // Asignar un array vacío para indicar que no hay platos disponibles
+        continue; // Saltar a la siguiente iteración del bucle
+      }
+      // Si no es un día feriado, proceder con la lógica existente
       try {
         const response = await axios.get(
           `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        const nombreDia = day.format('dddd')
-                          .toUpperCase()
-                          .normalize("NFD")
-                          .replace(/[\u0300-\u036f]/g, "");
-
-        newPlatosDisponibles[nombreDia] = response.data;
-        newPlatosDisponibles[day.format('dddd').toUpperCase()] = response.data;
+        const nombreDia = day.format('dddd').toUpperCase();
+        const nombreDiaNormalizado = nombreDia
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        newPlatosDisponibles[nombreDiaNormalizado] = response.data;
       } catch (error) {
         console.error("Error al obtener platos disponibles:", error);
       }
@@ -175,8 +187,9 @@ const Minutas = () => {
 
     setPlatosDisponibles(newPlatosDisponibles);
   };
+
   obtenerPlatosDisponibles();
-}, [year, week]);
+}, [year, week, diasFeriados]);
 
   const handleSucursalChange = (event) => {
     setSucursal(event.target.value);
@@ -197,15 +210,20 @@ const Minutas = () => {
   };
 
   const handleAutocompleteChange = (event, value, row, col) => {
-    setData(prevData => {
-      const newData = { ...prevData };
-      if (!newData[col]) {
-        newData[col] = {};
-      }
-      newData[col][row] = value ? value._id : null;
-      return newData;
-    });
-  };
+  // Normalizar el nombre de la columna
+  const colNormalizado = col.toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  setData((prevData) => {
+    const newData = { ...prevData };
+    if (!newData[colNormalizado]) {
+      newData[colNormalizado] = {};
+    }
+    newData[colNormalizado][row] = value ? value._id : null;
+    return newData;
+  });
+};
 
   const handleCrearMinuta = async () => {
     const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
@@ -249,35 +267,148 @@ const Minutas = () => {
     }
   };
 
-  const opcionesFiltradasPorFila = useMemo(() => {
-      const opciones = {};
-      filas.forEach(fila => {
-        let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
-        encabezados.slice(1).forEach(encabezado => {
-          if (!opciones[fila]) {
-            opciones[fila] = {};
-          }
-          if (
-            platosDisponibles[encabezado] &&
-            platosDisponibles[encabezado].length > 0
-          ) {
-            let opcionesFiltradas = platosDisponibles[encabezado].filter(
-              plato => plato.categoria === tipoPlatoFiltrado
-            );
-  
-            if (fila === "SOPA DEL DÍA") {
-              opcionesFiltradas = opcionesFiltradas.concat(
-                platosDisponibles[encabezado].filter(plato => plato.categoria === "CREMAS")
-              );
-            }
-            opciones[fila][encabezado] = opcionesFiltradas;
-          } else {
-            opciones[fila][encabezado] = [];
-          }
-        });
-      });
-      return opciones;
-    }, [platosDisponibles, year, week]);
+const handleButtonDisabled = useMemo(() => {
+  // Función auxiliar para verificar si una fila es opcional
+  const esFilaOpcional = (fila) => {
+    return fila === "PROTEINA 3" || fila === "GUARNICION 2" || fila === "ENSALADA 2" || fila === "ENSALADA 3";
+  };
+
+  // Verificar que todos los días tengan la información obligatoria
+  const todosLosDiasCompletos = encabezados.slice(1).every((encabezado) => {
+    const encabezadoNormalizado = encabezado
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    return filas.every((fila) => {
+      // Si la fila es opcional, no es necesario verificarla
+      if (esFilaOpcional(fila)) {
+        return true;
+      }
+
+      // Verificar si la fila tiene un plato seleccionado para el día actual
+      const platoSeleccionado = data[encabezadoNormalizado]?.[fila];
+      return !!platoSeleccionado; // Retorna true si hay un plato seleccionado, false si no
+    });
+  });
+
+  // Devuelve true si no todos los días están completos (para deshabilitar el botón)
+  return !todosLosDiasCompletos;
+}, [data]);
+
+  const opcionesFiltradasPorFila = useMemo(() => {
+  const opciones = {};
+
+  filas.forEach((fila) => {
+    let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
+    encabezados.slice(1).forEach((encabezado) => {
+      const encabezadoNormalizado = encabezado
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      if (!opciones[fila]) {
+        opciones[fila] = {};
+      }
+
+      if (
+        platosDisponibles[encabezadoNormalizado] &&
+        platosDisponibles[encabezadoNormalizado].length > 0
+      ) {
+        let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
+          (plato) => plato.categoria === tipoPlatoFiltrado
+        );
+
+        // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
+        if (tipoPlatoFiltrado === "PLATO DE FONDO") {
+          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+            // Verificar si el plato ya está seleccionado en el mismo día o en otro día de la semana
+            const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+              const otroEncabezadoNormalizado = otroEncabezado
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+
+              // Verificar si ya está seleccionado en el mismo día
+              if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+                return filas.some((otraFila) => {
+                  return (
+                    otraFila !== fila &&
+                    tipoPlatoPorFila[otraFila] === "PLATO DE FONDO" &&
+                    data[encabezadoNormalizado]?.[otraFila] === plato._id
+                  );
+                });
+              }
+
+              //Verificar si está seleccionado en otro día de la semana
+              return (
+                otroEncabezadoNormalizado !== encabezadoNormalizado &&
+                Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+              );
+            });
+
+            return !yaSeleccionado;
+          });
+        }
+
+        // Restricción: No repetir ensaladas en el mismo día
+        if (tipoPlatoFiltrado === "ENSALADA") {
+          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+            // Verificar si la ensalada ya está seleccionada en el día actual para otras ensaladas
+            const yaSeleccionadoEnDia = filas.some((otraFila) => {
+              return (
+                otraFila !== fila &&
+                tipoPlatoPorFila[otraFila] === "ENSALADA" &&
+                data[encabezadoNormalizado]?.[otraFila] === plato._id
+              );
+            });
+            return !yaSeleccionadoEnDia;
+          });
+        }
+
+        // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
+        if (tipoPlatoFiltrado === "GUARNICIÓN") {
+          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+            // Verificar si la guarnición ya está seleccionada en el mismo día o en otro día de la semana
+            const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+              const otroEncabezadoNormalizado = otroEncabezado
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+
+              // Verificar si ya está seleccionada en el mismo día
+              if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+                return filas.some((otraFila) => {
+                  return (
+                    otraFila !== fila &&
+                    tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
+                    data[encabezadoNormalizado]?.[otraFila] === plato._id
+                  );
+                });
+              }
+
+              // Verificar si está seleccionada en otro día de la semana
+              return (
+                otroEncabezadoNormalizado !== encabezadoNormalizado &&
+                Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+              );
+            });
+
+            return !yaSeleccionado;
+          });
+        }
+
+        if (fila === "SOPA DEL DÍA") {
+          opcionesFiltradas = opcionesFiltradas.concat(
+            platosDisponibles[encabezadoNormalizado].filter(
+              (plato) => plato.categoria === "CREMAS"
+            )
+          );
+        }
+        opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
+      } else {
+        opciones[fila][encabezadoNormalizado] = [];
+      }
+    });
+  });
+  return opciones;
+}, [platosDisponibles, year, week, data]);
   
   const getValueForAutocomplete = (row, col) => {
     const dia = col.toUpperCase();
@@ -345,7 +476,6 @@ const Minutas = () => {
             </Button>
           </Box>
         </LocalizationProvider>
-
 
         <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
           <Table sx={{ width: '90%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)' }} aria-label="simple table">

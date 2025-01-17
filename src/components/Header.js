@@ -69,7 +69,7 @@ const Header = () => {
                 className="logout-button"
                 onClick={() => {
                   localStorage.clear();
-                  alert("Cerraste sesión");
+                  localStorage.setItem('logout', 'cerraste sesion')
                   window.location.replace("/login");
                 }}
               >

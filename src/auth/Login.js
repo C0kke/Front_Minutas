@@ -16,12 +16,11 @@ function Login() {
             });
             const { access_token } = resp.data;
             localStorage.setItem('token', access_token);
-            console.log(resp)
             localStorage.setItem('id_user', resp.data.id );
     
             if (access_token) {
+                localStorage.setItem('session', 'exito');
                 window.location.replace('/home');
-                alert("Inicio de sesión exitoso");
             } else {
                 console.log("Usuario no existe")
             }
@@ -42,7 +41,14 @@ function Login() {
         setTimeout(function() {
           alert('Error en la sesión, ingresa nuevamente');
         }, 500); 
-      }
+    }
+
+    if (localStorage.getItem('logout')) {
+        localStorage.removeItem('logout');
+        setTimeout(function() {
+          alert('Has cerrado sesión');
+        }, 500); 
+    }
 
     return (
         <div>

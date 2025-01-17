@@ -10,6 +10,13 @@ const Home = () => {
   const token = localStorage.getItem('token')?.trim();// Cambia según cómo guardes el token
   const userId = localStorage.getItem("id_user");
 
+  if (localStorage.getItem('session')) {
+    localStorage.removeItem('session');
+    setTimeout(function() {
+      alert('Inicio de sesión exitoso');
+    }, 500); 
+  }
+
   // Función para obtener los datos del usuario
   const fetchUser = async () => {// Asegúrate de que el userId esté disponible
     if (!userId) {

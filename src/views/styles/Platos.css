@@ -2,7 +2,7 @@
     display: flex; 
     align-items: center; 
     margin: 16px;
-    background-color: rgba(230, 236, 241, 0.915); /* Fondo suave */
+    background-color: rgb(230, 236, 241); /* Fondo suave */
     width: 50em;
     padding: 10px 10px;
     border-radius: 8px; /* Bordes redondeados */
@@ -18,7 +18,7 @@
     padding: 10px;
     display: flex;
     justify-content: space-between;
-    background-color: rgba(230, 236, 241, 0.915); /* Fondo suave */
+    background-color: rgb(255, 255, 255); /* Fondo suave */
     color: #2E8B57; /* Texto verde */
     border-radius: 5px; /* Bordes redondeados */
     transition: transform 0.3s ease, box-shadow 0.3s ease; /* Animación suave */

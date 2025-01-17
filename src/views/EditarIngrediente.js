@@ -9,17 +9,14 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Divider,
   Grid,
-  InputAdornment,
   List,
-  ListItem,
-  TextField,
   Typography,
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import IngredienteItem from "../components/IngredienteItem.js";
+import AgregarIngrediente from "../components/AgregarIngrediente.js";
 
 const EditarIngredientes = () => {
     const platoId = localStorage.getItem("id_plato");
@@ -96,6 +93,10 @@ const EditarIngredientes = () => {
       },
       []
     );
+
+    const handleIngredienteAgregado = () => {
+        fetchData();
+      };
   
     const handleGuardarCambios = useCallback(async () => {
       setGuardando(true);
@@ -224,6 +225,10 @@ const EditarIngredientes = () => {
               </Card>
             </Grid>
           </Grid>
+            <AgregarIngrediente
+                platoId={platoId}
+                onIngredienteAgregado={handleIngredienteAgregado}
+            />
           <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
             <Button
               variant="contained"

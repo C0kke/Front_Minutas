@@ -1,24 +1,15 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import Header from "../components/Header";
+import React, { useCallback } from "react";
 import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
   Divider,
   Grid,
   InputAdornment,
-  List,
   ListItem,
   TextField,
   Typography,
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import AgregarIngrediente from "../components/AgregarIngrediente.js";
 
 const IngredienteItem = ({ ingredientePlato, index, handleChange }) => {
     const theme = useTheme();

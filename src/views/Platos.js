@@ -27,12 +27,18 @@ const Platos = () => {
     const [selectedCategory, setSelectedCategory] = useState('Todas');
     const [ingredientes, setIngredientes] = useState([]);
     const [modalIsOpen, setModalIsOpen] = useState(false);
+    const [modalCrearIsOpen, setModalCrearIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     const [pageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [nuevoPlato, setNuevoPlato] = useState({
+        nombre: '',
+        categoria: '',
+        descripcion: '',
+    });
     const navigate = useNavigate();
 
     const token = localStorage.getItem('token')?.trim();    
@@ -144,11 +150,34 @@ const Platos = () => {
         setModalIsOpen(false);
     };
 
+    const closeModalCrear = () => {
+        setModalCrearIsOpen(false);
+    };
+
     const actualizarIngredientes = () => {
         localStorage.setItem('id_plato', selectedPlato._id);
         navigate("/editar-ingredientes");
-    
     }
+
+    const handleCrearPlato = async () => {
+        const token = localStorage.getItem('token')?.trim();
+        if (!token) {
+            alert("Sesión inválida. Redirigiendo...");
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://localhost:3000/api/v1/plato', nuevoPlato, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setPlatos([...platos, response.data]);
+            closeModalCrear();
+            setNuevoPlato({ nombre: '', categoria: '', descripcion: '' });
+        } catch (err) {
+            console.error("Error al crear plato:", err);
+            alert("Ocurrió un error al crear el plato.");
+        }
+    };
 
     if (loading) {
         return <div>Cargando platos...</div>;
@@ -187,6 +216,13 @@ const Platos = () => {
                     </Select>
                 </FormControl>
             </Box>
+            <Button
+                onClick={() => setModalCrearIsOpen(true)}
+                variant="contained"
+                sx={{ marginBottom: '16px', backgroundColor: '#2E8B57', color: 'white', '&:hover': { backgroundColor: '#1A5230' } }}
+            >
+                Crear Nuevo Plato
+            </Button>
             <div className="ListaPLatos">
                 {displayedDishes.map((plato) => (
                     <div key={plato._id} onClick={() => openModal(plato)} className='PlatoCard' style={plato.descontinuado? {color : 'red', border: '1px solid red'} : {color : '#2E8B57'}}>
@@ -260,15 +296,80 @@ const Platos = () => {
                         )}
                         <div className='ButtonContainer'>
                         <Button variant="contained" color={selectedPlato.descontinuado ? "success" : "error"} onClick={handleDescontinuarClick}>
-                            {selectedPlato.descontinuado ? 'Continuar' : 'Descontinuar'}
+                            {selectedPlato.descontinuado ? 'Reactivar' : 'Descontinuar'}
                         </Button>                            
                     <Button className='ModalButton' onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
                         </div>
                     </div>
                 )}
             </Modal>
+
+            <Modal
+                isOpen={modalCrearIsOpen}
+                onRequestClose={closeModalCrear}
+                className="ReactModal__Content"
+                overlayClassName="ReactModal__Overlay"
+            >
+                <IconButton
+                    aria-label="close"
+                    onClick={closeModalCrear}
+                    sx={{ position: 'absolute', right: 8, top: 8 }}
+                >
+                    <CloseIcon />
+                </IconButton>
+                <div>
+                    <h2>Crear Nuevo Plato</h2>
+                    <TextField
+                        label="Nombre"
+                        value={nuevoPlato.nombre}
+                        onChange={(e) => setNuevoPlato({ ...nuevoPlato, nombre: e.target.value })}
+                        fullWidth
+                        margin="normal"
+                    />
+                    <FormControl fullWidth margin="normal">
+                        <InputLabel>Categoría</InputLabel>
+                        <Select
+                            value={nuevoPlato.categoria}
+                            onChange={(e) => setNuevoPlato({ ...nuevoPlato, categoria: e.target.value })}
+                        >
+                            {categorias.map((categoria) => (
+                                <MenuItem key={categoria} value={categoria}>
+                                    {categoria}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        label="Descripción"
+                        value={nuevoPlato.descripcion}
+                        onChange={(e) => setNuevoPlato({ ...nuevoPlato, descripcion: e.target.value })}
+                        fullWidth
+                        margin="normal"
+                        multiline
+                        rows={4}
+                    />
+                    <div className="ButtonContainer">
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleCrearPlato}
+                            sx={{ marginRight: '8px' }}
+                        >
+                            Crear
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="secondary"
+                            onClick={closeModalCrear}
+                        >
+                            Cancelar
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };
 
 export default Platos;
+

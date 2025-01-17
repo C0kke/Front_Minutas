@@ -24,7 +24,7 @@ function AppRouter() {
         <Route path="/crear-minuta" element={token ? <Minutas /> : <Navigate to="/login" />} />
         <Route path="/menuhistorico" element={token ? <MinutaLista /> : <Navigate to="/login" />} />
         <Route path="/listaingredientes" element={token ? <IngredienteList /> : <Navigate to="/login" />} />
-        <Route path="/editar-ingredientes" element={<EditarIngredientes/>} />
+        <Route path="/editar-ingredientes" element={token ? <EditarIngredientes/>: <Navigate to="/login" />} />
         <Route path="/calculoingrediente" element={token ? <GenerarReporte /> : <Navigate to="/login" />} />
         <Route path="/aprobarmenu" element={token ? <MenuSemanalAprobacion /> : <Navigate to="/login" />} />
       </Routes>

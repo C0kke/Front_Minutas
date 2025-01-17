@@ -2,25 +2,19 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './styles/menuhistorico.css';
 import Header from '../components/Header';
+import { Navigate } from 'react-router-dom';
 
 const MinutaLista = () => {
   const [minutas, setMinutas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSemana, setSelectedSemana] = useState(null);
-  const [selectedMinuta, setSelectedMinuta] = useState(null); // Estado para la minuta seleccionada
-  const [filter, setFilter] = useState(''); // Estado para el filtro de semanas
-  const [allWeeks, setAllWeeks] = useState([]); // Para almacenar todas las semanas
-
+  const [selectedMinuta, setSelectedMinuta] = useState(null); 
+  const [filter, setFilter] = useState('');
+  const [allWeeks, setAllWeeks] = useState([]);
+  const token = localStorage.getItem('token');
   useEffect(() => {
     const fetchMinutas = async () => {
-      const token = localStorage.getItem('token')?.trim();
-      if (!token) {
-        setError("No autorizado. Inicie sesión.");
-        setLoading(false);
-        return;
-      }
-
       try {
         const response = await axios.get('http://localhost:3000/api/v1/menudiario', {
           headers: { Authorization: `Bearer ${token}` }
@@ -30,11 +24,12 @@ const MinutaLista = () => {
 
         const semanas = Object.keys(groupedMinutas);
 
-        // Almacenar todas las semanas para el filtro
         setAllWeeks(semanas);
       } catch (error) {
         setError("Error al cargar las minutas");
         console.error('Error fetching minutas:', error);
+        localStorage.setItem('error', 'error en la sesion')
+        window.location.replace('/home');
       } finally {
         setLoading(false);
       }
@@ -56,7 +51,7 @@ const MinutaLista = () => {
 
   const handleSemanaClick = (semana) => {
     setSelectedSemana(semana);
-    setSelectedMinuta(null); // Resetea la minuta seleccionada
+    setSelectedMinuta(null); 
   };
   
   const handleMinutaClick = (minuta) => {
@@ -65,12 +60,11 @@ const MinutaLista = () => {
     } else {
       setSelectedMinuta({
         ...minuta,
-        listaplatos: [], // Asegúrate de asignar un array vacío si no hay platos
+        listaplatos: [], 
       });
     }
   };
 
-  // Filtrar las semanas basadas en la entrada del filtro
   const filteredWeeks = allWeeks.filter((semana) =>
     semana.includes(filter)
   );

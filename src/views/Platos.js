@@ -45,12 +45,6 @@ const Platos = () => {
     localStorage.removeItem('id_plato') 
     useEffect(() => {
         const fetchPlatos = async () => {
-            if (!token) {
-                console.error("Token no encontrado en localStorage. Redirigiendo al login.");
-                setError(new Error("No autorizado. Inicie sesión."));
-                setLoading(false);
-                return;
-            }   
             try {
                 const response = await axios.get('http://localhost:3000/api/v1/plato', {
                     headers: { Authorization: `Bearer ${token}` }
@@ -62,7 +56,8 @@ const Platos = () => {
                 if (error.response && error.response.status === 401) {
                     console.error("Token inválido. Redirigiendo al login.");
                     localStorage.removeItem('token');
-                    navigate("/");
+                    localStorage.setItem('error', 'error en la sesion')
+                    navigate("/login");
                 }
             } finally {
                 setLoading(false);
@@ -119,15 +114,6 @@ const Platos = () => {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem('token')?.trim();
-        if (!token) {
-            alert("Sesión inválida. Redirigiendo...");
-            setError(new Error("No autorizado. Inicie sesión."));
-            setLoading(false);
-            navigate("/");
-            return;
-        }
-
         try {
             const response = await axios.get(`http://localhost:3000/api/v1/ingredientexplato/plato/${plato._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -139,7 +125,8 @@ const Platos = () => {
             if (err.response?.status === 401) {
                 alert("Su sesión ha expirado. Redirigiendo...");
                 localStorage.removeItem('token');
-                navigate("/");
+                localStorage.setItem('error', 'error en la sesion');
+                navigate("/login");
             }
         } finally {
             setLoading(false);

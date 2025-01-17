@@ -11,7 +11,7 @@ function Login() {
 
         try{
             const resp = await axios.post(`http://localhost:3000/api/v1/auth/signin`, {
-                username: auth.username,
+                username: auth.username.trim(),
                 password: auth.password
             });
             const { access_token } = resp.data;
@@ -36,6 +36,13 @@ function Login() {
             [e.target.name]: e.target.value
         })
     }
+    
+    if (localStorage.getItem('error')) {
+        localStorage.removeItem('error');
+        setTimeout(function() {
+          alert('Error en la sesión, ingresa nuevamente');
+        }, 500); 
+      }
 
     return (
         <div>

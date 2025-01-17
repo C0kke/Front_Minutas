@@ -108,8 +108,9 @@ const Minutas = () => {
       } catch (error) {
         console.error("Error al obtener platos:", error);
         if (error.response && error.response.status === 401) {
-          localStorage.removeItem('token');
-          navigate("/");
+          localStorage.removeItem('token');
+          localStorage.setItem('error', 'error de sesion');
+          navigate("/login");
         } else if (error.response) {
           setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
         } else if (error.request) {
@@ -122,8 +123,8 @@ const Minutas = () => {
       }
     };
 
-    fetchPlatos();
-  }, [navigate]);
+    fetchPlatos();
+  }, [navigate]);
 
   // Obtención de Sucursales
   useEffect(() => {
@@ -136,7 +137,8 @@ const Minutas = () => {
       } catch (error) {
         if (error.response && error.response.status === 401) {
           localStorage.removeItem('token');
-          navigate("/");
+          localStorage.setItem('error', 'error en la sesion');
+          navigate("/login");
         } else if (error.response) {
           setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
         } else if (error.request) {

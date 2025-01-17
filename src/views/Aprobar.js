@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import './styles/Aprobar.css';
 import { Box, Alert, Button } from '@mui/material';
 import Header from '../components/Header';
+import { generarPDF } from '../components/PdfUtils'; 
 import TablaMinutaAprobacion from '../components/TablaMinuta';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,8 @@ const MenuSemanalAprobacion = () => {
   const [selectedMenu, setSelectedMenu] = useState(null);  
   const [selectedSemana, setSelectedSemana] = useState(null);
   const [error, setError] = useState(null);
-  const [loadingMenu, setLoadingMenu] = useState(false); // Para el indicador de carga del menú
+  const [loadingMenu, setLoadingMenu] = useState(false); 
+  const tableRef = useRef(null);
 
   const token = localStorage.getItem('token')?.trim();
   const navigate = useNavigate();
@@ -76,9 +78,11 @@ const MenuSemanalAprobacion = () => {
           selectedSemana.menus.some(m => m._id === menu._id) ? { ...menu, aprobado: true } : menu
         ));
         alert(`Minuta de la semana ${selectedSemana._id.semana} aprobado exitosamente`)
+        generarPDF(tableRef, selectedSemana._id.semana);
         setSelectedMenu(null);
         setSelectedSemana(null);
         setError(null);
+
         navigate('/home');
       } catch (error) {
         console.error('Error al aprobar el menú:', error);
@@ -131,7 +135,7 @@ const MenuSemanalAprobacion = () => {
                   </Button>
                   {selectedSemana && selectedSemana._id.semana === semana._id.semana && (
                       <>
-                          <TablaMinutaAprobacion semana={selectedSemana} />
+                          <TablaMinutaAprobacion semana={selectedSemana} tableRef={tableRef} />
                           <Button 
                           onClick={() => handleAprobar()}
                           sx={{

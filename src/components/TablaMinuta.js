@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -11,6 +11,7 @@ import {
 import { styled } from "@mui/system";
 import axios from "axios";
 
+// StyledTableCell para personalizar los estilos de las celdas
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   "&.encabezado": {
     backgroundColor: "#2e8b57",
@@ -27,7 +28,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   },
 }));
 
-const TablaMinutaAprobacion = ({ semana }) => {
+const TablaMinutaAprobacion = ({ semana, tableRef }) => {
   const [platosData, setPlatosData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,17 +66,20 @@ const TablaMinutaAprobacion = ({ semana }) => {
         setLoading(false);
       }
     };
+    // Ejecutar obtenerNombresPlatos solo si semana cambia
     obtenerNombresPlatos();
   }, [semana, token]);
 
   useEffect(() => {
+    // Este useEffect se ejecuta cuando platosData cambia
     if (Object.keys(platosData).length > 0) {
       const construirTablaData = () => {
         const data = {};
-        const platosUsadosPorDia = {}; 
+        const platosUsadosPorDia = {}; // Objeto para rastrear platos usados por día
 
         semana.menus.forEach((menu) => {
           const fecha = formatearFecha(new Date(menu.fecha));
+          const diaSemana = obtenerDiaSemana(new Date(menu.fecha)); // Obtener el nombre del día
           data[fecha] = {
             "PROTEINA 1": [],
             "PROTEINA 2": [],
@@ -90,8 +94,9 @@ const TablaMinutaAprobacion = ({ semana }) => {
             "ENSALADA 3": [],
             "SOPA DEL DÍA": [],
             "POSTRE": [],
+            diaSemana: diaSemana, // Guardar el nombre del día
           };
-          platosUsadosPorDia[fecha] = new Set();
+          platosUsadosPorDia[fecha] = new Set(); // Inicializar conjunto de platos usados para la fecha
 
           menu.listaplatos.forEach((platoId) => {
             const plato = platosData[platoId];
@@ -113,6 +118,7 @@ const TablaMinutaAprobacion = ({ semana }) => {
                   (fila === "SOPA DEL DÍA" && plato.categoria === "SOPA") ||
                   (fila === "POSTRE" && plato.categoria === "POSTRES")
                 ) {
+                  // Verificar si el plato ya fue usado en el día
                   if (!platosUsadosPorDia[fecha].has(plato.nombre)) {
                     if (data[fecha][fila].length === 0) {
                       filaParaPlato = fila;
@@ -123,16 +129,29 @@ const TablaMinutaAprobacion = ({ semana }) => {
               }
               if (filaParaPlato) {
                 data[fecha][filaParaPlato].push(plato.nombre);
-                platosUsadosPorDia[fecha].add(plato.nombre);
+                platosUsadosPorDia[fecha].add(plato.nombre); // Marcar plato como usado
               }
             }
           });
         });
         setTablaData(data);
       };
-      construirTablaData();
+      construirTablaData(); // Llamada correcta a la función
     }
   }, [platosData, semana]);
+
+  const obtenerDiaSemana = (fecha) => {
+    const dias = [
+      "Domingo",
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+    ];
+    return dias[fecha.getDay()];
+  };
 
   const formatearFecha = (fecha) => {
     const dia = fecha.getDate().toString().padStart(2, "0");
@@ -141,32 +160,18 @@ const TablaMinutaAprobacion = ({ semana }) => {
     return `${dia}/${mes}/${año}`;
   };
 
-  const diasSemana = [
-    "LUNES",
-    "MARTES",
-    "MIÉRCOLES",
-    "JUEVES",
-    "VIERNES",
-  ];
-
-  const fechasMenus = semana.menus.reduce((acc, menu) => {
-    const fecha = new Date(menu.fecha);
-    const diaSemana = diasSemana[fecha.getDay() - 1];
-    if (diaSemana) {
-      acc[diaSemana] = {
+  const encabezadosFecha = semana.menus
+    .map((menu) => {
+      const fecha = new Date(menu.fecha);
+      const diaSemana = obtenerDiaSemana(fecha);
+      const fechaFormateada = formatearFecha(fecha);
+      return {
         id: menu._id,
-        fecha: formatearFecha(fecha),
+        diaSemana: diaSemana,
+        fecha: fechaFormateada,
       };
-    }
-    return acc;
-  }, {});
-
-  const encabezadosFecha = diasSemana
-    .filter((diaSemana) => fechasMenus[diaSemana])
-    .map((diaSemana) => ({
-      id: fechasMenus[diaSemana].id,
-      fecha: fechasMenus[diaSemana].fecha,
-    }));
+    })
+    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Ordenar por fecha
 
   const filasOrdenadas = [
     "PROTEINA 1",
@@ -193,18 +198,21 @@ const TablaMinutaAprobacion = ({ semana }) => {
   }
 
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} ref={tableRef}>
       <Table sx={{ minWidth: 650 }} aria-label="tabla de aprobación de minuta">
         <TableHead>
           <TableRow>
-            <StyledTableCell className="encabezado">Categoría</StyledTableCell>
+            <StyledTableCell className="encabezado" sx={{ textWrap: "nowrap" }}>
+              SEMANA {semana._id.semana} - {semana._id.año}
+            </StyledTableCell>
             {encabezadosFecha.map((encabezado) => (
               <StyledTableCell
                 key={encabezado.id}
                 align="center"
                 className="encabezado"
               >
-                {encabezado.fecha}
+                <div>{encabezado.diaSemana}</div> {/* Mostrar el día de la semana */}
+                <div>{encabezado.fecha}</div> {/* Mostrar la fecha */}
               </StyledTableCell>
             ))}
           </TableRow>
@@ -212,7 +220,11 @@ const TablaMinutaAprobacion = ({ semana }) => {
         <TableBody>
           {filasOrdenadas.map((fila) => (
             <TableRow key={fila}>
-              <StyledTableCell component="th" scope="row" className="subtitulo">
+              <StyledTableCell
+                component="th"
+                scope="row"
+                className="subtitulo"
+              >
                 {fila}
               </StyledTableCell>
               {encabezadosFecha.map((encabezado) => {

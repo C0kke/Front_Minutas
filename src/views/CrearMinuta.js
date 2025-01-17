@@ -243,6 +243,7 @@ const Minutas = () => {
             }
           });
           alert(`MINUTA PARA SEMANA ${minutaDia.semana} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
+          navigate('/home');
         } catch (error) {
           console.error(`Error al crear minuta para <span class="math-inline">\{dia\} \(</span>{fechaDia}):`, error);
         }

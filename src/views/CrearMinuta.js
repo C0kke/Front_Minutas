@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -24,154 +23,136 @@ dayjs.extend(localizedFormat);
 dayjs.locale('es');
 
 const encabezados = [
-  "",
-  "LUNES",
-  "MARTES",
-  "MIERCOLES",
-  "JUEVES",
-  "VIERNES",
+  "",
+  "LUNES",
+  "MARTES",
+  "MIERCOLES",
+  "JUEVES",
+  "VIERNES",
 ];
 
 const filas = [
-  "PROTEINA 1",
-  "PROTEINA 2",
-  "PROTEINA 3",
-  "VEGETARIANA",
-  "VEGANA",
-  "GUARNICION 1",
-  "GUARNICION 2",
-  "HIPOCALÓRICO",
-  "ENSALADA 1",
-  "ENSALADA 2",
-  "ENSALADA 3",
-  "SOPA DEL DÍA",
-  "POSTRE",
+  "PROTEINA 1",
+  "PROTEINA 2",
+  "PROTEINA 3",
+  "VEGETARIANA",
+  "VEGANA",
+  "GUARNICION 1",
+  "GUARNICION 2",
+  "HIPOCALÓRICO",
+  "ENSALADA 1",
+  "ENSALADA 2",
+  "ENSALADA 3",
+  "SOPA DEL DÍA",
+  "POSTRE",
 ];
 
 const tipoPlatoPorFila = {
-  "PROTEINA 1": "PLATO DE FONDO",
-  "PROTEINA 2": "PLATO DE FONDO",
-  "PROTEINA 3": "PLATO DE FONDO",
-  "VEGETARIANA": "VEGETARIANO",
-  "VEGANA": "VEGANA",
-  "GUARNICION 1": "GUARNICIÓN",
-  "GUARNICION 2": "GUARNICIÓN",
-  "HIPOCALÓRICO": "HIPOCALORICO",
-  "ENSALADA 1": "ENSALADA",
-  "ENSALADA 2": "ENSALADA",
-  "ENSALADA 3": "ENSALADA",
-  "SOPA DEL DÍA": "SOPA",
-  "POSTRE": "POSTRES",
+  "PROTEINA 1": "PLATO DE FONDO",
+  "PROTEINA 2": "PLATO DE FONDO",
+  "PROTEINA 3": "PLATO DE FONDO",
+  "VEGETARIANA": "VEGETARIANO",
+  "VEGANA": "VEGANA",
+  "GUARNICION 1": "GUARNICIÓN",
+  "GUARNICION 2": "GUARNICIÓN",
+  "HIPOCALÓRICO": "HIPOCALORICO",
+  "ENSALADA 1": "ENSALADA",
+  "ENSALADA 2": "ENSALADA",
+  "ENSALADA 3": "ENSALADA",
+  "SOPA DEL DÍA": "SOPA",
+  "POSTRE": "POSTRES",
 };
 
 const generateWeekDays = (year, week) => {
-  const firstDayOfYear = dayjs().year(year).startOf('year').isoWeekday(1);
-  const firstDayOfWeek = firstDayOfYear.add(week - 1, 'week');
+  const firstDayOfYear = dayjs().year(year).startOf('year').isoWeekday(1);
+  const firstDayOfWeek = firstDayOfYear.add(week - 1, 'week');
 
-  const weekDays = [];
-  for (let i = 0; i < 5; i++) {
-    weekDays.push(firstDayOfWeek.add(i, 'day'));
-  }
-  return weekDays;
+  const weekDays = [];
+  for (let i = 0; i < 5; i++) {
+    weekDays.push(firstDayOfWeek.add(i, 'day'));
+  }
+  return weekDays;
 };
 
 const Minutas = () => {
-  const [sucursal, setSucursal] = useState('');
-  const [sucursales, setSucursales] = useState([]);
-  const [platos, setPlatos] = useState([]);
-  const [platosDisponibles, setPlatosDisponibles] = useState({});
+  const [sucursal, setSucursal] = useState('');
+  const [sucursales, setSucursales] = useState([]);
+  const [platos, setPlatos] = useState([]);
+  const [platosDisponibles, setPlatosDisponibles] = useState({}); 
+  const currentYear = dayjs().year();
+  const [year, setYear] = useState(currentYear);
+  const [week, setWeek] = useState(dayjs().week());
+  const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState({});
+  const navigate = useNavigate(); 
+  const token = localStorage.getItem('token')?.trim();  
 
-  const currentYear = dayjs().year();
-  const [year, setYear] = useState(currentYear);
-  const [week, setWeek] = useState(dayjs().week());
-  const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));
-
-  const [diasFeriados, setDiasFeriados] = useState([]);
-  const [diaFeriadoSeleccionado, setDiaFeriadoSeleccionado] = useState(null);
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [data, setData] = useState({});
-  const navigate = useNavigate();
-
-  const token = localStorage.getItem('token')?.trim();
-
-  // Obtención de Platos
-  useEffect(() => {
-    const fetchPlatos = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/v1/plato', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
-        setPlatos(platosFiltrados);
-      } catch (error) {
-        console.error("Error al obtener platos:", error);
-        if (error.response && error.response.status === 401) {
+  // Obtención de Platos
+  useEffect(() => {
+    const fetchPlatos = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/v1/plato', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
+        setPlatos(platosFiltrados);
+      } catch (error) {
+        console.error("Error al obtener platos:", error);
+        if (error.response && error.response.status === 401) {
           localStorage.removeItem('token');
           localStorage.setItem('error', 'error de sesion');
           navigate("/login");
-        } else if (error.response) {
-          setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
-        } else if (error.request) {
-          setError(new Error("No se recibió respuesta del servidor."));
-        } else {
-          setError(new Error("Error al configurar la solicitud."));
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
+        } else if (error.response) {
+          setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
+        } else if (error.request) {
+          setError(new Error("No se recibió respuesta del servidor."));
+        } else {
+          setError(new Error("Error al configurar la solicitud."));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchPlatos();
   }, [navigate]);
 
-  // Obtención de Sucursales
-  useEffect(() => {
-    const fetchSucursales = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setSucursales(response.data);
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem('token');
+  // Obtención de Sucursales
+  useEffect(() => {
+    const fetchSucursales = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSucursales(response.data);
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('token');
           localStorage.setItem('error', 'error en la sesion');
-          navigate("/login");
-        } else if (error.response) {
-          setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
-        } else if (error.request) {
-          setError(new Error("No se recibió respuesta del servidor."));
-        } else {
-          setError(new Error("Error al configurar la solicitud."));
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+        navigate("/login");
+        } else if (error.response) {
+          setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
+        } else if (error.request) {
+          setError(new Error("No se recibió respuesta del servidor."));
+        } else {
+          setError(new Error("Error al configurar la solicitud."));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSucursales();
+  }, [navigate]);
 
-    fetchSucursales();
-  }, [navigate]);
-
-  // Obtener platos disponibles por fecha
- useEffect(() => {
+  // Obtener platos disponibles por fecha
+  useEffect(() => {
   const obtenerPlatosDisponibles = async () => {
     const days = generateWeekDays(year, week);
     const newPlatosDisponibles = {};
 
     for (const day of days) {
       const fechaFormateada = day.format('YYYY-MM-DD');
-
-      // Verificar si el día es feriado
-      if (diasFeriados.includes(fechaFormateada)) {
-        console.log(`El día ${fechaFormateada} es feriado. No se obtendrán platos disponibles.`);
-        newPlatosDisponibles[day.format('dddd').toUpperCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")] = []; // Asignar un array vacío para indicar que no hay platos disponibles
-        continue; // Saltar a la siguiente iteración del bucle
-      }
-      // Si no es un día feriado, proceder con la lógica existente
       try {
         const response = await axios.get(
           `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
@@ -191,27 +172,27 @@ const Minutas = () => {
   };
 
   obtenerPlatosDisponibles();
-}, [year, week, diasFeriados]);
+}, [year, week]);
 
-  const handleSucursalChange = (event) => {
-    setSucursal(event.target.value);
-  };
+  const handleSucursalChange = (event) => {
+    setSucursal(event.target.value);
+  };
 
-  const handleYearChange = (event) => {
-    const newYear = parseInt(event.target.value, 10) || currentYear;
-    setYear(newYear);
-    setWeekDays(generateWeekDays(newYear, week));
-  };
+  const handleYearChange = (event) => {
+    const newYear = parseInt(event.target.value, 10) || currentYear;
+    setYear(newYear);
+    setWeekDays(generateWeekDays(newYear, week));
+  };
 
-  const handleWeekChange = (event) => {
-    const newWeek = parseInt(event.target.value, 10);
-    if (newWeek > 0 && newWeek < 53) {
-      setWeek(newWeek);
-      setWeekDays(generateWeekDays(year, newWeek));
-    }
-  };
+  const handleWeekChange = (event) => {
+    const newWeek = parseInt(event.target.value, 10);
+    if (newWeek > 0 && newWeek < 53) {
+      setWeek(newWeek);
+      setWeekDays(generateWeekDays(year, newWeek));
+    }
+  };
 
-  const handleAutocompleteChange = (event, value, row, col) => {
+  const handleAutocompleteChange = (event, value, row, col) => {
   // Normalizar el nombre de la columna
   const colNormalizado = col.toUpperCase()
     .normalize("NFD")
@@ -227,75 +208,48 @@ const Minutas = () => {
   });
 };
 
-  const handleCrearMinuta = async () => {
-    const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
+  const handleCrearMinuta = async () => {
+    const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
 
-    for (let i = 1; i < encabezados.length; i++) {
-      const dia = encabezados[i];
-      const platosSeleccionados = [];
+    for (let i = 1; i < encabezados.length; i++) {
+      const dia = encabezados[i];
+      const platosSeleccionados = [];
 
-      if (data && data[dia]) {
-        Object.values(data[dia]).forEach(platoId => {
-          if (platoId) {
-            platosSeleccionados.push(platoId);
-          }
-        });
+      if (data && data[dia]) {
+        Object.values(data[dia]).forEach(platoId => {
+          if (platoId) {
+            platosSeleccionados.push(platoId);
+          }
+        });
 
-        const fechaDia = firstDayOfWeek.add(i - 1, 'day').toISOString();
+        const fechaDia = firstDayOfWeek.add(i - 1, 'day').toISOString();
 
-        const minutaDia = {
-          nombre: `Minuta ${dia} Semana ${week}`,
-          fecha: fechaDia,
-          semana: week,
-          id_sucursal: sucursal,
-          estado: "Activo",
-          listaplatos: platosSeleccionados,
-          aprobado: false,
-        };
+        const minutaDia = {
+          nombre: `Minuta ${dia} Semana ${week}`,
+          fecha: fechaDia,
+          semana: week,
+          id_sucursal: sucursal,
+          estado: "Activo",
+          listaplatos: platosSeleccionados,
+          aprobado: false,
+        };
 
-        try {
-          const token = localStorage.getItem('token')?.trim();
-          const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaDia, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
-          });
-          console.log(`Minuta para <span class="math-inline">\{dia\} \(</span>{fechaDia}) creada:`, response.data);
-        } catch (error) {
-          console.error(`Error al crear minuta para <span class="math-inline">\{dia\} \(</span>{fechaDia}):`, error);
-        }
-      }
-    }
-  };
-
-const handleButtonDisabled = useMemo(() => {
-  // Función auxiliar para verificar si una fila es opcional
-  const esFilaOpcional = (fila) => {
-    return fila === "PROTEINA 3" || fila === "GUARNICION 2" || fila === "ENSALADA 2" || fila === "ENSALADA 3";
-  };
-
-  // Verificar que todos los días tengan la información obligatoria
-  const todosLosDiasCompletos = encabezados.slice(1).every((encabezado) => {
-    const encabezadoNormalizado = encabezado
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-    return filas.every((fila) => {
-      // Si la fila es opcional, no es necesario verificarla
-      if (esFilaOpcional(fila)) {
-        return true;
+        try {
+          const token = localStorage.getItem('token')?.trim();
+          const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaDia, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+          alert(`MINUTA PARA SEMANA ${minutaDia.semana} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
+          navigate('/home');
+        } catch (error) {
+          console.error(`Error al crear minuta para <span class="math-inline">\{dia\} \(</span>{fechaDia}):`, error);
+        }
       }
-
-      // Verificar si la fila tiene un plato seleccionado para el día actual
-      const platoSeleccionado = data[encabezadoNormalizado]?.[fila];
-      return !!platoSeleccionado; // Retorna true si hay un plato seleccionado, false si no
-    });
-  });
-
-  // Devuelve true si no todos los días están completos (para deshabilitar el botón)
-  return !todosLosDiasCompletos;
-}, [data]);
+    }
+  };
 
   const opcionesFiltradasPorFila = useMemo(() => {
   const opciones = {};
@@ -403,6 +357,15 @@ const handleButtonDisabled = useMemo(() => {
             )
           );
         }
+
+        if (fila === "VEGANA") {
+          opcionesFiltradas = opcionesFiltradas.concat(
+            platosDisponibles[encabezadoNormalizado].filter(
+              (plato) => plato.categoria === "VEGETARIANO"
+            )
+          );
+        }
+
         opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
       } else {
         opciones[fila][encabezadoNormalizado] = [];
@@ -410,21 +373,21 @@ const handleButtonDisabled = useMemo(() => {
     });
   });
   return opciones;
-}, [platosDisponibles, year, week, data]);
+  }, [platosDisponibles, year, week, data]);
   
-  const getValueForAutocomplete = (row, col) => {
-    const dia = col.toUpperCase();
-    const platoId = data[dia]?.[row];
-    return (
-      opcionesFiltradasPorFila[row]?.[dia]?.find(p => p._id === platoId) || null
-    );
-  };
+  const getValueForAutocomplete = (row, col) => {
+    const dia = col.toUpperCase();
+    const platoId = data[dia]?.[row];
+    return (
+      opcionesFiltradasPorFila[row]?.[dia]?.find(p => p._id === platoId) || null
+    );
+  };
   
-  return (
-    <div>
-      <Header />
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'white', padding: 2, borderRadius: '25px', margin: '0 auto', width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+  return (
+    <div>
+      <Header />
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'white', padding: 2, borderRadius: '25px', margin: '0 auto', width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Box
             sx={{
               display: 'flex',
@@ -554,9 +517,9 @@ const handleButtonDisabled = useMemo(() => {
               </TableBody>
             </Table>
         </TableContainer>
-      </Box>
-    </div>
-  );
+      </Box>
+    </div>
+  );
 }
   
 export default Minutas;

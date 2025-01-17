@@ -158,6 +158,7 @@ const Platos = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPlatos([...platos, response.data]);
+            alert(`PLATO ${nuevoPlato.nombre} CREADO CON ÉXITO`)
             closeModalCrear();
             setNuevoPlato({ nombre: '', categoria: '', descripcion: '' });
         } catch (err) {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -84,7 +83,6 @@ const Minutas = () => {
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
   const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));  
-  const [diasFeriados, setDiasFeriados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState({});
@@ -155,16 +153,6 @@ const Minutas = () => {
 
     for (const day of days) {
       const fechaFormateada = day.format('YYYY-MM-DD');
-
-      // Verificar si el día es feriado
-      if (diasFeriados.includes(fechaFormateada)) {
-        console.log(`El día ${fechaFormateada} es feriado. No se obtendrán platos disponibles.`);
-        newPlatosDisponibles[day.format('dddd').toUpperCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")] = []; // Asignar un array vacío para indicar que no hay platos disponibles
-        continue; // Saltar a la siguiente iteración del bucle
-      }
-      // Si no es un día feriado, proceder con la lógica existente
       try {
         const response = await axios.get(
           `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
@@ -184,7 +172,7 @@ const Minutas = () => {
   };
 
   obtenerPlatosDisponibles();
-}, [year, week, diasFeriados]);
+}, [year, week]);
 
   const handleSucursalChange = (event) => {
     setSucursal(event.target.value);

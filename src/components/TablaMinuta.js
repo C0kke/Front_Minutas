@@ -75,7 +75,6 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
         const data = {};
 
         semana.menus.forEach((menu) => {
-          console.log("  --- Procesando menú para la fecha:", menu.fecha, " ---");
           const fecha = formatearFecha(new Date(menu.fecha));
           const diaSemana = obtenerDiaSemana(new Date(menu.fecha));
 
@@ -96,31 +95,18 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
             diaSemana: diaSemana,
           };
           
-          console.log("  Data[fecha] inicializada:", data[fecha]);
-
           menu.listaplatos.forEach((item) => {
-            console.log("    --- Procesando item:", item, " ---");
             const plato = platosData[item.platoId];
-            console.log("    Plato encontrado:", plato);
             const fila = item.fila;
-            console.log("    Fila:", fila);
 
             if (plato && fila && data[fecha][fila]) {
-              console.log("      Plato y fila válidos. Añadiendo plato a la fila:", fila);
               // Añadir el plato a la fila especificada
               if (!data[fecha][fila].includes(plato.nombre)) {
                 data[fecha][fila].push(plato.nombre);
-                console.log("      Plato añadido:", plato.nombre, "a la fila", fila);
-              } else {
-                console.log("      Plato ya existe en la fila:", plato.nombre, "en la fila", fila);
               }
-            } else {
-              console.log("      Plato, fila o data[fecha][fila] no válidos. No se añade el plato.");
             }
           });
-          console.log("  Data[fecha] después de procesar platos:", data[fecha]);
         });
-        console.log("--- TablaData final:", data);
         setTablaData(data);
       };
       construirTablaData();

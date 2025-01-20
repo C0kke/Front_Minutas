@@ -48,18 +48,18 @@ const filas = [
 ];
 
 const tipoPlatoPorFila = {
-  "PROTEINA 1": "PLATO DE FONDO",
-  "PROTEINA 2": "PLATO DE FONDO",
-  "PROTEINA 3": "PLATO DE FONDO",
+  "PROTEINA_1": "PLATO DE FONDO",
+  "PROTEINA_2": "PLATO DE FONDO",
+  "PROTEINA_3": "PLATO DE FONDO",
   "VEGETARIANA": "VEGETARIANO",
   "VEGANA": "VEGANA",
-  "GUARNICION 1": "GUARNICIÓN",
-  "GUARNICION 2": "GUARNICIÓN",
-  "HIPOCALÓRICO": "HIPOCALORICO",
-  "ENSALADA 1": "ENSALADA",
-  "ENSALADA 2": "ENSALADA",
-  "ENSALADA 3": "ENSALADA",
-  "SOPA DEL DÍA": "SOPA",
+  "GUARNICION_1": "GUARNICIÓN",
+  "GUARNICION_2": "GUARNICIÓN",
+  "HIPOCALORICO": "HIPOCALORICO",
+  "ENSALADA_1": "ENSALADA",
+  "ENSALADA_2": "ENSALADA",
+  "ENSALADA_3": "ENSALADA",
+  "SOPA_DIA": "SOPA",
   "POSTRE": "POSTRES",
 };
 
@@ -213,14 +213,18 @@ const Minutas = () => {
 
     for (let i = 1; i < encabezados.length; i++) {
       const dia = encabezados[i];
-      const platosSeleccionados = [];
+      const listaplatos = [];
 
       if (data && data[dia]) {
-        Object.values(data[dia]).forEach(platoId => {
+        Object.entries(data[dia]).forEach(([fila, platoId]) => { 
           if (platoId) {
-            platosSeleccionados.push(platoId);
+            listaplatos.push({
+              platoId: platoId,
+              fila: fila,
+            });
           }
         });
+      }
 
         const fechaDia = firstDayOfWeek.add(i - 1, 'day').toISOString();
 
@@ -230,11 +234,12 @@ const Minutas = () => {
           semana: week,
           id_sucursal: sucursal,
           estado: "Activo",
-          listaplatos: platosSeleccionados,
+          listaplatos: listaplatos,
           aprobado: false,
         };
 
         try {
+          if (minutaDia.length == 0) {throw new Error("Minuta sin datos");}
           const token = localStorage.getItem('token')?.trim();
           const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaDia, {
             headers: {
@@ -259,7 +264,7 @@ const Minutas = () => {
         }
       }
      }
-    }
+    
     
   };
 
@@ -288,13 +293,11 @@ const Minutas = () => {
         // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
         if (tipoPlatoFiltrado === "PLATO DE FONDO") {
           opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            // Verificar si el plato ya está seleccionado en el mismo día o en otro día de la semana
             const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
               const otroEncabezadoNormalizado = otroEncabezado
                 .normalize("NFD")
                 .replace(/[\u0300-\u036f]/g, "");
 
-              // Verificar si ya está seleccionado en el mismo día
               if (otroEncabezadoNormalizado === encabezadoNormalizado) {
                 return filas.some((otraFila) => {
                   return (
@@ -305,7 +308,6 @@ const Minutas = () => {
                 });
               }
 
-              //Verificar si está seleccionado en otro día de la semana
               return (
                 otroEncabezadoNormalizado !== encabezadoNormalizado &&
                 Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
@@ -319,7 +321,6 @@ const Minutas = () => {
         // Restricción: No repetir ensaladas en el mismo día
         if (tipoPlatoFiltrado === "ENSALADA") {
           opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            // Verificar si la ensalada ya está seleccionada en el día actual para otras ensaladas
             const yaSeleccionadoEnDia = filas.some((otraFila) => {
               return (
                 otraFila !== fila &&
@@ -334,13 +335,11 @@ const Minutas = () => {
         // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
         if (tipoPlatoFiltrado === "GUARNICIÓN") {
           opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            // Verificar si la guarnición ya está seleccionada en el mismo día o en otro día de la semana
             const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
               const otroEncabezadoNormalizado = otroEncabezado
                 .normalize("NFD")
                 .replace(/[\u0300-\u036f]/g, "");
 
-              // Verificar si ya está seleccionada en el mismo día
               if (otroEncabezadoNormalizado === encabezadoNormalizado) {
                 return filas.some((otraFila) => {
                   return (
@@ -351,7 +350,6 @@ const Minutas = () => {
                 });
               }
 
-              // Verificar si está seleccionada en otro día de la semana
               return (
                 otroEncabezadoNormalizado !== encabezadoNormalizado &&
                 Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
@@ -398,9 +396,21 @@ const Minutas = () => {
   return (
     <div>
       <Header />
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'white', padding: 2, borderRadius: '25px', margin: '0 auto', width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        bgcolor: 'white', 
+        padding: 2, 
+        borderRadius: '25px', 
+        margin: '2rem auto',
+        width: 'calc(100% - 4rem)', // Ancho dinámico con margen
+        maxWidth: '2200px', // Ancho máximo
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        overflowX: 'auto',
+      }}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <Box
+        <Box
             sx={{
               display: 'flex',
               gap: 3,
@@ -454,24 +464,23 @@ const Minutas = () => {
           </Box>
         </LocalizationProvider>
 
-        <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-          <Table sx={{ width: '90%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)' }} aria-label="simple table">
+        <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
+          <Table sx={{ width: '150%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">
             <TableHead>
               <TableRow>
-                <TableCell key="empty-cell" sx={{backgroundColor: '#2E8B57'}}></TableCell>
+                <TableCell key="empty-cell" sx={{backgroundColor: '#2E8B57', width: '15%'}}></TableCell>
                 {weekDays.map((day) => (
                   <TableCell
                     key={day.toString()}
                     align="center"
                     sx={{
-                      width: '100%',
+                      width: '17%',
                       backgroundColor: '#2E8B57',
                       color: 'white',
                       textTransform: 'uppercase',
                       fontWeight: 'bold',
                       letterSpacing: '1.5px',
                       padding: '20px 15px',
-                      whiteSpace: 'nowrap',
                     }}
                   >
                     {day.format('dddd DD [de] MMMM')}
@@ -484,27 +493,28 @@ const Minutas = () => {
                 <TableRow 
                   key={fila} 
                   sx={{ 
-                    '&:last-child td, &:last-child th': { border: 0 }, 
-                    width: '200%', 
-                    '&:nth-of-type(even)': { backgroundColor: 'rgba(0, 0, 0, 0.04)'},                
-                  }}>
+                    '&:last-child td, &:last-child th': { border: 0 },                      
+                    '&:nth-of-type(even)': { backgroundColor: 'rgba(0, 0, 0, 0.04)'},
+                  }}
+                >
                   <TableCell 
                     component="th" 
                     scope="row" 
                     align="center" 
                     sx={{ 
-                      width: '100%', 
+                      width: '15%',
+                      minWidth: '150px',
                       p: 1.5, 
                       fontSize: '14px', 
                       fontWeight: 'bold',
                       backgroundColor: '#2E8B57',
                       color: 'white' 
-                      }}
-                    >
+                    }}
+                  >
                       {fila}
                     </TableCell>
                     {encabezados.slice(1).map((encabezado, index) => (
-                      <TableCell key={`${encabezado}-${fila}`} align="center" sx={{width:'100%', p: 1.5, fontSize: '12px' }}>
+                      <TableCell key={`${encabezado}-${fila}`} align="center" sx={{ p: 1.5, fontSize: '12px', wordBreak: 'break-word'}}>
                         <Autocomplete
                           disablePortal
                           id={`${encabezado}-${fila}`}
@@ -516,19 +526,20 @@ const Minutas = () => {
                           sx={{ width: '100%' }}
                           renderInput={(params) => (
                             <TextField
-                            {...params}
-                            label={`Seleccionar ${tipoPlatoPorFila[fila]}`}
-                            size="small"
-                            sx={{ width: '100%' }}
+                              {...params}
+                              label={`Seleccionar ${tipoPlatoPorFila[fila]}`}
+                              size="small"
+                              sx={{ width: '100%' }}
+                              multiline
                             />
-                        )}/>
+                          )}/>
                       </TableCell>
                     ))}
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-        </TableContainer>
+          </TableContainer>
       </Box>
     </div>
   );

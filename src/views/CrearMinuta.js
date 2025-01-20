@@ -245,10 +245,22 @@ const Minutas = () => {
           alert(`MINUTA PARA SEMANA ${minutaDia.semana} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
           navigate('/home');
         } catch (error) {
-          console.error(`Error al crear minuta para <span class="math-inline">\{dia\} \(</span>{fechaDia}):`, error);
+          console.error(`Error al crear minuta para ${dia} (${fechaDia}):`, error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.setItem('error', 'error de sesion');
+          navigate("/login");
+        } else if (error.response) {
+          alert(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`);
+        } else if (error.request) {
+          alert("No se recibió respuesta del servidor.");
+        } else {
+          alert("Error al configurar la solicitud.");
         }
       }
+     }
     }
+    
   };
 
   const opcionesFiltradasPorFila = useMemo(() => {
@@ -473,7 +485,7 @@ const Minutas = () => {
                   key={fila} 
                   sx={{ 
                     '&:last-child td, &:last-child th': { border: 0 }, 
-                    width: '100%', 
+                    width: '200%', 
                     '&:nth-of-type(even)': { backgroundColor: 'rgba(0, 0, 0, 0.04)'},                
                   }}>
                   <TableCell 

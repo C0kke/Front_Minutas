@@ -23,15 +23,15 @@ import moment from 'moment';
 import 'moment-timezone';
 import CloseIcon from '@mui/icons-material/Close';
 
-
 const GenerarReporte = () => {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [sucursal, setSucursal] = useState([]);
   const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [platosPorFecha, setPlatosPorFecha] = useState({}); // Objeto para agrupar platos por fecha
-  const [fechaSeleccionada, setFechaSeleccionada] = useState(null); // Fecha seleccionada para mostrar platos
+  const [platosPorFecha, setPlatosPorFecha] = useState({});
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
+  const [semana, setSemana] = useState("");
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token')?.trim();
@@ -44,7 +44,6 @@ const GenerarReporte = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSucursales(response.data);
-        console.log(response.data)
       } catch (error) {
         console.error("Error al obtener sucursales:", error);
       } finally {
@@ -54,6 +53,18 @@ const GenerarReporte = () => {
 
     fetchSucursales();
   }, []);
+
+  const handleSemanaChange = (e) => {
+    const selectedWeek = e.target.value;
+    setSemana(selectedWeek);
+
+    // Calcular las fechas de la semana (lunes y domingo)
+    const startOfWeek = moment().isoWeek(selectedWeek).startOf('isoWeek'); // Lunes
+    const endOfWeek = moment().isoWeek(selectedWeek).endOf('isoWeek'); // Domingo
+
+    setFechaInicio(startOfWeek.format("YYYY-MM-DD"));
+    setFechaFin(endOfWeek.format("YYYY-MM-DD"));
+  };
 
   const handleFechaChange = async () => {
     if (fechaInicio && fechaFin && sucursal) {
@@ -80,20 +91,18 @@ const GenerarReporte = () => {
             platosAgrupados[fecha] = [];
           }
           menu.platos.forEach(plato => {
-            // Verificar si el plato ya existe en la lista de esa fecha
             const platoExistente = platosAgrupados[fecha].find(p => p.id === plato.id);
             if (!platoExistente) {
                 platosAgrupados[fecha].push({
                   id: plato.id,
                   nombre: plato.nombre,
-                  cantidad: 0 // Puedes inicializar la cantidad si lo necesitas
+                  cantidad: 0
                 });
             }
           });
         });
 
         setPlatosPorFecha(platosAgrupados);
-        console.log("Platos agrupados por fecha:", platosAgrupados);
 
       } catch (error) {
         console.error("Error al obtener platos:", error);
@@ -130,8 +139,6 @@ const GenerarReporte = () => {
       ),
     };
 
-    console.log("Enviando reporte:", reportData);
-
     try {
       const response = await axios.post('http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes', reportData, {
         headers: {
@@ -139,7 +146,6 @@ const GenerarReporte = () => {
         },
       });
       const sucursalObj = sucursales.find(s => s._id === sucursal);
-      console.log(response.data)
       alert(`Reporte para ${sucursalObj.nombresucursal} generado correctamente en la ruta 'Downloads/archivos'`)
       navigate("/home");
     } catch (error) {
@@ -149,7 +155,6 @@ const GenerarReporte = () => {
 
   const handleSucursalChange = (event) => {
     setSucursal(event.target.value);
-    console.log(event.target.value)
   };
 
   return (
@@ -159,6 +164,23 @@ const GenerarReporte = () => {
         <Box className="report-content">
           <Typography variant="h4" gutterBottom>Generar Reporte</Typography>
           <form onSubmit={(e) => e.preventDefault()}>
+            <div className="form-group">
+              <FormControl sx={{ width: '100%' }}>
+                <InputLabel>Semana</InputLabel>
+                <Select
+                  value={semana}
+                  onChange={handleSemanaChange}
+                  label="Semana"
+                >
+                  {Array.from({ length: 52 }, (_, index) => (
+                    <MenuItem key={index + 1} value={index + 1}>
+                      Semana {index + 1}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+
             <div className="form-group">
               <TextField
                 label="Fecha de Inicio"
@@ -239,19 +261,11 @@ const GenerarReporte = () => {
                                     handlePlatoChange(fecha, plato.id, value || 0);
                                   }
                                 }}
-                                onKeyDown={(e) => {
-                                  if (plato.cantidad === 0 && /^[0-9]$/.test(e.key)) {
-                                    e.target.value = '';
-                                  }
-                                }}
                                 label="Cantidad"
                                 variant="outlined"
                                 sx={{ width: '100px' }}
                               />
-                              <IconButton
-                                onClick={() => handlePlatoChange(fecha, plato.id, 0)} // Establecer la cantidad a 0
-                                size="small"
-                              >
+                              <IconButton onClick={() => handlePlatoChange(fecha, plato.id, 0)} size="small">
                                 <CloseIcon />
                               </IconButton>
                             </Box>

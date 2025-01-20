@@ -48,3 +48,72 @@ table.Ingrediente tr:hover {
   flex-direction: column; /* Cambiar la dirección a columna si es necesario */
   align-items: flex-start; /* Alinea los elementos a la izquierda */
 }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semi-transparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Aparece encima del contenido */
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 400px; /* Ancho del modal */
+  max-width: 100%;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  color: #2E8B57; /* Color verde */
+}
+
+.modal-content input {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.save-button,
+.cancel-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.save-button {
+  background-color: #2E8B57; /* Verde */
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #246a43; /* Verde oscuro */
+}
+
+.cancel-button {
+  background-color: #f72525; /* Rosado */
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #9c0505; /* Rosado oscuro */
+}

@@ -45,27 +45,7 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
 
       let ingrediente = ingredienteResponse.data;
 
-      // Si el ingrediente no existe, crearlo
-      if (!ingrediente) {
-        ingredienteResponse = await axios.post(
-          `${API_BASE_URL}/ingrediente`,
-          { nombreIngrediente, unidadmedida: unidadMedida },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        ingrediente = ingredienteResponse.data;
-        setSuccessMessage("Nuevo ingrediente creado correctamente.");
-      } else if (ingrediente.unidadmedida !== unidadMedida) {
-        setError(
-            `El ingrediente ya existe con una unidad de medida diferente: ${ingrediente.unidadmedida}. Por favor, ingrese la unidad de medida correcta o busque otro ingrediente.`
-        );
-        setLoading(false);
-        return;
-      } else {
-        setSuccessMessage("Ingrediente encontrado y añadido correctamente.");
-      }
-
+      
       // Agregar el ingrediente al plato
       await axios.post(
         `${API_BASE_URL}/ingredientexplato`,
@@ -90,7 +70,7 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
       console.error("Error al agregar ingrediente:", error);
       setError(
         error.response?.data?.message ||
-          "Hubo un error al agregar el ingrediente. Por favor, inténtalo de nuevo más tarde."
+          "El ingrediente no existe. Por favor, inténtalo de nuevo más tarde."
       );
     } finally {
       setLoading(false);

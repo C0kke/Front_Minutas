@@ -10,6 +10,12 @@ const IngredienteList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [filter, setFilter] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newIngrediente, setNewIngrediente] = useState({
+    nombreIngrediente: "",
+    unidadmedida: "",
+  });
+
   const token = localStorage.getItem("token")?.trim();
 
   useEffect(() => {
@@ -43,6 +49,26 @@ const IngredienteList = () => {
     setCurrentPage(1);
   };
 
+  const handleCreateIngredient = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/v1/ingrediente",
+        newIngrediente,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert("Ingrediente creado exitosamente");
+      setIngredientes((prev) => [...prev, response.data]);
+      setFilteredIngredientes((prev) => [...prev, response.data]);
+      setShowCreateModal(false);
+      setNewIngrediente({ nombreIngrediente: "", unidadmedida: "" });
+    } catch (error) {
+      console.error("Error al crear el ingrediente:", error);
+      alert("Error al crear el ingrediente");
+    }
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredIngredientes.slice(indexOfFirstItem, indexOfLastItem);
@@ -68,8 +94,60 @@ const IngredienteList = () => {
   return (
     <div>
       <Header />
+        {showCreateModal && (
+  <div
+    className="modal-overlay"
+    onClick={() => setShowCreateModal(false)} // Cerrar al hacer clic fuera del modal
+  >
+    <div
+      className="modal-content"
+      onClick={(e) => e.stopPropagation()} // Evitar cierre al hacer clic dentro del modal
+    >
+      <h3>Crear Ingrediente</h3>
+      <input
+        type="text"
+        placeholder="Nombre del Ingrediente"
+        value={newIngrediente.nombreIngrediente}
+        onChange={(e) =>
+          setNewIngrediente({ ...newIngrediente, nombreIngrediente: e.target.value })
+        }
+      />
+      <input
+        type="text"
+        placeholder="Unidad de Medida"
+        value={newIngrediente.unidadmedida}
+        onChange={(e) =>
+          setNewIngrediente({ ...newIngrediente, unidadmedida: e.target.value })
+        }
+      />
+      <div className="button-container">
+        <button className="save-button" onClick={handleCreateIngredient}>
+          Guardar
+        </button>
+        <button className="cancel-button" onClick={() => setShowCreateModal(false)}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       <div className="ingrediente-list-container" style={{ position: "relative" }}>
-        {/* Campo de búsqueda en la esquina superior derecha */}
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            padding: "10px 20px",
+            backgroundColor: "#2E8B57",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Crear Ingrediente
+        </button>
         <input
           type="text"
           placeholder="Buscar ingrediente..."
@@ -142,6 +220,7 @@ const IngredienteList = () => {
           {">"}
         </button>
       </div>
+    
     </div>
   );
 };

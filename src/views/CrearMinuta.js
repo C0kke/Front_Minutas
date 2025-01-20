@@ -486,7 +486,7 @@ const Minutas = () => {
                       fontSize: '14px', 
                       fontWeight: 'bold',
                       backgroundColor: '#2E8B57',
-                      color: 'rgb(8, 7, 66)' 
+                      color: 'white' 
                       }}
                     >
                       {fila}

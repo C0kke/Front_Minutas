@@ -11,8 +11,7 @@ import {
 import { styled } from "@mui/system";
 import axios from "axios";
 
-// StyledTableCell para personalizar los estilos de las celdas
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
+const StyledTableCell = styled(TableCell)(() => ({
   "&.encabezado": {
     backgroundColor: "#2e8b57",
     color: "white",
@@ -36,6 +35,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
 
   const token = localStorage.getItem("token")?.trim();
 
+  // Obtener los platos segun los ids
   useEffect(() => {
     const obtenerNombresPlatos = async () => {
       setLoading(true);
@@ -44,15 +44,15 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
         await Promise.all(
           semana.menus.map(async (menu) => {
             await Promise.all(
-              menu.listaplatos.map(async (platoId) => {
-                if (!nombresPlatos[platoId]) {
+              menu.listaplatos.map(async (item) => {
+                if (!nombresPlatos[item.platoId]) {
                   const response = await axios.get(
-                    `http://localhost:3000/api/v1/plato/${platoId}`,
+                    `http://localhost:3000/api/v1/plato/${item.platoId}`,
                     {
                       headers: { Authorization: `Bearer ${token}` },
                     }
                   );
-                  nombresPlatos[platoId] = response.data;
+                  nombresPlatos[item.platoId] = response.data;
                 }
               })
             );
@@ -66,91 +66,80 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
         setLoading(false);
       }
     };
-    // Ejecutar obtenerNombresPlatos solo si semana cambia
     obtenerNombresPlatos();
   }, [semana, token]);
 
   useEffect(() => {
-    // Este useEffect se ejecuta cuando platosData cambia
     if (Object.keys(platosData).length > 0) {
       const construirTablaData = () => {
         const data = {};
-        const platosUsadosPorDia = {}; // Objeto para rastrear platos usados por día
 
         semana.menus.forEach((menu) => {
+          console.log("  --- Procesando menú para la fecha:", menu.fecha, " ---");
           const fecha = formatearFecha(new Date(menu.fecha));
-          const diaSemana = obtenerDiaSemana(new Date(menu.fecha)); // Obtener el nombre del día
+          const diaSemana = obtenerDiaSemana(new Date(menu.fecha));
+
           data[fecha] = {
-            "PROTEINA 1": [],
-            "PROTEINA 2": [],
-            "PROTEINA 3": [],
+            "PROTEINA_1": [],
+            "PROTEINA_2": [],
+            "PROTEINA_3": [],
             "VEGETARIANA": [],
             "VEGANA": [],
-            "GUARNICION 1": [],
-            "GUARNICION 2": [],
-            "HIPOCALÓRICO": [],
-            "ENSALADA 1": [],
-            "ENSALADA 2": [],
-            "ENSALADA 3": [],
-            "SOPA DEL DÍA": [],
+            "GUARNICION_1": [],
+            "GUARNICION_2": [],
+            "HIPOCALORICO": [],
+            "ENSALADA_1": [],
+            "ENSALADA_2": [],
+            "ENSALADA_3": [],
+            "SOPA_DIA": [],
             "POSTRE": [],
-            diaSemana: diaSemana, // Guardar el nombre del día
+            diaSemana: diaSemana,
           };
-          platosUsadosPorDia[fecha] = new Set(); // Inicializar conjunto de platos usados para la fecha
+          
+          console.log("  Data[fecha] inicializada:", data[fecha]);
 
-          menu.listaplatos.forEach((platoId) => {
-            const plato = platosData[platoId];
-            if (plato) {
-              let filaParaPlato = null;
-              for (const fila in data[fecha]) {
-                if (
-                  (fila.startsWith("PROTEINA") &&
-                    plato.categoria === "PLATO DE FONDO") ||
-                  (fila.startsWith("GUARNICION") &&
-                    plato.categoria === "GUARNICIÓN") ||
-                  (fila.startsWith("ENSALADA") &&
-                    plato.categoria === "ENSALADA") ||
-                  (fila === "VEGETARIANA" &&
-                    plato.categoria === "VEGETARIANO") ||
-                  (fila === "VEGANA" && plato.categoria === "VEGANA") ||
-                  (fila === "HIPOCALÓRICO" &&
-                    plato.categoria === "HIPOCALORICO") ||
-                  (fila === "SOPA DEL DÍA" && plato.categoria === "SOPA") ||
-                  (fila === "POSTRE" && plato.categoria === "POSTRES")
-                ) {
-                  // Verificar si el plato ya fue usado en el día
-                  if (!platosUsadosPorDia[fecha].has(plato.nombre)) {
-                    if (data[fecha][fila].length === 0) {
-                      filaParaPlato = fila;
-                      break;
-                    }
-                  }
-                }
+          menu.listaplatos.forEach((item) => {
+            console.log("    --- Procesando item:", item, " ---");
+            const plato = platosData[item.platoId];
+            console.log("    Plato encontrado:", plato);
+            const fila = item.fila;
+            console.log("    Fila:", fila);
+
+            if (plato && fila && data[fecha][fila]) {
+              console.log("      Plato y fila válidos. Añadiendo plato a la fila:", fila);
+              // Añadir el plato a la fila especificada
+              if (!data[fecha][fila].includes(plato.nombre)) {
+                data[fecha][fila].push(plato.nombre);
+                console.log("      Plato añadido:", plato.nombre, "a la fila", fila);
+              } else {
+                console.log("      Plato ya existe en la fila:", plato.nombre, "en la fila", fila);
               }
-              if (filaParaPlato) {
-                data[fecha][filaParaPlato].push(plato.nombre);
-                platosUsadosPorDia[fecha].add(plato.nombre); // Marcar plato como usado
-              }
+            } else {
+              console.log("      Plato, fila o data[fecha][fila] no válidos. No se añade el plato.");
             }
           });
+          console.log("  Data[fecha] después de procesar platos:", data[fecha]);
         });
+        console.log("--- TablaData final:", data);
         setTablaData(data);
       };
-      construirTablaData(); // Llamada correcta a la función
+      construirTablaData();
     }
   }, [platosData, semana]);
 
   const obtenerDiaSemana = (fecha) => {
     const dias = [
-      "Domingo",
       "Lunes",
       "Martes",
       "Miércoles",
       "Jueves",
       "Viernes",
       "Sábado",
+      "Domingo",
     ];
-    return dias[fecha.getDay()];
+    let dia = fecha.getDay();
+    dia = dia === 0 ? 6 : dia - 1;
+    return dias[dia];
   };
 
   const formatearFecha = (fecha) => {
@@ -161,31 +150,37 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
   };
 
   const encabezadosFecha = semana.menus
-    .map((menu) => {
-      const fecha = new Date(menu.fecha);
-      const diaSemana = obtenerDiaSemana(fecha);
-      const fechaFormateada = formatearFecha(fecha);
-      return {
-        id: menu._id,
-        diaSemana: diaSemana,
-        fecha: fechaFormateada,
-      };
-    })
-    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Ordenar por fecha
+  .map((menu) => {
+    const fecha = new Date(menu.fecha);
+    const fechaFormateada = formatearFecha(fecha);
+    const fechaSiguiente = new Date(menu.fecha);
+    fechaSiguiente.setDate(fechaSiguiente.getDate() + 1);
+    const fechaSiguienteFormateada = formatearFecha(fechaSiguiente);
+    const diaSiguiente = obtenerDiaSemana(fechaSiguiente);
+
+    return {
+      id: menu._id,
+      diaSemana: diaSiguiente,
+      fecha: fechaFormateada,
+      fechaSiguiente: fechaSiguienteFormateada,
+      fechaOriginal: fecha
+    };
+  })
+  .sort((a, b) => a.fechaOriginal - b.fechaOriginal);
 
   const filasOrdenadas = [
-    "PROTEINA 1",
-    "PROTEINA 2",
-    "PROTEINA 3",
+    "PROTEINA_1",
+    "PROTEINA_2",
+    "PROTEINA_3",
     "VEGETARIANA",
     "VEGANA",
-    "GUARNICION 1",
-    "GUARNICION 2",
-    "HIPOCALÓRICO",
-    "ENSALADA 1",
-    "ENSALADA 2",
-    "ENSALADA 3",
-    "SOPA DEL DÍA",
+    "GUARNICION_1",
+    "GUARNICION_2",
+    "HIPOCALORICO" ,
+    "ENSALADA_1",
+    "ENSALADA_2",
+    "ENSALADA_3",
+    "SOPA_DIA",
     "POSTRE",
   ];
 
@@ -211,8 +206,8 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
                 align="center"
                 className="encabezado"
               >
-                <div>{encabezado.diaSemana}</div> {/* Mostrar el día de la semana */}
-                <div>{encabezado.fecha}</div> {/* Mostrar la fecha */}
+                <div>{encabezado.diaSemana}</div>
+                <div>{encabezado.fechaSiguiente}</div>
               </StyledTableCell>
             ))}
           </TableRow>

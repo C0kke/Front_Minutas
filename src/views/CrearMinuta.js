@@ -48,18 +48,18 @@ const filas = [
 ];
 
 const tipoPlatoPorFila = {
-  "PROTEINA_1": "PLATO DE FONDO",
-  "PROTEINA_2": "PLATO DE FONDO",
-  "PROTEINA_3": "PLATO DE FONDO",
+  "PROTEINA 1": "PLATO DE FONDO",
+  "PROTEINA 2": "PLATO DE FONDO",
+  "PROTEINA 3": "PLATO DE FONDO",
   "VEGETARIANA": "VEGETARIANO",
   "VEGANA": "VEGANA",
-  "GUARNICION_1": "GUARNICIÓN",
-  "GUARNICION_2": "GUARNICIÓN",
-  "HIPOCALORICO": "HIPOCALORICO",
-  "ENSALADA_1": "ENSALADA",
-  "ENSALADA_2": "ENSALADA",
-  "ENSALADA_3": "ENSALADA",
-  "SOPA_DIA": "SOPA",
+  "GUARNICION 1": "GUARNICIÓN",
+  "GUARNICION 2": "GUARNICIÓN",
+  "HIPOCALÓRICO": "HIPOCALORICO",
+  "ENSALADA 1": "ENSALADA",
+  "ENSALADA 2": "ENSALADA",
+  "ENSALADA 3": "ENSALADA",
+  "SOPA DEL DÍA": "SOPA",
   "POSTRE": "POSTRES",
 };
 
@@ -239,7 +239,6 @@ const Minutas = () => {
         };
 
         try {
-          if (minutaDia.length == 0) {throw new Error("Minuta sin datos");}
           const token = localStorage.getItem('token')?.trim();
           const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaDia, {
             headers: {

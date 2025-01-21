@@ -79,18 +79,18 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
           const diaSemana = obtenerDiaSemana(new Date(menu.fecha));
 
           data[fecha] = {
-            "PROTEINA_1": [],
-            "PROTEINA_2": [],
-            "PROTEINA_3": [],
+            "PROTEINA 1": [],
+            "PROTEINA 2": [],
+            "PROTEINA 3": [],
             "VEGETARIANA": [],
             "VEGANA": [],
-            "GUARNICION_1": [],
-            "GUARNICION_2": [],
+            "GUARNICION 1": [],
+            "GUARNICION 2": [],
             "HIPOCALORICO": [],
-            "ENSALADA_1": [],
-            "ENSALADA_2": [],
-            "ENSALADA_3": [],
-            "SOPA_DIA": [],
+            "ENSALADA 1": [],
+            "ENSALADA 2": [],
+            "ENSALADA 3": [],
+            "SOPA DIA": [],
             "POSTRE": [],
             diaSemana: diaSemana,
           };
@@ -155,18 +155,18 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
   .sort((a, b) => a.fechaOriginal - b.fechaOriginal);
 
   const filasOrdenadas = [
-    "PROTEINA_1",
-    "PROTEINA_2",
-    "PROTEINA_3",
+    "PROTEINA 1",
+    "PROTEINA 2",
+    "PROTEINA 3",
     "VEGETARIANA",
     "VEGANA",
-    "GUARNICION_1",
-    "GUARNICION_2",
+    "GUARNICION 1",
+    "GUARNICION 2",
     "HIPOCALORICO" ,
-    "ENSALADA_1",
-    "ENSALADA_2",
-    "ENSALADA_3",
-    "SOPA_DIA",
+    "ENSALADA 1",
+    "ENSALADA 2",
+    "ENSALADA 3",
+    "SOPA DIA",
     "POSTRE",
   ];
 
@@ -193,7 +193,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
                 className="encabezado"
               >
                 <div>{encabezado.diaSemana}</div>
-                <div>{encabezado.fechaSiguiente}</div>
+                <div>{encabezado.fecha}</div>
               </StyledTableCell>
             ))}
           </TableRow>

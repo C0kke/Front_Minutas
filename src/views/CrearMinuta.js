@@ -39,11 +39,11 @@ const filas = [
   "VEGANA",
   "GUARNICION 1",
   "GUARNICION 2",
-  "HIPOCALÓRICO",
+  "HIPOCALORICO",
   "ENSALADA 1",
   "ENSALADA 2",
   "ENSALADA 3",
-  "SOPA DEL DÍA",
+  "SOPA DIA",
   "POSTRE",
 ];
 
@@ -55,11 +55,11 @@ const tipoPlatoPorFila = {
   "VEGANA": "VEGANA",
   "GUARNICION 1": "GUARNICIÓN",
   "GUARNICION 2": "GUARNICIÓN",
-  "HIPOCALÓRICO": "HIPOCALORICO",
+  "HIPOCALORICO": "HIPOCALORICO",
   "ENSALADA 1": "ENSALADA",
   "ENSALADA 2": "ENSALADA",
   "ENSALADA 3": "ENSALADA",
-  "SOPA DEL DÍA": "SOPA",
+  "SOPA DIA": "SOPA",
   "POSTRE": "POSTRES",
 };
 
@@ -239,6 +239,7 @@ const Minutas = () => {
         };
 
         try {
+          if (minutaDia.listaplatos.length == 0) {throw new Error("NO SE ENCUANTRAN PLATOS");}
           const token = localStorage.getItem('token')?.trim();
           const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaDia, {
             headers: {

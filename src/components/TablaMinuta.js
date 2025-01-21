@@ -139,7 +139,6 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
     const fecha = new Date(menu.fecha);
     const fechaFormateada = formatearFecha(fecha);
     const diaSemana = obtenerDiaSemana(fecha);
-    console.log(`dia para ${fecha}: ${diaSemana}`)
     return {
       id: menu._id,
       diaSemana: diaSemana,

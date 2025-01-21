@@ -8,10 +8,12 @@ const MinutaLista = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedSemana, setSelectedSemana] = useState(null);
-  const [filter, setFilter] = useState('');
+  const [selectedAño, setSelectedAño] = useState(null);
+  const [filterSemana, setFilterSemana] = useState('');
+  const [filterAño, setFilterAño] = useState(''); // Nuevo estado para el filtro de año
   const [allWeeks, setAllWeeks] = useState([]);
   const [mostrarTabla, setMostrarTabla] = useState(false);
-  const [minutasAgrupadas, setMinutasAgrupadas] = useState({}); // Estado para las minutas agrupadas
+  const [minutasAgrupadas, setMinutasAgrupadas] = useState({});
   const tablaMinutaRef = useRef(null);
   const token = localStorage.getItem('token');
 
@@ -22,9 +24,14 @@ const MinutaLista = () => {
         const response = await axios.get('http://localhost:3000/api/v1/menudiario', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const groupedMinutas = groupBySemana(response.data);
+        const groupedMinutas = groupBySemanaYAño(response.data); //Actualizar groupBySemana
         setMinutasAgrupadas(groupedMinutas);
-        setAllWeeks(Object.keys(groupedMinutas));
+
+        const semanasUnicas = Object.keys(groupedMinutas).map(key => {
+            const [año, semana] = key.split('-');
+            return { semana: Number(semana), año: Number(año) };
+          });
+          setAllWeeks(semanasUnicas);
       } catch (error) {
         setError("Error al cargar las minutas");
         console.error('Error fetching minutas:', error);
@@ -36,11 +43,12 @@ const MinutaLista = () => {
     fetchMinutas();
   }, []);
 
-  const groupBySemana = (data) => {
+  //ACTUALIZAR
+  const groupBySemanaYAño = (data) => {
     return data.reduce((acc, minuta) => {
-      const semana = minuta.semana; 
-      const año = minuta.year;
-      const key = `${semana}-${año}`;
+      const semana = minuta.semana;
+      const año = new Date(minuta.fecha).getFullYear();
+      const key = `${año}-${semana}`;
       if (!acc[key]) {
         acc[key] = [];
       }
@@ -49,33 +57,33 @@ const MinutaLista = () => {
     }, {});
   };
 
-  const handleSemanaClick = (semana) => {
+  const handleSemanaClick = (semana, año) => {
     setSelectedSemana(semana);
+    setSelectedAño(año);
     setMostrarTabla(true);
   };
 
-  const filteredWeeks = allWeeks.filter((semana) =>
-    semana.toString().includes(filter)
-  );
-
-  const obtenerAño = (minutas) => {
-    if(minutas && minutas.length > 0) {
-      return new Date(minutas[0].fecha).getFullYear()
-    }
-    return new Date().getFullYear();
-  }
+  // Filtrar por semana y año
+  const filteredWeeks = filterSemana || filterAño
+    ? allWeeks.filter((semana) => {
+        const matchSemana =
+          !filterSemana || semana.semana.toString().includes(filterSemana);
+        const matchAño = !filterAño || semana.año.toString().includes(filterAño);
+        return matchSemana && matchAño;
+      })
+    : [];
 
   const formatMinutasForTable = (minutas) => {
-      if (!minutas) return [];
+    if (!minutas) return [];
 
-      return minutas.map(minuta => ({
-          ...minuta,
-          listaplatos: minuta.listaplatos.map(item => ({
-            ...item,
-            platoId: item.platoId._id
-          }))
-        }));
-  }
+    return minutas.map((minuta) => ({
+      ...minuta,
+      listaplatos: minuta.listaplatos.map((item) => ({
+        ...item,
+        platoId: item.platoId._id,
+      })),
+    }));
+  };
 
   if (loading) {
     return <div>Cargando...</div>;
@@ -90,36 +98,46 @@ const MinutaLista = () => {
       <Header />
       <div className="minuta-lista-container">
         <div className="filter-container">
+          <h2>Selecciona un Año</h2>
+          <input
+            type="number"
+            className="filter-input"
+            placeholder="Filtrar por año..."
+            value={filterAño}
+            onChange={(e) => setFilterAño(e.target.value)}
+          />
+        </div>
+        <div className="filter-container">
           <h2>Selecciona una Semana</h2>
           <input
-            type="text"
+            type="number"
             className="filter-input"
             placeholder="Filtrar por semana..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            value={filterSemana}
+            onChange={(e) => setFilterSemana(e.target.value)}
           />
         </div>
 
         <div className="weeks-container">
-          {/* Mostrar las semanas filtradas solo si hay filtro */}
-          {filter && filteredWeeks.length > 0 && (
+          {/* Mostrar las semanas filtradas solo si hay filtro de semana o año */}
+          {(filterSemana || filterAño) && filteredWeeks.length > 0 && (
             <div className="filtered-weeks">
               {filteredWeeks.map((semana) => (
                 <button
-                  key={semana}
-                  onClick={() => handleSemanaClick(semana)}
+                  key={`${semana.año}-${semana.semana}`}
+                  onClick={() => handleSemanaClick(semana.semana, semana.año)}
                   className="week-button"
                 >
-                  Semana {semana}
+                  Semana {semana.semana} - {semana.año}
                 </button>
               ))}
             </div>
           )}
 
           {/* Mensaje cuando no hay filtro o no hay coincidencias */}
-          {(!filter || filteredWeeks.length === 0) && (
+          {(!(filterSemana || filterAño) || filteredWeeks.length === 0) && (
             <p>
-              {filter
+              {filterSemana || filterAño
                 ? "No hay semanas que coincidan con el filtro."
                 : "Ingrese un filtro para ver las semanas."}
             </p>
@@ -131,12 +149,9 @@ const MinutaLista = () => {
           <div className="tabla-minuta-container">
             <TablaMinutaAprobacion
               semana={{
-                _id: {
-                  semana: selectedSemana,
-                  año: obtenerAño(minutasAgrupadas[selectedSemana]),
-                },
+                _id: { semana: selectedSemana, año: selectedAño },
                 menus: formatMinutasForTable(
-                  minutasAgrupadas[selectedSemana]
+                  minutasAgrupadas[`${selectedAño}-${selectedSemana}`]
                 ),
               }}
               ref={tablaMinutaRef}

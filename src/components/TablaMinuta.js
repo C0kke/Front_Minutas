@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -100,7 +100,6 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
             const fila = item.fila;
 
             if (plato && fila && data[fecha][fila]) {
-              // Añadir el plato a la fila especificada
               if (!data[fecha][fila].includes(plato.nombre)) {
                 data[fecha][fila].push(plato.nombre);
               }
@@ -139,17 +138,12 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
   .map((menu) => {
     const fecha = new Date(menu.fecha);
     const fechaFormateada = formatearFecha(fecha);
-    const fechaSiguiente = new Date(menu.fecha);
-    fechaSiguiente.setDate(fechaSiguiente.getDate() + 1);
-    const fechaSiguienteFormateada = formatearFecha(fechaSiguiente);
-    const diaSiguiente = obtenerDiaSemana(fechaSiguiente);
-
+    const diaSemana = obtenerDiaSemana(fecha);
+    console.log(`dia para ${fecha}: ${diaSemana}`)
     return {
       id: menu._id,
-      diaSemana: diaSiguiente,
+      diaSemana: diaSemana,
       fecha: fechaFormateada,
-      fechaSiguiente: fechaSiguienteFormateada,
-      fechaOriginal: fecha
     };
   })
   .sort((a, b) => a.fechaOriginal - b.fechaOriginal);

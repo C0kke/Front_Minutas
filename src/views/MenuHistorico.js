@@ -23,7 +23,6 @@ const MinutaLista = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         const groupedMinutas = groupBySemana(response.data);
-        console.log(groupedMinutas)
         setMinutasAgrupadas(groupedMinutas);
         setAllWeeks(Object.keys(groupedMinutas));
       } catch (error) {
@@ -39,9 +38,8 @@ const MinutaLista = () => {
 
   const groupBySemana = (data) => {
     return data.reduce((acc, minuta) => {
-      const fecha = new Date(minuta.fecha);
       const semana = minuta.semana; 
-      const año = fecha.getFullYear();
+      const año = minuta.year;
       const key = `${semana}-${año}`;
       if (!acc[key]) {
         acc[key] = [];
@@ -103,7 +101,8 @@ const MinutaLista = () => {
         </div>
 
         <div className="weeks-container">
-          {filteredWeeks.length > 0 ? (
+          {/* Mostrar las semanas filtradas solo si hay filtro */}
+          {filter && filteredWeeks.length > 0 && (
             <div className="filtered-weeks">
               {filteredWeeks.map((semana) => (
                 <button
@@ -115,8 +114,15 @@ const MinutaLista = () => {
                 </button>
               ))}
             </div>
-          ) : (
-            <p>No hay semanas que coincidan con el filtro.</p>
+          )}
+
+          {/* Mensaje cuando no hay filtro o no hay coincidencias */}
+          {(!filter || filteredWeeks.length === 0) && (
+            <p>
+              {filter
+                ? "No hay semanas que coincidan con el filtro."
+                : "Ingrese un filtro para ver las semanas."}
+            </p>
           )}
         </div>
 
@@ -124,7 +130,15 @@ const MinutaLista = () => {
         {selectedSemana && mostrarTabla && (
           <div className="tabla-minuta-container">
             <TablaMinutaAprobacion
-              semana={{ _id: { semana: selectedSemana, año: obtenerAño(minutasAgrupadas[selectedSemana])}, menus: formatMinutasForTable(minutasAgrupadas[selectedSemana])}}
+              semana={{
+                _id: {
+                  semana: selectedSemana,
+                  año: obtenerAño(minutasAgrupadas[selectedSemana]),
+                },
+                menus: formatMinutasForTable(
+                  minutasAgrupadas[selectedSemana]
+                ),
+              }}
               ref={tablaMinutaRef}
             />
           </div>

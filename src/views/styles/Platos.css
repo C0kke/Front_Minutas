@@ -82,6 +82,7 @@
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
+    gap: 20px
 }
 
 .ReactModal__Content .ModalButton { 
@@ -93,8 +94,10 @@
 }
 
 .ReactModal__Content .ModalButton {
-    color: #2E8B57; /* Texto verde */
-    background-color: white; /* Fondo blanco */
+    
+        color: #fafafa; /* Texto blanco */
+        background-color: #0a9a30; /* Fondo blanco */
+    
 }
 
 .ReactModal__Content .ModalButton:hover {

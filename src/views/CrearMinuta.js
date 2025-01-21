@@ -243,6 +243,7 @@ const Minutas = () => {
           nombre: `Minuta ${dia} Semana ${week}`,
           fecha: fechaDia,
           semana: week,
+          year: year,
           id_sucursal: sucursal,
           estado: "Activo",
           listaplatos: listaplatos,
@@ -274,7 +275,7 @@ const Minutas = () => {
               }
             });
           }
-          alert(`MINUTA PARA SEMANA ${week} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
+          alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
           navigate('/home');
         } catch (error) {
           console.error("Error al enviar las minutas:", error);
@@ -451,7 +452,7 @@ const Minutas = () => {
               borderRadius: '4px',
             }}
           >
-            <TextField label="Nombre" type="text" value={`Minuta Semana ${week}`} sx={{ width: '15rem' }} />
+            <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
             <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
             <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
             <FormControl sx={{ width: '15rem' }}>

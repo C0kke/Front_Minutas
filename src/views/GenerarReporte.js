@@ -82,26 +82,24 @@ const GenerarReporte = () => {
             Authorization: `Bearer ${token}`,
           }
         });
-
         // Agrupar platos por fecha
         const platosAgrupados = {};
         response.data.forEach(menu => {
-            const fecha = moment(menu.fecha).tz("America/New_York").add(1, 'days').format("DD-MM-YYYY");
+          const fecha = moment(menu.fecha).tz("America/New_York").add(1, 'days').format("DD-MM-YYYY");
           if (!platosAgrupados[fecha]) {
             platosAgrupados[fecha] = [];
           }
           menu.platos.forEach(plato => {
             const platoExistente = platosAgrupados[fecha].find(p => p.id === plato.id);
             if (!platoExistente) {
-                platosAgrupados[fecha].push({
-                  id: plato.id,
-                  nombre: plato.nombre,
-                  cantidad: 0
-                });
+              platosAgrupados[fecha].push({
+                id: plato.id,
+                nombre: plato.nombre,
+                cantidad: 0
+              });
             }
           });
         });
-
         setPlatosPorFecha(platosAgrupados);
 
       } catch (error) {
@@ -138,7 +136,6 @@ const GenerarReporte = () => {
           }))
       ),
     };
-
     try {
       const response = await axios.post('http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes', reportData, {
         headers: {
@@ -254,7 +251,7 @@ const GenerarReporte = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               <TextField
                                 type="number"
-                                value={plato.cantidad || 0}
+                                value={plato.cantidad || ''}
                                 onChange={(e) => {
                                   const value = parseInt(e.target.value);
                                   if (value >= 0) {

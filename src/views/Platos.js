@@ -332,7 +332,7 @@ const Platos = () => {
                             {selectedPlato.descontinuado ? 'Reactivar' : 'Descontinuar'}
                         </Button>                            
                    
-                    <Button className='ModalButton' color='#5DE2E7'  onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
+                    <Button className='ModalButton'   onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
 
 
                     <Button variant="contained" color="error" onClick={() => handleEliminarPlato(selectedPlato._id,selectedPlato.nombre)} >Eliminar</Button>

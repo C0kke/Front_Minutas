@@ -193,7 +193,6 @@ const Minutas = () => {
   };
 
   const handleAutocompleteChange = (event, value, row, col) => {
-  // Normalizar el nombre de la columna
   const colNormalizado = col.toUpperCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
@@ -210,21 +209,33 @@ const Minutas = () => {
 
   const handleCrearMinuta = async () => {
     const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
+    let datosCompletos = true;
+    const minutasAEnviar = []; // Array para almacenar las minutas
 
+    // Verificar si existen datos en los 5 encabezados
     for (let i = 1; i < encabezados.length; i++) {
       const dia = encabezados[i];
-      const listaplatos = [];
-
-      if (data && data[dia]) {
-        Object.entries(data[dia]).forEach(([fila, platoId]) => { 
-          if (platoId) {
-            listaplatos.push({
-              platoId: platoId,
-              fila: fila,
-            });
-          }
-        });
+      if (!data || !data[dia] || Object.keys(data[dia]).length === 0) {
+        datosCompletos = false;
+        break;
       }
+    }
+
+    if (datosCompletos) {
+      for (let i = 1; i < encabezados.length; i++) {
+        const dia = encabezados[i];
+        const listaplatos = [];
+
+        if (data && data[dia]) {
+          Object.entries(data[dia]).forEach(([fila, platoId]) => {
+            if (platoId) {
+              listaplatos.push({
+                platoId: platoId,
+                fila: fila,
+              });
+            }
+          });
+        }
 
         const fechaDia = firstDayOfWeek.add(i - 1, 'day').toISOString();
 
@@ -237,35 +248,52 @@ const Minutas = () => {
           listaplatos: listaplatos,
           aprobado: false,
         };
+          //Se agregan las minutas al array minutasAEnviar
+          minutasAEnviar.push(minutaDia); 
+      }
 
-        try {
-          if (minutaDia.listaplatos.length == 0) {throw new Error("NO SE ENCUANTRAN PLATOS");}
-          const token = localStorage.getItem('token')?.trim();
-          const response = await axios.post('http://localhost:3000/api/v1/menudiario', minutaDia, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
-          });
-          alert(`MINUTA PARA SEMANA ${minutaDia.semana} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
-          navigate('/home');
-        } catch (error) {
-          console.error(`Error al crear minuta para ${dia} (${fechaDia}):`, error);
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.setItem('error', 'error de sesion');
-          navigate("/login");
-        } else if (error.response) {
-          alert(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`);
-        } else if (error.request) {
-          alert("No se recibió respuesta del servidor.");
-        } else {
-          alert("Error al configurar la solicitud.");
+      // Verificar si hay errores potenciales (en este caso, si la lista de platos está vacía)
+      let hayErrores = false;
+      for (const minuta of minutasAEnviar) {
+        if (minuta.listaplatos.length === 0) {
+          hayErrores = true;
+          alert(`Error potencial: La minuta para ${minuta.nombre} no tiene platos.`);
+          break;
         }
       }
-     }
-    
-    
+
+      if (!hayErrores) {
+        try {
+          const token = localStorage.getItem('token')?.trim();
+          // Enviar todas las minutas a la API
+          for (const minuta of minutasAEnviar) {
+            const response = await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              }
+            });
+          }
+          alert(`MINUTA PARA SEMANA ${week} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
+          navigate('/home');
+        } catch (error) {
+          console.error("Error al enviar las minutas:", error);
+          if (error.response && error.response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.setItem('error', 'error de sesion');
+            navigate("/login");
+          } else if (error.response) {
+            alert(`Error del servidor: ${error.response.status} - ${error.response.data.error.message || 'Detalles no disponibles'}`);
+          } else if (error.request) {
+            alert("No se recibió respuesta del servidor.");
+          }
+        }
+      } else {
+        alert("Se encontraron errores en algunas minutas. No se creará ninguna minuta.");
+      }
+    } else {
+      alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
+    }
   };
 
   const opcionesFiltradasPorFila = useMemo(() => {
@@ -360,7 +388,7 @@ const Minutas = () => {
           });
         }
 
-        if (fila === "SOPA DEL DÍA") {
+        if (fila === "SOPA DIA") {
           opcionesFiltradas = opcionesFiltradas.concat(
             platosDisponibles[encabezadoNormalizado].filter(
               (plato) => plato.categoria === "CREMAS"

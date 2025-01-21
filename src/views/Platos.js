@@ -31,6 +31,7 @@ const Platos = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedStatus, setSelectedStatus] = useState('Todos');
+    const [eliminacion, setEliminacion] = useState(false);
 
     const [pageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
@@ -44,8 +45,10 @@ const Platos = () => {
 
     const token = localStorage.getItem('token')?.trim();    
     localStorage.removeItem('id_plato') 
+
     useEffect(() => {
         const fetchPlatos = async () => {
+            setEliminacion(false);
             try {
                 const response = await axios.get('http://localhost:3000/api/v1/plato', {
                     headers: { Authorization: `Bearer ${token}` }
@@ -66,7 +69,7 @@ const Platos = () => {
         };
 
         fetchPlatos();
-    }, [currentPage,platos]);
+    }, [currentPage, eliminacion]);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -77,6 +80,7 @@ const Platos = () => {
         setSelectedStatus(event.target.value);
         setCurrentPage(1);
     };
+
     const handleCategoryChange = (event) => {
         setSelectedCategory(event.target.value);
         setCurrentPage(1);
@@ -110,7 +114,6 @@ const Platos = () => {
             setCurrentPage(currentPage - 1);
         }
     };
-
 
     const handleDescontinuarClick = () => {
         selectedPlato.descontinuado = !selectedPlato.descontinuado;
@@ -176,6 +179,7 @@ const Platos = () => {
             alert("Ocurrió un error al crear el plato.");
         }
     };
+
     const handleEliminarPlato = async (id,nombre) => {
         const confirmacion = window.confirm(`¿Estás seguro de que deseas eliminar el plato : ${nombre}?`);
         if (confirmacion) {
@@ -184,10 +188,8 @@ const Platos = () => {
                 
                 if (response.status === 200) {
                     alert('Plato eliminado exitosamente.');
-                    // Aquí puedes actualizar la lista de platos, por ejemplo:
-                    setPlatos(platos.filter(plato => plato.id !== id));
+                    setEliminacion(true);
                     closeModal();
-                   
                 } else {
                     alert('No se pudo eliminar el plato. Inténtalo de nuevo.');
                 }

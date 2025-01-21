@@ -66,7 +66,7 @@ const Platos = () => {
         };
 
         fetchPlatos();
-    }, [currentPage]);
+    }, [currentPage,platos]);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -174,6 +174,27 @@ const Platos = () => {
         } catch (err) {
             console.error("Error al crear plato:", err);
             alert("Ocurrió un error al crear el plato.");
+        }
+    };
+    const handleEliminarPlato = async (id,nombre) => {
+        const confirmacion = window.confirm(`¿Estás seguro de que deseas eliminar el plato : ${nombre}?`);
+        if (confirmacion) {
+            try {
+                const response = await axios.delete(`http://localhost:3000/api/v1/plato/${id}`, {headers: { Authorization: `Bearer ${token}` }});
+                
+                if (response.status === 200) {
+                    alert('Plato eliminado exitosamente.');
+                    // Aquí puedes actualizar la lista de platos, por ejemplo:
+                    setPlatos(platos.filter(plato => plato.id !== id));
+                    closeModal();
+                   
+                } else {
+                    alert('No se pudo eliminar el plato. Inténtalo de nuevo.');
+                }
+            } catch (error) {
+                console.error('Error eliminando el plato:', error);
+                alert('Ocurrió un error al eliminar el plato.');
+            }
         }
     };
 
@@ -310,7 +331,11 @@ const Platos = () => {
                         <Button variant="contained" color={selectedPlato.descontinuado ? "success" : "error"} onClick={handleDescontinuarClick}>
                             {selectedPlato.descontinuado ? 'Reactivar' : 'Descontinuar'}
                         </Button>                            
-                    <Button className='ModalButton' onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
+                   
+                    <Button className='ModalButton'   onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
+
+
+                    <Button variant="contained" color="error" onClick={() => handleEliminarPlato(selectedPlato._id,selectedPlato.nombre)} >Eliminar</Button>
                         </div>
                     </div>
                 )}

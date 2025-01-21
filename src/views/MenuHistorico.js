@@ -10,7 +10,7 @@ const MinutaLista = () => {
   const [selectedSemana, setSelectedSemana] = useState(null);
   const [selectedAño, setSelectedAño] = useState(null);
   const [filterSemana, setFilterSemana] = useState('');
-  const [filterAño, setFilterAño] = useState(''); // Nuevo estado para el filtro de año
+  const [filterAño, setFilterAño] = useState('2025');
   const [allWeeks, setAllWeeks] = useState([]);
   const [mostrarTabla, setMostrarTabla] = useState(false);
   const [minutasAgrupadas, setMinutasAgrupadas] = useState({});
@@ -43,7 +43,6 @@ const MinutaLista = () => {
     fetchMinutas();
   }, []);
 
-  //ACTUALIZAR
   const groupBySemanaYAño = (data) => {
     return data.reduce((acc, minuta) => {
       const semana = minuta.semana;
@@ -97,30 +96,34 @@ const MinutaLista = () => {
     <div>
       <Header />
       <div className="minuta-lista-container">
-        <div className="filter-container">
-          <h2>Selecciona un Año</h2>
-          <input
-            type="number"
-            className="filter-input"
-            placeholder="Filtrar por año..."
-            value={filterAño}
-            onChange={(e) => setFilterAño(e.target.value)}
-          />
-        </div>
-        <div className="filter-container">
-          <h2>Selecciona una Semana</h2>
-          <input
-            type="number"
-            className="filter-input"
-            placeholder="Filtrar por semana..."
-            value={filterSemana}
-            onChange={(e) => setFilterSemana(e.target.value)}
-          />
+        <div className='filters-container'>
+          <div className="filter-container">
+            <h2>Selecciona un Año</h2>
+            <input
+              type="number"
+              className="filter-input"
+              placeholder="Filtrar por año..."
+              value={filterAño}
+              onChange={(e) => setFilterAño(e.target.value)}
+              min={2024}
+              defaultValue={2024}
+            />
+          </div>
+          <div className="filter-container">
+            <h2>Selecciona una Semana</h2>
+            <input
+              type="number"
+              className="filter-input"
+              placeholder="Filtrar por semana..."
+              value={filterSemana}
+              onChange={(e) => setFilterSemana(e.target.value)}
+              min={1}
+            />
+          </div>
         </div>
 
         <div className="weeks-container">
-          {/* Mostrar las semanas filtradas solo si hay filtro de semana o año */}
-          {(filterSemana || filterAño) && filteredWeeks.length > 0 && (
+          {(filterSemana && filterAño.length > 0) && (
             <div className="filtered-weeks">
               {filteredWeeks.map((semana) => (
                 <button
@@ -137,9 +140,9 @@ const MinutaLista = () => {
           {/* Mensaje cuando no hay filtro o no hay coincidencias */}
           {(!(filterSemana || filterAño) || filteredWeeks.length === 0) && (
             <p>
-              {filterSemana || filterAño
+              {filterSemana 
                 ? "No hay semanas que coincidan con el filtro."
-                : "Ingrese un filtro para ver las semanas."}
+                : "Ingrese un filtro para ver las semanas."}  
             </p>
           )}
         </div>

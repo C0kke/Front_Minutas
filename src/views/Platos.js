@@ -30,6 +30,7 @@ const Platos = () => {
     const [modalCrearIsOpen, setModalCrearIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedStatus, setSelectedStatus] = useState('Todos');
 
     const [pageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
@@ -72,6 +73,10 @@ const Platos = () => {
         setCurrentPage(1);
     };
     
+    const handleStatusChange = (event) => {
+        setSelectedStatus(event.target.value);
+        setCurrentPage(1);
+    };
     const handleCategoryChange = (event) => {
         setSelectedCategory(event.target.value);
         setCurrentPage(1);
@@ -81,9 +86,14 @@ const Platos = () => {
         return platos.filter(plato => {
             const nombreCoincide = plato.nombre && plato.nombre.trim().toUpperCase().includes(searchTerm.trim().toUpperCase());
             const categoriaCoincide = selectedCategory === "Todas" || plato.categoria === selectedCategory;
-            return nombreCoincide && categoriaCoincide;
+            const estadoCoincide = 
+                selectedStatus === "Todos" ||
+                (selectedStatus === "Activos" && !plato.descontinuado) ||
+                (selectedStatus === "Descontinuados" && plato.descontinuado);
+    
+            return nombreCoincide && categoriaCoincide && estadoCoincide;
         });
-    }, [platos, searchTerm, selectedCategory]);
+    }, [platos, searchTerm, selectedCategory, selectedStatus]);
 
     const displayedDishes = useMemo(() => {
         return filteredPlatos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -203,6 +213,20 @@ const Platos = () => {
                         ))}
                     </Select>
                 </FormControl>
+                <FormControl sx={{ m: 1, minWidth: 120 }}>
+    <InputLabel id="estado-select-label">Estado</InputLabel>
+    <Select
+        labelId="estado-select-label"
+        id="estado-select"
+        value={selectedStatus}
+        label="Estado"
+        onChange={handleStatusChange}
+    >
+        <MenuItem value="Todos">Todos</MenuItem>
+        <MenuItem value="Activos">Activos</MenuItem>
+        <MenuItem value="Descontinuados">Descontinuados</MenuItem>
+    </Select>
+</FormControl>
             </Box>
             <Button
                 onClick={() => setModalCrearIsOpen(true)}

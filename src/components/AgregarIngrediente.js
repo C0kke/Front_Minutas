@@ -1,16 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Box,
   Button,
   Grid,
   TextField,
-  MenuItem,
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
   Typography,
-  Alert
+  Alert,
+  Autocomplete,
 } from "@mui/material";
 
 const API_BASE_URL = "http://localhost:3000/api/v1";
@@ -18,15 +19,50 @@ const API_BASE_URL = "http://localhost:3000/api/v1";
 const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
   const [nombreIngrediente, setNombreIngrediente] = useState("");
   const [unidadMedida, setUnidadMedida] = useState("");
+  const [opcionesIngrediente, setOpcionesIngrediente] = useState([]);
+  const [ingredientes, setIngredientes] = useState([]);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const unidadesMedida = ["GRAMOS", "KILOS", "CC", "UNIDADES", "LITROS"];
 
+  useEffect(() => {
+    const fetchIngredientes = async () => {
+      const token = localStorage.getItem("token")?.trim();
+      if (!token) {
+        console.error("Token no encontrado.");
+        return;
+      }
+      try {
+        const response = await axios.get(`${API_BASE_URL}/ingrediente`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIngredientes(response.data);
+      } catch (error) {
+        console.error("Error al obtener ingredientes:", error);
+      }
+    };
+    fetchIngredientes();
+  }, []);
+
+  const handleBuscarIngredientes = (query) => {
+    if (!query) {
+      setOpcionesIngrediente([]);
+      return;
+    }
+    const filtered = ingredientes.filter((ingrediente) =>
+      ingrediente.nombreIngrediente
+        ?.toLowerCase()
+        .includes(query.toLowerCase())
+    );
+    setOpcionesIngrediente(filtered);
+  };
+
   const handleAgregarIngrediente = async () => {
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
+
     const token = localStorage.getItem("token")?.trim();
     if (!token) {
       console.error("Token no encontrado.");
@@ -35,23 +71,20 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
     }
 
     try {
-      // Buscar el ingrediente por nombre
-      let ingredienteResponse = await axios.get(
-        `${API_BASE_URL}/ingrediente/buscar/${nombreIngrediente}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const ingredienteSeleccionado = ingredientes.find(
+        (i) => i.nombreIngrediente === nombreIngrediente
       );
+      if (!ingredienteSeleccionado) {
+        setError("Por favor selecciona un ingrediente válido.");
+        setLoading(false);
+        return;
+      }
 
-      let ingrediente = ingredienteResponse.data;
-
-      
-      // Agregar el ingrediente al plato
       await axios.post(
         `${API_BASE_URL}/ingredientexplato`,
         {
           id_plato: platoId,
-          id_ingrediente: ingrediente._id,
+          id_ingrediente: ingredienteSeleccionado._id,
           porcion_neta: 0,
           peso_bruto: 0,
           rendimiento: 0,
@@ -61,16 +94,15 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
         }
       );
 
-      // Notificar a EditarIngredientes que se agregó un nuevo ingrediente
       onIngredienteAgregado();
       setNombreIngrediente("");
       setUnidadMedida("");
-
+      setSuccessMessage("Ingrediente agregado correctamente.");
     } catch (error) {
       console.error("Error al agregar ingrediente:", error);
       setError(
         error.response?.data?.message ||
-          "El ingrediente no existe. Por favor, inténtalo de nuevo más tarde."
+          "Ocurrió un error. Por favor, inténtalo nuevamente."
       );
     } finally {
       setLoading(false);
@@ -84,27 +116,17 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
       </Typography>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} sm={5}>
-          <TextField
-            label="Nombre del Ingrediente"
-            fullWidth
-            value={nombreIngrediente}
-            onChange={(e) => setNombreIngrediente(e.target.value)}
-            sx={{
-              "& .MuiInputBase-root": {
-                "& fieldset": {
-                  borderWidth: 1,
-                  borderColor: "rgba(0, 0, 0, 0.23)",
-                },
-                "&:hover fieldset": {
-                  borderColor: "rgba(0, 0, 0, 0.23)",
-                  borderWidth: 1,
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "primary.main",
-                  borderWidth: 1,
-                },
-              },
+          <Autocomplete
+            options={opcionesIngrediente}
+            getOptionLabel={(option) => option.nombreIngrediente || ""}
+            inputValue={nombreIngrediente}
+            onInputChange={(event, newInputValue) => {
+              setNombreIngrediente(newInputValue);
+              handleBuscarIngredientes(newInputValue);
             }}
+            renderInput={(params) => (
+              <TextField {...params} label="Nombre del Ingrediente" fullWidth />
+            )}
           />
         </Grid>
         <Grid item xs={12} sm={5}>
@@ -115,22 +137,6 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
               value={unidadMedida}
               label="Unidad de Medida"
               onChange={(e) => setUnidadMedida(e.target.value)}
-              sx={{
-                "& .MuiInputBase-root": {
-                  "& fieldset": {
-                    borderWidth: 1,
-                    borderColor: "rgba(0, 0, 0, 0.23)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(0, 0, 0, 0.23)",
-                    borderWidth: 1,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "primary.main",
-                    borderWidth: 1,
-                  },
-                },
-              }}
             >
               {unidadesMedida.map((unidad) => (
                 <MenuItem key={unidad} value={unidad}>
@@ -152,14 +158,14 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
         </Grid>
       </Grid>
       {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
       )}
       {successMessage && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            {successMessage}
-          </Alert>
+        <Alert severity="success" sx={{ mt: 2 }}>
+          {successMessage}
+        </Alert>
       )}
     </Box>
   );

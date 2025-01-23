@@ -78,7 +78,7 @@ const MenuSemanalAprobacion = () => {
           selectedSemana.menus.some(m => m._id === menu._id) ? { ...menu, aprobado: true } : menu
         ));
         alert(`Minuta de la semana ${selectedSemana._id.semana} aprobado exitosamente`)
-        generarPDF(tableRef, selectedSemana._id.semana);
+       
         setSelectedMenu(null);
         setSelectedSemana(null);
         setError(null);

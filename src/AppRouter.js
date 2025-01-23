@@ -10,7 +10,7 @@ import EditarIngredientes from './views/EditarIngrediente';
 
 import GenerarReporte from './views/GenerarReporte';
 import MenuSemanalAprobacion from './views/Aprobar';
-import Proyecciones from './views/Proyecciones';
+import Proyeccion from './views/Proyecciones';
 import EditarMinuta from './views/EditarMinuta';
 
 function AppRouter() {
@@ -30,7 +30,7 @@ function AppRouter() {
         <Route path="/calculoingrediente" element={token ? <GenerarReporte /> : <Navigate to="/login" />} />
         <Route path="/aprobarmenu" element={token ? <MenuSemanalAprobacion /> : <Navigate to="/login" />} />
         <Route path="/editarmenu" element={token ? <EditarMinuta /> : <Navigate to="/login" />} />
-        <Route path="/proyecciones" element={token ? <Proyecciones /> : <Navigate to="/login" />} />
+        <Route path="/proyecciones" element={token ? <Proyeccion /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

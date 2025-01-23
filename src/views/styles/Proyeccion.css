@@ -1,0 +1,46 @@
+.proyeccion-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    font-family: Arial, sans-serif;
+  }
+  
+  .title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333333;
+    text-align: center;
+  }
+  
+  .fecha {
+    font-size: 16px;
+    color: #555555;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .lista {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .lista-item {
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+    margin: 5px 0;
+    border-radius: 5px;
+    font-size: 16px;
+    color: #333333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .loading,
+  .error {
+    text-align: center;
+    font-size: 18px;
+    color: #555555;
+  }

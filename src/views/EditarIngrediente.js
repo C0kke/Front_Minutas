@@ -149,6 +149,10 @@ const EditarIngredientes = () => {
     }
   }, [fetchData, ingredientes, navigate]);
 
+  const handleVolverAPlatos = () => {
+    navigate('../platos')
+  }
+
   return (
     <div
       style={{
@@ -159,6 +163,17 @@ const EditarIngredientes = () => {
       }}
     >
       <Header />
+      <Button
+        onClick={handleVolverAPlatos}
+        sx={{
+          width:'20%',
+          bgcolor:'#14375A',
+          color: 'white',
+          marginLeft: '25px'
+        }}
+      >
+        Volver atrás
+      </Button>
       <Box
         sx={{
           flexGrow: 1,

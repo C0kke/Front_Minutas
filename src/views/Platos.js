@@ -115,8 +115,35 @@ const Platos = () => {
         }
     };
 
-    const handleDescontinuarClick = () => {
-        selectedPlato.descontinuado = !selectedPlato.descontinuado;
+    const handleDescontinuarClick = async () => {
+
+        if (selectedPlato.descontinuado && ingredientes.length === 0){
+            alert("Ingrese algún ingrediente primero - Los platos deben contener ingredientes");
+            return;
+        }
+
+        const platoData = {
+            nombre : selectedPlato.nombre,
+            categoria : selectedPlato.categoria,
+            descripcion: "Plato editado desde software",
+            descontinuado: !selectedPlato.descontinuado,
+        }
+        try {
+            const response = await axios.put(`http://localhost:3000/api/v1/plato/${selectedPlato._id}`, platoData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            console.log(response)
+            selectedPlato.descontinuado = !selectedPlato.descontinuado;
+            
+        } catch (error) {
+            console.error("Error al actualizar el plato:", error);
+            if (error.response && error.response.status === 401) {
+                console.error("Token inválido. Redirigiendo al login.");
+                localStorage.removeItem('token');
+                localStorage.setItem('error', 'error en la sesion')
+                navigate("/login");
+            }
+        }
         closeModal();
     };
     

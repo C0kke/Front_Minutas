@@ -3,7 +3,7 @@ import axios from 'axios';
 import './styles/Aprobar.css';
 import { Box, Alert, Button } from '@mui/material';
 import Header from '../components/Header';
-import { generarPDF } from '../components/PdfUtils'; 
+import ExportToExcel from '../components/ExportToExcel';
 import TablaMinutaAprobacion from '../components/TablaMinuta';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';

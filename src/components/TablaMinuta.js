@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import ExportToExcel from "./ExportToExcel";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -180,48 +181,85 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
     return <div>{error}</div>;
   }
 
+  const prepareDataForExcel = () => {
+    const excelData = [];
+    const headers = ["SEMANA " + semana._id.semana + " - " + semana._id.año, ...encabezadosFecha.map(h => `${h.diaSemana} ${h.fecha}`)];
+    excelData.push(headers);
+    filasOrdenadas.forEach(fila => {
+        const row = [fila];
+        encabezadosFecha.forEach(encabezado => {
+            const fecha = encabezado.fecha;
+            const cellValue = (fecha && tablaData[fecha] && tablaData[fecha][fila]) ? tablaData[fecha][fila].join(", ") : "-";
+            row.push(cellValue);
+        });
+        excelData.push(row);
+    });
+
+    // Aplanar la estructura para que sea un array de objetos
+    const flattenedData = excelData.map(row => {
+        const rowObject = {};
+        row.forEach((cell, index) => {
+            rowObject[headers[index]] = cell;
+        });
+        return rowObject;
+    });
+
+    return flattenedData;
+  };
+  
+
   return (
-    <TableContainer component={Paper} ref={tableRef}>
-      <Table sx={{ minWidth: 650 }} aria-label="tabla de aprobación de minuta">
-        <TableHead>
-          <TableRow>
-            <StyledTableCell className="encabezado" sx={{ textWrap: "nowrap" }}>
-              SEMANA {semana._id.semana} - {semana._id.año}
-            </StyledTableCell>
-            {encabezadosFecha.map((encabezado) => (
-              <StyledTableCell
+    <div>
+      <TableContainer component={Paper} ref={tableRef}>
+      <ExportToExcel
+        data={prepareDataForExcel()}
+        fileName={`PLANIFICACIÓN DE MINUTA ${semana._id.semana} - ${semana._id.año}`}
+        sheetName={`MINUTA`}
+        semana={semana}
+        encabezadosFecha={encabezadosFecha}
+        buttonLabel="Exportar a Excel"
+      />
+        <Table sx={{ minWidth: 650 }} aria-label="tabla de aprobación de minuta">
+          <TableHead>
+            <TableRow>
+              <StyledTableCell className="encabezado" sx={{ textWrap: "nowrap" }}>
+                SEMANA {semana._id.semana} - {semana._id.año}
+              </StyledTableCell>
+              {encabezadosFecha.map((encabezado) => (
+                <StyledTableCell
                 key={encabezado.id}
                 align="center"
                 className="encabezado"
-              >
-                <div>{encabezado.diaSemana}</div>
-                <div>{encabezado.fecha}</div>
-              </StyledTableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filasOrdenadas.map((fila) => (
-            <TableRow key={fila}>
-              <StyledTableCell
-                component="th"
-                scope="row"
-                className="subtitulo"
-              >
-                {fila}
-              </StyledTableCell>
-              {encabezadosFecha.map((encabezado) => (
-                <StyledTableCell key={encabezado.id} align="center">
-                  {tablaData[encabezado.fecha] && tablaData[encabezado.fecha][fila]
-                    ? tablaData[encabezado.fecha][fila].join(", ")
-                    : "-"}
+                >
+                  <div>{encabezado.diaSemana}</div>
+                  <div>{encabezado.fecha}</div>
                 </StyledTableCell>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {filasOrdenadas.map((fila) => (
+              <TableRow key={fila}>
+                <StyledTableCell
+                  component="th"
+                  scope="row"
+                  className="subtitulo"
+                  >
+                  {fila}
+                </StyledTableCell>
+                {encabezadosFecha.map((encabezado) => (
+                  <StyledTableCell key={encabezado.id} align="center">
+                    {tablaData[encabezado.fecha] && tablaData[encabezado.fecha][fila]
+                      ? tablaData[encabezado.fecha][fila].join(", ")
+                      : "-"}
+                  </StyledTableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
   );
 };
 

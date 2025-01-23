@@ -60,6 +60,9 @@ const Home = () => {
           <button className="home-button" onClick={() => navigate("/calculoingrediente")}>
             Generar Reporte
           </button>
+          <button className="home-button" onClick={() => navigate("/proyecciones")}>
+            Ver Proyecciones
+          </button>
           <button className="home-button" onClick={() => navigate("/aprobarmenu")}>
             Aprobar Minuta
           </button>

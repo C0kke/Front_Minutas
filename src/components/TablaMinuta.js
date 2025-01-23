@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -10,6 +10,14 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/system";
 import axios from "axios";
+import dayjs from 'dayjs';
+import 'dayjs/locale/es';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.locale('es');
 
 const StyledTableCell = styled(TableCell)(() => ({
   "&.encabezado": {
@@ -75,8 +83,9 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
         const data = {};
 
         semana.menus.forEach((menu) => {
-          const fecha = formatearFecha(new Date(menu.fecha));
-          const diaSemana = obtenerDiaSemana(new Date(menu.fecha));
+          // Convertir la fecha a la zona horaria deseada (ej. UTC-3)
+          const fecha = dayjs(menu.fecha).tz('America/Argentina/Buenos_Aires').format("DD/MM/YYYY");
+          const diaSemana = obtenerDiaSemana(dayjs(menu.fecha).tz('America/Argentina/Buenos_Aires'));
 
           data[fecha] = {
             "PROTEINA 1": [],
@@ -94,7 +103,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
             "POSTRE": [],
             diaSemana: diaSemana,
           };
-          
+
           menu.listaplatos.forEach((item) => {
             const plato = platosData[item.platoId];
             const fila = item.fila;
@@ -112,40 +121,40 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
     }
   }, [platosData, semana]);
 
+  // Función obtenerDiaSemana (ahora usa dayjs internamente)
   const obtenerDiaSemana = (fecha) => {
-    const dias = [
-      "Lunes",
-      "Martes",
-      "Miércoles",
-      "Jueves",
-      "Viernes",
-      "Sábado",
-      "Domingo",
-    ];
-    let dia = fecha.getDay();
-    dia = dia === 0 ? 6 : dia - 1;
-    return dias[dia];
+    const dias = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
+    return dias[fecha.day()];
   };
 
-  const formatearFecha = (fecha) => {
-    const dia = fecha.getDate().toString().padStart(2, "0");
-    const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
-    const año = fecha.getFullYear();
-    return `${dia}/${mes}/${año}`;
-  };
+  // useMemo para encabezadosFecha
+  const encabezadosFecha = useMemo(() => {
+    const { menus } = semana;
+    const fechasSet = new Set();
+    const encabezados = [];
 
-  const encabezadosFecha = semana.menus
-  .map((menu) => {
-    const fecha = new Date(menu.fecha);
-    const fechaFormateada = formatearFecha(fecha);
-    const diaSemana = obtenerDiaSemana(fecha);
-    return {
-      id: menu._id,
-      diaSemana: diaSemana,
-      fecha: fechaFormateada,
-    };
-  })
-  .sort((a, b) => a.fechaOriginal - b.fechaOriginal);
+    menus.forEach((menu) => {
+      // Convertir la fecha a la zona horaria deseada (ej. UTC-3)
+      const fecha = dayjs(menu.fecha).tz('America/Argentina/Buenos_Aires');
+      const fechaFormateada = fecha.format("DD/MM/YYYY");
+      const diaSemana = obtenerDiaSemana(fecha);
+
+      // Verificar si la fecha ya fue agregada
+      if (!fechasSet.has(fechaFormateada)) {
+        fechasSet.add(fechaFormateada);
+        encabezados.push({
+          id: menu._id,
+          diaSemana: diaSemana,
+          fecha: fechaFormateada,
+        });
+      }
+    });
+
+    // Ordenar los encabezados por fecha
+    encabezados.sort((a, b) => dayjs(a.fecha, "DD/MM/YYYY").diff(dayjs(b.fecha, "DD/MM/YYYY")));
+
+    return encabezados;
+  }, [semana]);
 
   const filasOrdenadas = [
     "PROTEINA 1",
@@ -155,7 +164,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
     "VEGANA",
     "GUARNICION 1",
     "GUARNICION 2",
-    "HIPOCALORICO" ,
+    "HIPOCALORICO",
     "ENSALADA 1",
     "ENSALADA 2",
     "ENSALADA 3",
@@ -201,16 +210,13 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
               >
                 {fila}
               </StyledTableCell>
-              {encabezadosFecha.map((encabezado) => {
-                const fecha = encabezado.fecha;
-                return (
-                  <StyledTableCell key={encabezado.id} align="center">
-                    {fecha && tablaData[fecha] && tablaData[fecha][fila]
-                      ? tablaData[fecha][fila].join(", ")
-                      : "-"}
-                  </StyledTableCell>
-                );
-              })}
+              {encabezadosFecha.map((encabezado) => (
+                <StyledTableCell key={encabezado.id} align="center">
+                  {tablaData[encabezado.fecha] && tablaData[encabezado.fecha][fila]
+                    ? tablaData[encabezado.fecha][fila].join(", ")
+                    : "-"}
+                </StyledTableCell>
+              ))}
             </TableRow>
           ))}
         </TableBody>

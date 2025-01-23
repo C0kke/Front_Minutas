@@ -10,7 +10,7 @@ import EditarIngredientes from './views/EditarIngrediente';
 
 import GenerarReporte from './views/GenerarReporte';
 import MenuSemanalAprobacion from './views/Aprobar';
-import EditarMinuta from './views/EditarMinuta';
+//import EditarMinuta from './views/EditarMinuta';
 
 function AppRouter() {
   const token = localStorage.getItem('token');
@@ -28,7 +28,7 @@ function AppRouter() {
         <Route path="/editar-ingredientes" element={token ? <EditarIngredientes/>: <Navigate to="/login" />} />
         <Route path="/calculoingrediente" element={token ? <GenerarReporte /> : <Navigate to="/login" />} />
         <Route path="/aprobarmenu" element={token ? <MenuSemanalAprobacion /> : <Navigate to="/login" />} />
-        <Route path="/editarmenu" element={token ? <EditarMinuta /> : <Navigate to="/login" />} />
+    {/* <Route path="/editarmenu" element={token ? <EditarMinuta /> : <Navigate to="/login" />} /> */}   
       </Routes>
     </Router>
   );

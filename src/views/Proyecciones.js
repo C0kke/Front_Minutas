@@ -14,7 +14,7 @@ const Proyeccion = () => {
         const response = await axios.get("http://localhost:3000/api/v1/proyeccion", {
             headers: { Authorization: `Bearer ${token}` }
           });
-        setData(response.data);
+          setData(response.data);
       } catch (err) {
         setError("Error al cargar los datos. Intenta nuevamente más tarde.");
       } finally {
@@ -23,21 +23,33 @@ const Proyeccion = () => {
     };
 
     fetchData();
-  }, []);
+  }, [token]);
 
   if (loading) return <div className="loading">Cargando...</div>;
   if (error) return <div className="error">{error}</div>;
 
+  // Agrupar los platos por la fecha de cada plato
+  const groupedData = data.reduce((acc, proyeccion) => {
+    proyeccion.lista.forEach((item) => {
+      const fechaPlato = item.fecha; // Fecha del plato
+      if (!acc[fechaPlato]) {
+        acc[fechaPlato] = [];
+      }
+      acc[fechaPlato].push(item);
+    });
+    return acc;
+  }, {});
+
   return (
     <div className="proyeccion-container">
       <h1 className="title">Proyecciones</h1>
-      {data.length > 0 ? (
-        data.map((proyeccion, index) => (
+      {Object.keys(groupedData).length > 0 ? (
+        Object.keys(groupedData).map((fecha, index) => (
           <div key={index} className="proyeccion-item">
-            <p className="fecha">Fecha: {proyeccion.fecha ? new Date(proyeccion.fecha).toLocaleString() : "N/A"}</p>
+            <p className="fecha">Fecha: {fecha}</p>
             <ul className="lista">
-              {proyeccion.lista?.length > 0 ? (
-                proyeccion.lista.map((item) => (
+              {groupedData[fecha].length > 0 ? (
+                groupedData[fecha].map((item) => (
                   <li key={item._id} className="lista-item">
                     <p><strong>Nombre del Plato:</strong> {item.Nombreplato}</p>
                     <p><strong>Cantidad:</strong> {item.cantidad}</p>

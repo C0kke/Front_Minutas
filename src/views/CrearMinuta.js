@@ -96,7 +96,7 @@ const Minutas = () => {
         const response = await axios.get('http://localhost:3000/api/v1/plato', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const platosFiltrados = response.data.filter(plato => !plato.descontinuado);
+        const platosFiltrados = response.data.filter(plato => plato.descontinuado === false);
         setPlatos(platosFiltrados);
       } catch (error) {
         console.error("Error al obtener platos:", error);

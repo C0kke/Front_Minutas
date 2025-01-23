@@ -121,8 +121,18 @@ const GenerarReporte = () => {
       return nuevosPlatos;
     });
   };
-
   const handleSubmit = async () => {
+
+    const platosInvalidos = Object.entries(platosPorFecha).flatMap(([_, platos]) =>
+      platos.filter(plato => !plato.cantidad || plato.cantidad <= 0)
+    );
+  
+    if (platosInvalidos.length > 0) {
+      alert("Todos los platos deben tener una cantidad mayor a 0.");
+      return; 
+    }
+  
+   
     const reportData = {
       fechaInicio,
       fechaFin,
@@ -136,14 +146,17 @@ const GenerarReporte = () => {
           }))
       ),
     };
+    
     try {
+
       const response = await axios.post('http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes', reportData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      
       const sucursalObj = sucursales.find(s => s._id === sucursal);
-      alert(`Reporte para ${sucursalObj.nombresucursal} generado correctamente en la ruta 'Downloads/archivos'`)
+      alert(`Reporte para ${sucursalObj.nombresucursal} generado correctamente en la ruta 'Downloads/archivos'`);
       navigate("/home");
     } catch (error) {
       console.error("Error al generar el reporte:", error);

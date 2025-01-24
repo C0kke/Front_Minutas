@@ -17,7 +17,6 @@ const Proyeccion = () => {
         const response = await axios.get("http://localhost:3000/api/v1/proyeccion", {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log("Response Data:", response.data);
         setData(response.data);
       } catch (err) {
         setError("Error al cargar los datos. Intenta nuevamente más tarde.");
@@ -32,75 +31,80 @@ const Proyeccion = () => {
   if (loading) return <div className="loading">Cargando...</div>;
   if (error) return <div className="error">{error}</div>;
 
-  // Agrupar por proyecciones
-const groupedData = data.reduce((acc, proyeccion) => {
-    // Genera un nombre único para cada proyección basado en su _id
-    const nombreProyeccion = proyeccion._id;
-    if (!acc[nombreProyeccion]) {
-      acc[nombreProyeccion] = [];
-    }
-    acc[nombreProyeccion].push(proyeccion);
-    return acc;
-  }, {});
+  // Función para agrupar platos por fecha
+  const agruparPorFecha = (lista) => {
+    const agrupado = {};
+    lista.forEach((item) => {
+      if (!agrupado[item.fecha]) {
+        agrupado[item.fecha] = [];
+      }
+      agrupado[item.fecha].push(item);
+    });
+    return agrupado;
+  };
 
-  const handleToggleProyeccion = (nombreProyeccion) => {
-    setOpenProyecciones(prev => ({
+  const handleToggleProyeccion = (proyeccionId) => {
+    setOpenProyecciones((prev) => ({
       ...prev,
-      [nombreProyeccion]: !prev[nombreProyeccion]
+      [proyeccionId]: !prev[proyeccionId]
     }));
-    // Cerrar todas las fechas al cerrar la proyección
-    if (openProyecciones[nombreProyeccion]) {
-        setOpenFechas({});
+    if (!openProyecciones[proyeccionId]) {
+      setOpenFechas({}); // Reiniciar fechas abiertas al abrir otra proyección
     }
   };
 
-  const handleToggleFecha = (fecha) => {
-    setOpenFechas(prev => ({
+  const handleToggleFecha = (proyeccionId, fecha) => {
+    setOpenFechas((prev) => ({
       ...prev,
-      [fecha]: !prev[fecha]
+      [`${proyeccionId}-${fecha}`]: !prev[`${proyeccionId}-${fecha}`]
     }));
   };
 
   return (
     <div>
-        <Header />
-        <h1 className="title">Proyecciones</h1>
-        <div className="proyeccion-container">
-        {Object.keys(groupedData)? (
-          Object.keys(groupedData).map((nombreProyeccion) => (
-            <div key={nombreProyeccion} className="proyeccion-item">
-              <p className="proyeccion-titulo" onClick={() => handleToggleProyeccion(nombreProyeccion)}>
-                {/* Usa el nombre de la proyección o un texto alternativo */}
-                Proyección {openProyecciones[nombreProyeccion] ? '▲' : '▼'}
-              </p>
-              {openProyecciones[nombreProyeccion] && (
-                <div className="fechas-container">
-                  {groupedData[nombreProyeccion].map((proyeccion) => (
-                    <div key={proyeccion._id} className="fecha-item">
-                      <p className="fecha" onClick={() => handleToggleFecha(proyeccion.fecha)}>
-                        {new Date(proyeccion.fecha).toLocaleDateString()} {openFechas[proyeccion.fecha] ? '▲' : '▼'}
-                      </p>
-                      <ul className={`lista ${openFechas[proyeccion.fecha] ? 'open' : ''}`}>
-                        <div className="lista-content">
-                          {openFechas[proyeccion.fecha] && proyeccion.lista ? (
-                            proyeccion.lista.map((item) => (
-                              <li key={item.m} className="lista-item">
-                                {/* Asegúrate de que los campos sean correctos */}
-                                <p><strong>Nombre del Plato:</strong> {item.nombre || "No disponible"}</p>
-                                <p><strong>Cantidad:</strong> {item.cantidad || "N/A"}</p>
+      <Header />
+      <h1 className="title">Proyecciones</h1>
+      <div className="proyeccion-container">
+        {data.length ? (
+          data.map((proyeccion) => {
+            const platosPorFecha = agruparPorFecha(proyeccion.lista);
+            return (
+              <div key={proyeccion._id} className="proyeccion-item">
+                <p
+                  className="proyeccion-titulo"
+                  onClick={() => handleToggleProyeccion(proyeccion._id)}
+                >
+                  Proyección: {proyeccion.nombreSucursal || "N/A"}{" "}
+                  {openProyecciones[proyeccion._id] ? "▲" : "▼"}
+                </p>
+                {openProyecciones[proyeccion._id] && (
+                  <div className="fechas-container">
+                    {Object.keys(platosPorFecha).map((fecha) => (
+                      <div key={`${proyeccion._id}-${fecha}`} className="fecha-item">
+                        <p
+                          className="fecha"
+                          onClick={() => handleToggleFecha(proyeccion._id, fecha)}
+                        >
+                          Fecha: {fecha}{" "}
+                          {openFechas[`${proyeccion._id}-${fecha}`] ? "▲" : "▼"}
+                        </p>
+                        {openFechas[`${proyeccion._id}-${fecha}`] && (
+                          <ul className="lista">
+                            {platosPorFecha[fecha].map((plato) => (
+                              <li key={plato._id} className="lista-item">
+                                <p><strong>Nombre del Plato:</strong> {plato.Nombreplato || "No disponible"}</p>
+                                <p><strong>Cantidad:</strong> {plato.cantidad || "N/A"}</p>
                               </li>
-                            ))
-                          ) : openFechas[proyeccion.fecha] ? (
-                            <li className="lista-item">No hay elementos para mostrar.</li>
-                          ) : null}
-                        </div>
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })
         ) : (
           <div className="empty">No hay proyecciones disponibles.</div>
         )}

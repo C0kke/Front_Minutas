@@ -83,6 +83,7 @@ const GenerarReporte = () => {
           }
         });
         // Agrupar platos por fecha
+        console.log(response.data)
         const platosAgrupados = {};
         response.data.forEach(menu => {
           const fecha = moment(menu.fecha).tz("America/New_York").add(1, 'days').format("DD-MM-YYYY");
@@ -145,8 +146,11 @@ const GenerarReporte = () => {
       ),
     };
      console.log(reportData)
+     const sucursalObj = sucursales.find(s => s._id === sucursal);
      const proyeccionData = {
+     
       fecha: new Date(), // Fecha principal de la proyección
+      nombreSucursal: sucursalObj.nombresucursal,
       lista: Object.entries(platosPorFecha).flatMap(([fecha, platos]) =>
         platos
           .filter(plato => plato.cantidad > 0)

@@ -4,6 +4,8 @@ body {
     background-image: url("../../../public/frontis_casino.jpg");
     background-size: cover;
     background-position: center;
+    background-attachment: fixed; /* Clave para que el fondo sea fijo */
+    background-repeat: no-repeat;
     margin: 0;
     padding: 0;
     display: flex;

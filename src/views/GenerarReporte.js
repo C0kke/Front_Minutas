@@ -67,16 +67,15 @@ const GenerarReporte = () => {
   };
 
   const handleFechaChange = async () => {
-    if (fechaInicio && fechaFin && sucursal) {
+    if (fechaInicio && fechaFin ) {
       setLoading(true);
       try {
-        const sucursalObj = sucursales.find(s => s._id === sucursal);
+        
 
         const response = await axios.get('http://localhost:3000/api/v1/menudiario/reporte/obtener-platos', {
           params: {
             fechaInicio: fechaInicio,
             fechaFin: fechaFin,
-            sucursalId: sucursal,
           },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -129,7 +128,13 @@ const GenerarReporte = () => {
   
     if (platosInvalidos.length > 0) {
       alert("Todos los platos deben tener una cantidad mayor a 0.");
-      return; 
+      return;
+    }
+  
+    const sucursalObj = sucursales.find(s => s._id === sucursal);
+    if (!sucursalObj) {
+      alert("Es obligatorio seleccionar una sucursal antes de continuar.");
+      return;
     }
   
     const reportData = {
@@ -137,7 +142,8 @@ const GenerarReporte = () => {
       fechaFin,
       sucursal,
       platosConCantidad: Object.entries(platosPorFecha).flatMap(([fecha, platos]) =>
-        platos.filter(plato => plato.cantidad > 0)
+        platos
+          .filter(plato => plato.cantidad > 0)
           .map(plato => ({
             fecha,
             platoId: plato.id,
@@ -145,28 +151,27 @@ const GenerarReporte = () => {
           }))
       ),
     };
-     console.log(reportData)
-     const sucursalObj = sucursales.find(s => s._id === sucursal);
-     const proyeccionData = {
-     
+    console.log(reportData);
+  
+    const proyeccionData = {
       fecha: new Date(), // Fecha principal de la proyección
       nombreSucursal: sucursalObj.nombresucursal,
       lista: Object.entries(platosPorFecha).flatMap(([fecha, platos]) =>
         platos
           .filter(plato => plato.cantidad > 0)
           .map(plato => ({
-            fecha,// Fecha del plato
+            fecha, // Fecha del plato
             Nombreplato: plato.nombre, // Nombre del plato
             cantidad: plato.cantidad.toString(), // Cantidad convertida a string
           }))
       ),
     };
-     console.log(proyeccionData)
+    console.log(proyeccionData);
+  
     try {
-      // Crear el reporte
       const reportResponse = await axios.post(
-        'http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes', 
-        reportData, 
+        'http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes',
+        reportData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -174,7 +179,6 @@ const GenerarReporte = () => {
         }
       );
   
-      const sucursalObj = sucursales.find(s => s._id === sucursal);
       alert(`Reporte para ${sucursalObj.nombresucursal} generado correctamente en la ruta 'Downloads/archivos'`);
   
       // Crear la proyección

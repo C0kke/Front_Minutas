@@ -45,6 +45,7 @@ const Platos = () => {
 
     const token = localStorage.getItem('token')?.trim();    
     localStorage.removeItem('id_plato') 
+    const role =  localStorage.getItem('ROL')?.trim();
 
     useEffect(() => {
         const fetchPlatos = async () => {
@@ -362,8 +363,17 @@ const Platos = () => {
                    
                     <Button className='ModalButton'   onClick={actualizarIngredientes} variant="outlined">Actualizar Ingredientes</Button>
 
+                    
+                    {role === "admin" && (
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => handleEliminarPlato(selectedPlato._id, selectedPlato.nombre)}
+                        >
+                            Eliminar
+                        </Button>
+                        )}
 
-                    <Button variant="contained" color="error" onClick={() => handleEliminarPlato(selectedPlato._id,selectedPlato.nombre)} >Eliminar</Button>
                         </div>
                     </div>
                 )}

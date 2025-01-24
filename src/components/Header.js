@@ -39,7 +39,8 @@ const Header = () => {
       handleError(new Error('Usuario no encontrado'));
     }
   }, []);
-    
+
+  localStorage.setItem('ROL' , user?.role)
   return (
     <header className="app-header">
       <div className="header-content">

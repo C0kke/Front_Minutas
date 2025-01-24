@@ -75,6 +75,19 @@ const Proyeccion = () => {
     
   }
 
+  const parseFecha = (fechaStr) => {
+    const [dia, mes, anio] = fechaStr.split("-").map(Number);
+    return new Date(anio, mes - 1, dia);
+  };
+
+  // Función para formatear fecha de objeto Date a DD-MM-YYYY
+  const formatearFecha = (fecha) => {
+    const dia = fecha.getDate().toString().padStart(2, '0');
+    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const anio = fecha.getFullYear();
+    return `${dia}-${mes}-${anio}`;
+  };
+
   if (loading) return <div className="loading">Cargando...</div>;
   if (error) return <div className="error">{error}</div>;
 
@@ -86,18 +99,30 @@ const Proyeccion = () => {
         {Object.keys(proyeccionesConFechas).length > 0 ? (
           Object.keys(proyeccionesConFechas).map((proyeccionId) => {
             const proyeccion = data.find((p) => p._id === proyeccionId);
+
+            const fechas = Object.keys(proyeccionesConFechas[proyeccionId]);
+
+            const fechasDate = fechas.map(parseFecha);
+
+            const fechaMinima = new Date(Math.min(...fechasDate));
+            const fechaMaxima = new Date(Math.max(...fechasDate));
             return (
               <div key={proyeccionId} className="proyeccion-item">
                 <p
                   className="proyeccion-titulo"
                   onClick={() => handleToggleProyeccion(proyeccionId)}
                 >
-                  Proyección: {proyeccion.nombreSucursal || "N/A"}
-                  {openProyecciones[proyeccionId] ? " ▲" : " ▼"}
+                  Proyección a sucursal {proyeccion.nombreSucursal || "N/A"} {openProyecciones[proyeccionId] ? " ▲" : " ▼"}
                 </p>
-                <button onClick={handleExportExcel}>
+                <p style={{color:'black'}}>
+                  De {formatearFecha(fechaMinima)} 
+                  { (fechaMaxima.getDate() !== fechaMinima.getDate()) && (
+                    <span> hasta {formatearFecha(fechaMaxima)}</span>       
+                  )}
+                </p>
+               {/*  <button onClick={handleExportExcel}>
                   Exportar a excel
-                </button>
+                </button> */}
                 {openProyecciones[proyeccionId] && (
                   <div className={`fechas-container ${openProyecciones[proyeccion._id] ? "open" : ""}`}>
                     {Object.keys(proyeccionesConFechas[proyeccionId]).map((fecha) => (

@@ -4,6 +4,8 @@ import "./styles/ingredientes.css";
 import Header from "../components/Header";
 
 const IngredienteList = () => {
+
+  const role = localStorage.getItem("ROL")?.trim();
   const [ingredientes, setIngredientes] = useState([]);
   const [filteredIngredientes, setFilteredIngredientes] = useState([]);
   const [error, setError] = useState(null);
@@ -299,8 +301,12 @@ const IngredienteList = () => {
                       >
                         Editar
                       </button>
+
+                      {role === "admin" && (
                       <button
-                        onClick={() => handleDeleteIngredient(ingrediente._id,ingrediente.nombreIngrediente)}
+                        onClick={() =>
+                          handleDeleteIngredient(ingrediente._id, ingrediente.nombreIngrediente)
+                        }
                         style={{
                           backgroundColor: "#FF6347",
                           color: "white",
@@ -311,6 +317,7 @@ const IngredienteList = () => {
                       >
                         Eliminar
                       </button>
+                    )}
                     </td>
                   </tr>
                 ))

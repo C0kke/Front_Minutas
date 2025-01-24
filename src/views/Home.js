@@ -68,26 +68,28 @@ const Home = () => {
           </button>
         </>
       );
-    } else if (role === "gerencia" || role === "logistica") {
+    } else if ( role === "logistica") {
       return (
         <>
           <button className="home-button" onClick={() => navigate("/menuhistorico")}>
             Ver Historial de Minutas
           </button>
-          <button className="home-button" onClick={() => navigate("/calculoingrediente")}>
-            Generar Reporte
+        
+          <button className="home-button" onClick={() => navigate("/proyecciones")}>
+            Ver Proyecciones
           </button>
-          <button className="home-button" onClick={() => navigate("/aprobarmenu")}>
-            Aprobar Minuta
-          </button>
+
         </>
       );
-    } else if (role === "user") {
+    } else if (role === "nutricionista") {
       return (
         <>
           <button className="home-button" onClick={() => navigate("/crear-minuta")}>
             Crear Minuta Semanal
           </button>
+          <button className="home-button" onClick={() => navigate("/editarmenu")}> 
+            Editar Minutas 
+          </button> 
           <button className="home-button" onClick={() => navigate("/menuhistorico")}>
             Ver Historial de Minutas
           </button>
@@ -99,6 +101,9 @@ const Home = () => {
           </button>
           <button className="home-button" onClick={() => navigate("/calculoingrediente")}>
             Generar Reporte
+          </button>
+          <button className="home-button" onClick={() => navigate("/proyecciones")}>
+            Ver Proyecciones
           </button>
         </>
       );

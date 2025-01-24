@@ -19,6 +19,7 @@ import {
   MenuItem,
   FormControl,
   Button,
+  Grid,
 } from "@mui/material";
 
 import dayjs from "dayjs";
@@ -27,6 +28,8 @@ import weekday from "dayjs/plugin/weekday";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import isoWeek from "dayjs/plugin/isoWeek";
 import "dayjs/locale/es";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const encabezados = [
   "",
@@ -227,45 +230,102 @@ const EditarMinuta = () => {
   };
 
   const handleUpdateMinuta = async () => {
-    try {
-      setLoading(true);
-      for (const menu of menus) {
-        // **Enviar todos los platos, incluidos los nuevos (con ID temporal)**
-        const listaplatosToUpdate = menu.listaplatos;
+    setLoading(true);
+    const minutasAEnviar = [];
   
-        const updatedMenu = {
-          ...menu,
-          listaplatos: listaplatosToUpdate,
-          nombre: menu.nombre,
-          fecha: menu.fecha,
-          semana: menu.semana,
-          id_sucursal: menu.id_sucursal,
-          estado: menu.estado,
-        };
+    // Crear un objeto para rastrear las ensaladas por fecha
+    const ensaladasPorFecha = {};
   
-        delete updatedMenu._id;
+    for (const menu of menus) {
+      const listaplatosToUpdate = menu.listaplatos.map(plato => ({
+        platoId: plato.platoId._id, // Ahora platoId es un string
+        fila: plato.fila
+      }));
   
-        // Depuración
-        console.log("Enviando a:", `http://localhost:3000/api/v1/menudiario/${menu._id}`);
-        console.log("Datos a enviar:", updatedMenu);
+      const updatedMenu = {
+        ...menu,
+        listaplatos: listaplatosToUpdate,
+        nombre: menu.nombre,
+        fecha: menu.fecha,
+        semana: menu.semana,
+        id_sucursal: menu.id_sucursal,
+        estado: menu.estado,
+      };
+
   
-        await axios.put(
-          `http://localhost:3000/api/v1/menudiario/${menu._id}`,
-          updatedMenu,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      minutasAEnviar.push(updatedMenu);
+  
+      // Agregar las ensaladas de la minuta actual al objeto ensaladasPorFecha
+      const fechaISO = dayjs(updatedMenu.fecha).format('YYYY-MM-DD');
+      if (!ensaladasPorFecha[fechaISO]) {
+        ensaladasPorFecha[fechaISO] = [];
       }
-      alert("Minuta actualizada correctamente");
-      navigate("../home");
-    } catch (error) {
-      // ... (manejo de errores)
-    } finally {
+      updatedMenu.listaplatos.forEach(plato => {
+        if (plato.fila.startsWith("ENSALADA") && plato.platoId) {
+          ensaladasPorFecha[fechaISO].push(plato.platoId); // Corrección aquí
+        }
+      });
+    }
+  
+    // Verificar combinaciones de ensaladas repetidas
+    let hayErrores = false;
+    for (const fecha of Object.keys(ensaladasPorFecha)) {
+      const combinacionActual = ensaladasPorFecha[fecha];
+      if (combinacionActual.length > 0) {
+        for (const otraFecha of Object.keys(ensaladasPorFecha)) {
+          if (fecha !== otraFecha) {
+            const otraCombinacion = ensaladasPorFecha[otraFecha];
+            const sonIguales = combinacionActual.length === otraCombinacion.length &&
+              combinacionActual.every(ensaladaId => otraCombinacion.includes(ensaladaId));
+  
+            if (sonIguales) {
+              hayErrores = true;
+              const fechaActual = dayjs(fecha).format('dddd DD [de] MMMM');
+              const otraFechaFormateada = dayjs(otraFecha).format('dddd DD [de] MMMM');
+              alert(`Error: La combinación de ensaladas del ${fechaActual} ya existe en la fecha ${otraFechaFormateada}.`);
+              break;
+            }
+          }
+        }
+      }
+      if (hayErrores) break;
+    }
+  
+    if (!hayErrores) {
+      try {
+        for (const menu of minutasAEnviar) {
+          await axios.put(
+            `http://localhost:3000/api/v1/menudiario/${menu._id}`,
+            menu,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+        alert("Minuta actualizada correctamente");
+        navigate("../home");
+      } catch (error) {
+        console.error("Error al actualizar la minuta:", error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.setItem('error', 'error de sesion');
+          navigate("/login");
+        } else if (error.response) {
+          alert(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`);
+        } else if (error.request) {
+          alert("No se recibió respuesta del servidor.");
+        } else {
+          alert("Se produjo un error al actualizar la minuta. Por favor, inténtalo de nuevo.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      alert("Se encontraron errores en la minuta. No se actualizará.");
       setLoading(false);
     }
   };
 
   // **Función para filtrar las opciones**
-  const opcionesFiltradasPorFila = useMemo(() => {
+   const opcionesFiltradasPorFila = useMemo(() => {
     const opciones = {};
     const dias = weekDays.map((day) =>
       day
@@ -274,16 +334,16 @@ const EditarMinuta = () => {
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
     );
-  
+
     filas.forEach((fila) => {
       let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
       dias.forEach((dia) => {
         const diaNormalizado = dia;
-  
+
         if (!opciones[fila]) {
           opciones[fila] = {};
         }
-  
+
         if (
           platosDisponibles[diaNormalizado] &&
           platosDisponibles[diaNormalizado].length > 0
@@ -291,8 +351,8 @@ const EditarMinuta = () => {
           let opcionesFiltradas = platosDisponibles[diaNormalizado].filter(
             (plato) => plato.categoria === tipoPlatoFiltrado
           );
-  
-          // **Lógica de Filtrado para EditarMinuta (CORREGIDA)**
+
+          // **Lógica de Filtrado para EditarMinuta**
           opcionesFiltradas = opcionesFiltradas.filter((plato) => {
             // Verificar si el plato ya está seleccionado en la semana actual
             const yaSeleccionado = menus.some((menu) => {
@@ -301,14 +361,11 @@ const EditarMinuta = () => {
                 "day"
               );
               const esMismaSemana = menu.semana === selectedWeek;
-  
+
               // **Restricciones por tipo de plato**
               if (
                 tipoPlatoFiltrado === "PLATO DE FONDO" ||
-                tipoPlatoFiltrado === "GUARNICIÓN" ||
-                tipoPlatoFiltrado === "HIPOCALORICO" ||
-                tipoPlatoFiltrado === "VEGETARIANO" ||
-                tipoPlatoFiltrado === "VEGANO"
+                tipoPlatoFiltrado === "GUARNICIÓN"
               ) {
                 // Para estos tipos de plato, no se debe repetir en la semana
                 if (esMismaSemana) {
@@ -318,10 +375,6 @@ const EditarMinuta = () => {
                       const platoEnOtraFila = menu.listaplatos.find(
                         (p) => p.fila.toUpperCase() === otraFila.toUpperCase()
                       );
-                      // **Verificar si el plato ya está seleccionado en el mismo día, en otra fila del mismo tipo**
-                      if (esMismoDia) {
-                        return platoEnOtraFila?.platoId?._id === plato._id;
-                      }
                       return platoEnOtraFila?.platoId?._id === plato._id;
                     }
                     return false;
@@ -341,15 +394,33 @@ const EditarMinuta = () => {
                     return false;
                   });
                 }
-              }
-  
+              } else if (["HIPOCALORICO", "VEGETARIANO", "VEGANA"].includes(tipoPlatoFiltrado)) {
+                // Para HIPOCALORICO, VEGETARIANO y VEGANA, no se debe repetir en la semana
+                if (esMismaSemana) {
+                    return menus.some(otroMenu => {
+                        if (otroMenu.semana === selectedWeek) {
+                            return filas.some(otraFila => {
+                                if (["VEGETARIANO", "VEGANA", "HIPOCALORICO"].includes(tipoPlatoPorFila[otraFila])) {
+                                    const platoEnOtraFila = otroMenu.listaplatos.find(
+                                        p => p.fila.toUpperCase() === otraFila.toUpperCase()
+                                    );
+                                    return platoEnOtraFila?.platoId?._id === plato._id;
+                                }
+                                return false;
+                            });
+                        }
+                        return false;
+                    });
+                }
+            }
+
               // Para otros tipos de plato, no hay restricciones
               return false;
             });
-  
+
             return !yaSeleccionado;
           });
-  
+
           // **Casos Especiales: SOPA DIA y VEGANA**
           if (fila === "SOPA DIA") {
             opcionesFiltradas = opcionesFiltradas.concat(
@@ -358,30 +429,14 @@ const EditarMinuta = () => {
               )
             );
           }
-  
-          if (fila === "VEGANA") {
-            opcionesFiltradas = opcionesFiltradas.concat(
-              platosDisponibles[diaNormalizado].filter(
-                (plato) => plato.categoria === "VEGETARIANO"
-              )
-            );
-          }
 
-          if (fila === "VEGETARIANA") {
-            opcionesFiltradas = opcionesFiltradas.concat(
-              platosDisponibles[diaNormalizado].filter(
-                (plato) => plato.categoria === "VEGANA"
-              )
-            );
-          }
-  
           opciones[fila][diaNormalizado] = opcionesFiltradas;
         } else {
           opciones[fila][diaNormalizado] = [];
         }
       });
     });
-  
+
     return opciones;
   }, [platosDisponibles, selectedWeek, currentYear, menus, platos]);
 
@@ -402,259 +457,251 @@ const EditarMinuta = () => {
                 </div>
             </div>
         );
-    }return (
-      <div>
-        <Header />
-        {/* Contenedor principal */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            bgcolor: "#f5f5f5",
-            padding: 2,
-            margin: "2rem auto",
-            width: "calc(100% - 4rem)",
-            maxWidth: "2200px",
-            overflowX: "auto",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-around",
-              alignItems: "center",
-              width: "90%",
-              marginBottom: "1rem",
-            }}
-          >
-            {/* Selector de semana */}
-            <FormControl fullWidth margin="normal" sx={{ width: "25%" }}>
-              <InputLabel
-                id="week-select-label"
-                sx={{
-                  fontWeight: "bold",
-                  color: "#0d47a1",
-                }}
-              >
-                Semana
-              </InputLabel>
-              <Select
-                labelId="week-select-label"
-                id="week-select"
-                value={selectedWeek}
-                label="Semana"
-                onChange={handleWeekChange}
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: "4px",
-                  "& .MuiSelect-select": {
-                    fontWeight: "bold",
-                    color: "#1565c0",
-                  },
-                }}
-              >
-                {availableWeeks.map((week) => (
-                  <MenuItem
-                    key={week}
-                    value={week}
-                    sx={{
-                      fontWeight: "bold",
-                      color: "#1565c0",
-                    }}
+    }
+    
+    return (
+      <Grid container direction="column" style={{ minHeight: '100vh' }}>
+        <Grid item>
+          <Header />
+        </Grid>
+        <Grid item container justifyContent="center" style={{ flexGrow: 1 }}>
+          <Grid item xs={12} md={11}> {/* Ajusta el Grid item para que ocupe el ancho deseado */}
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              bgcolor: 'white',
+              padding: 2,
+              borderRadius: '25px',
+              my: '2rem', // Margen superior e inferior
+              width: '100rem',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 3,
+                    height: "5rem",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    p: 2,
+                    mb: 2,
+                    backgroundColor: "#f5f5f5",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    width: '100rem',
+                  }}
+                >
+                  <FormControl fullWidth margin="normal" sx={{ width: "25%" }}>
+                    <InputLabel
+                      id="week-select-label"
+                      sx={{
+                        fontWeight: "bold",
+                        color: "#0d47a1",
+                      }}
+                    >
+                      Semana
+                    </InputLabel>
+                    <Select
+                      labelId="week-select-label"
+                      id="week-select"
+                      value={selectedWeek}
+                      label="Semana"
+                      onChange={handleWeekChange}
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: "4px",
+                        "& .MuiSelect-select": {
+                          fontWeight: "bold",
+                          color: "#1565c0",
+                        },
+                      }}
+                    >
+                      {availableWeeks.map((week) => (
+                        <MenuItem
+                          key={week}
+                          value={week}
+                          sx={{
+                            fontWeight: "bold",
+                            color: "#1565c0",
+                          }}
+                        >
+                          Semana {week}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleUpdateMinuta}
+                    disabled={loading}
+                    sx={{ marginLeft: "2rem" }}
                   >
-                    Semana {week}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleUpdateMinuta}
-              disabled={loading}
-              sx={{ marginLeft: "2rem" }}
-            >
-              Actualizar Minuta
-            </Button>
-          </div>
+                    Actualizar Minuta
+                  </Button>
+                </Box>
+              </LocalizationProvider>
   
-          <TableContainer
-            component={Paper}
-            sx={{
-              width: "100%",
-              overflowX: "auto",
-              boxShadow: "none",
-              border: "none",
-            }}
-          >
-            <Table
-              sx={{
-                width: "150%",
-                fontFamily: "Roboto, sans-serif",
-                margin: "0 auto",
-                borderCollapse: "collapse",
-              }}
-              aria-label="simple table"
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    key="empty-cell"
-                    sx={{
-                      backgroundColor: "#2e7d32",
-                      width: "15%",
-                      border: "none",
-                    }}
-                  ></TableCell>
-                  {weekDays.map((day) => (
-                    <TableCell
-                      key={day.toString()}
-                      align="center"
-                      sx={{
-                        width: "17%",
-                        backgroundColor: "#2e7d32",
-                        color: "white",
-                        textTransform: "uppercase",
-                        fontWeight: "bold",
-                        letterSpacing: "1.5px",
-                        padding: "10px",
-                        fontSize: "14px",
-                        border: "none",
-                      }}
-                    >
-                      {day
-                        .format("dddd DD [de] MMMM")
-                        .replace(
-                          day.format("dddd"),
-                          day.format("dddd").slice(0, 3)
-                        )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filas.map((fila) => (
-                  <TableRow
-                    key={fila}
-                    sx={{
-                      "&:nth-of-type(odd)": {
-                        backgroundColor: "#f5f5f5",
-                      },
-                    }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="center"
-                      sx={{
-                        width: "15%",
-                        minWidth: "150px",
-                        p: 1,
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                        backgroundColor: "#2e7d32",
-                        color: "white",
-                        border: "none",
-                      }}
-                    >
-                      {fila}
-                    </TableCell>
-                    {weekDays.map((day) => {
-                      const menuDia = menus.find((menu) =>
-                        dayjs(menu.fecha).isSame(day, "day")
-                      );
-                      const platoExistente = menuDia?.listaplatos.find(
-                        (plato) => plato.fila.toUpperCase() === fila.toUpperCase()
-                      );
-                      const platoExistenteId = platoExistente?.platoId?._id;
-                      const platoExistenteNombre = platoExistente?.platoId?.nombre;
-                      return (
+              <TableContainer component={Paper} sx={{ width: '100%', overflowX: 'auto', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+                <Table sx={{ width: '100%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell
+                        key="empty-cell"
+                        sx={{ backgroundColor: "#2e7d32", width: "15%", border: "none" }}
+                      ></TableCell>
+                      {weekDays.map((day) => (
                         <TableCell
-                          key={`${day.format("YYYY-MM-DD")}-${fila}`}
+                          key={day.toString()}
                           align="center"
                           sx={{
-                            p: 1,
-                            fontSize: "12px",
-                            wordBreak: "break-word",
+                            width: "17%",
+                            backgroundColor: "#2e7d32",
+                            color: "white",
+                            textTransform: "uppercase",
+                            fontWeight: "bold",
+                            letterSpacing: "1.5px",
+                            padding: "10px",
+                            fontSize: "14px",
                             border: "none",
                           }}
                         >
-                          <Autocomplete
-                            disablePortal
-                            id={`${day.format("YYYY-MM-DD")}-${fila}`}
-                            options={
-                              opcionesFiltradasPorFila[fila]?.[
-                                dayjs(day)
-                                  .format("dddd")
-                                  .toUpperCase()
-                                  .normalize("NFD")
-                                  .replace(/[\u0300-\u036f]/g, "")
-                              ] || []
-                            }
-                            getOptionLabel={(option) => option.nombre || ""}
-                            value={ 
-                              opcionesFiltradasPorFila[fila]?.[
-                                dayjs(day)
-                                  .format("dddd")
-                                  .toUpperCase()
-                                  .normalize("NFD")
-                                  .replace(/[\u0300-\u036f]/g, "")
-                              ]?.find((p) => p._id === platoExistenteId) ||
-                              (platoExistenteId
-                                ? { _id: platoExistenteId, nombre: platoExistenteNombre }
-                                : null)
-                            }
-                            onChange={(event, newValue) => {
-                              if (newValue) {
-                                handlePlatoChange(day, fila, newValue);
-                              }
-                            }}
-                            isOptionEqualToValue={(option, value) =>
-                              option?._id === value?._id
-                            }
-                            sx={{ width: "100%" }}
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
-                                label={
-                                  platoExistente
-                                    ? platoExistenteNombre
-                                    : `Seleccione ${tipoPlatoPorFila[fila]}`
-                                }
-                                size="small"
-                                sx={{
-                                  width: "100%",
-                                  color: "#2e7d32",
-                                  "& .MuiInputLabel-root": {
-                                    fontWeight: "bold",
-                                    fontSize: "14px",
-                                  },
-                                  "& .MuiOutlinedInput-root": {
-                                    "& fieldset": {
-                                      borderColor: "#2e7d32",
-                                    },
-                                    "&:hover fieldset": {
-                                      borderColor: "#2e7d32",
-                                    },
-                                    "&.Mui-focused fieldset": {
-                                      borderColor: "#2e7d32",
-                                    },
-                                  },
-                                }}
-                              />
+                          {day
+                            .format("dddd DD [de] MMMM")
+                            .replace(
+                              day.format("dddd"),
+                              day.format("dddd").slice(0, 3)
                             )}
-                          />
                         </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      </div>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filas.map((fila) => (
+                      <TableRow
+                        key={fila}
+                        sx={{
+                          "&:nth-of-type(odd)": {
+                            backgroundColor: "#f5f5f5",
+                          },
+                        }}
+                      >
+                        <TableCell
+                          component="th"
+                          scope="row"
+                          align="center"
+                          sx={{
+                            width: "15%",
+                            minWidth: "150px",
+                            p: 1,
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                            backgroundColor: "#2e7d32",
+                            color: "white",
+                            border: "none",
+                          }}
+                        >
+                          {fila}
+                        </TableCell>
+                        {weekDays.map((day) => {
+                          const menuDia = menus.find((menu) =>
+                            dayjs(menu.fecha).isSame(day, "day")
+                          );
+                          const platoExistente = menuDia?.listaplatos.find(
+                            (plato) => plato.fila.toUpperCase() === fila.toUpperCase()
+                          );
+                          const platoExistenteId = platoExistente?.platoId?._id;
+                          const platoExistenteNombre = platoExistente?.platoId?.nombre;
+                          return (
+                            <TableCell
+                              key={`${day.format("YYYY-MM-DD")}-${fila}`}
+                              align="center"
+                              sx={{
+                                p: 1,
+                                fontSize: "12px",
+                                wordBreak: "break-word",
+                                border: "none",
+                              }}
+                            >
+                              <Autocomplete
+                                disablePortal
+                                id={`${day.format("YYYY-MM-DD")}-${fila}`}
+                                options={
+                                  opcionesFiltradasPorFila[fila]?.[
+                                    dayjs(day)
+                                      .format("dddd")
+                                      .toUpperCase()
+                                      .normalize("NFD")
+                                      .replace(/[\u0300-\u036f]/g, "")
+                                  ] || []
+                                }
+                                getOptionLabel={(option) => option.nombre || ""}
+                                value={
+                                  opcionesFiltradasPorFila[fila]?.[
+                                    dayjs(day)
+                                      .format("dddd")
+                                      .toUpperCase()
+                                      .normalize("NFD")
+                                      .replace(/[\u0300-\u036f]/g, "")
+                                  ]?.find((p) => p._id === platoExistenteId) ||
+                                  (platoExistenteId
+                                    ? { _id: platoExistenteId, nombre: platoExistenteNombre }
+                                    : null)
+                                }
+                                onChange={(event, newValue) => {
+                                  if (newValue) {
+                                    handlePlatoChange(day, fila, newValue);
+                                  }
+                                }}
+                                isOptionEqualToValue={(option, value) =>
+                                  option?._id === value?._id
+                                }
+                                sx={{ width: "100%" }}
+                                renderInput={(params) => (
+                                  <TextField
+                                    {...params}
+                                    label={
+                                      platoExistente
+                                        ? platoExistenteNombre
+                                        : `Seleccione ${tipoPlatoPorFila[fila]}`
+                                    }
+                                    size="small"
+                                    sx={{
+                                      width: "100%",
+                                      color: "#2e7d32",
+                                      "& .MuiInputLabel-root": {
+                                        fontWeight: "bold",
+                                        fontSize: "14px",
+                                      },
+                                      "& .MuiOutlinedInput-root": {
+                                        "& fieldset": {
+                                          borderColor: "#2e7d32",
+                                        },
+                                        "&:hover fieldset": {
+                                          borderColor: "#2e7d32",
+                                        },
+                                        "&.Mui-focused fieldset": {
+                                          borderColor: "#2e7d32",
+                                        },
+                                      },
+                                    }}
+                                  />
+                                )}
+                              />
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          </Grid>
+        </Grid>
+      </Grid>
     );
   };
   

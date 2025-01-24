@@ -36,7 +36,7 @@ const IngredienteItem = ({ ingredientePlato, index, handleChange }) => {
     );
   
     if (!confirmacion) {
-      console.log("Eliminación cancelada.");
+      alert("Eliminación cancelada.");
       return;
     }
   

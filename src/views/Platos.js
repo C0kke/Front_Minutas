@@ -132,7 +132,6 @@ const Platos = () => {
             const response = await axios.put(`http://localhost:3000/api/v1/plato/${selectedPlato._id}`, platoData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log(response)
             selectedPlato.descontinuado = !selectedPlato.descontinuado;
             
         } catch (error) {

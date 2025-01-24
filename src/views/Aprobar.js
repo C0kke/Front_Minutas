@@ -28,7 +28,6 @@ const MenuSemanalAprobacion = () => {
             Authorization: `Bearer ${token}`,
           }
         });
-        console.log(response.data)
         setMenusPendientes(response.data);
       } catch (error) {
         console.error('Error al cargar los menús pendientes:', error);

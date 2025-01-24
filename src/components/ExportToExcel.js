@@ -8,8 +8,6 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet(`Minuta`);
 
-        console.log("Iniciando exportToExcel");
-
         const headerData = [
             { key: 'semana', label: 'SEMANA', value: semana._id.semana },
             { key: 'año', label: 'AÑO', value: semana._id.año },
@@ -17,17 +15,12 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
             { key: 'hasta', label: 'HASTA', value: encabezadosFecha[encabezadosFecha.length - 1].fecha },
         ];
 
-        console.log("headerData:", headerData);
-
         let currentRow = 2;
         headerData.forEach((header) => {
-            console.log(`Procesando header: ${header.label}`);
             worksheet.mergeCells(currentRow, 2, currentRow, 4);
             const headerRow = worksheet.addRow([null, `${header.label}: ${header.value}`]);
-            console.log(`Fila agregada para ${header.label}. currentRow: ${currentRow}`);
 
             headerRow.eachCell((cell) => {
-                console.log(`Procesando celda: ${cell.address}`);
                 if (cell.address !== 'A' + currentRow) {
                     cell.fill = {
                         type: 'pattern',
@@ -54,18 +47,12 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
             currentRow++;
         });
 
-        console.log("Cabecera terminada. currentRow:", currentRow);
-
         worksheet.addRow([]);
         currentRow++;
 
-        console.log("Agregando título. currentRow:", currentRow);
         worksheet.mergeCells(currentRow, 2, currentRow, encabezadosFecha.length + 2);
-        console.log("Merge realizado para título. currentRow:", currentRow);
         const titleRow = worksheet.addRow([null, 'MINUTA SEMANAL S' + semana._id.semana]);
-        console.log("Fila de título agregada. currentRow:", currentRow);
         titleRow.eachCell((cell) => {
-            console.log(`Procesando celda del título: ${cell.address}`);
             if (cell.address !== 'A' + currentRow) {
                 cell.fill = {
                     type: 'pattern',
@@ -92,17 +79,12 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
         titleRow.height = 30;
         currentRow++;
 
-        console.log("Título terminado. currentRow:", currentRow);
-
         worksheet.addRow([]);
         currentRow++;
 
-        console.log("Agregando encabezados de días. currentRow:", currentRow);
         const daysHeader = encabezadosFecha.map(h => `${h.diaSemana.toUpperCase()} ${h.fecha}`);
         const daysHeaderRow = worksheet.addRow([null, null, ...daysHeader]);
-        console.log("Encabezados de días agregados. currentRow:", currentRow);
         daysHeaderRow.eachCell((cell, colNumber) => {
-            console.log(`Procesando celda de encabezado de día: ${cell.address}`);
             if (colNumber > 1) {
                 cell.fill = {
                     type: 'pattern',
@@ -126,20 +108,13 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
             }
         });
         daysHeaderRow.height = 25;
-
-        console.log("Encabezados de días terminados. currentRow:", currentRow);
-
-        console.log("Agregando datos de la tabla. currentRow:", currentRow);
         data.slice(1).forEach(row => {
             const excelRow = [];
             Object.keys(row).forEach(key => {
-                console.log(`Agregando valor de celda: ${row[key]}`);
                 excelRow.push(row[key]);
             });
             const dataRow = worksheet.addRow([null, ...excelRow]);
-            console.log("Fila de datos agregada. currentRow:", currentRow);
             dataRow.eachCell((cell, colNumber) => {
-                console.log(`Procesando celda de datos: ${cell.address}`);
                 if (colNumber === 2) {
                     cell.fill = {
                         type: 'pattern',
@@ -167,10 +142,7 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
             dataRow.height = 60;
         });
 
-        console.log("Datos de la tabla terminados. currentRow:", currentRow);
-
         // Establecer el ancho de las columnas
-        console.log("Estableciendo ancho de columnas");
         worksheet.columns.forEach((column, index) => {
             if (index > 0) {
                 column.width = 25;
@@ -182,7 +154,6 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
         });
 
         // Descargar el archivo
-        console.log("Descargando archivo");
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const link = document.createElement('a');
@@ -190,7 +161,6 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
         link.download = `${fileName}.xlsx`;
         link.click();
         URL.revokeObjectURL(link.href);
-        console.log("Archivo descargado");
     };
 
     return (

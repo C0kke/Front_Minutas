@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
+import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, Grid2, FormControl } from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -193,26 +193,26 @@ const Minutas = () => {
   };
 
   const handleAutocompleteChange = (event, value, row, col) => {
-  const colNormalizado = col.toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    const colNormalizado = col.toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
 
-  setData((prevData) => {
-    const newData = { ...prevData };
-    if (!newData[colNormalizado]) {
-      newData[colNormalizado] = {};
-    }
-    newData[colNormalizado][row] = value ? value._id : null;
-    return newData;
-  });
-};
+    setData((prevData) => {
+      const newData = { ...prevData };
+      if (!newData[colNormalizado]) {
+        newData[colNormalizado] = {};
+      }
+      newData[colNormalizado][row] = value ? value._id : null;
+      return newData;
+    });
+  };
 
   const handleCrearMinuta = async () => {
     const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
     let datosCompletos = true;
-    const minutasAEnviar = []; // Array para almacenar las minutas
+    const minutasAEnviar = [];
 
-    // Verificar si existen datos en los 5 encabezados
+    // Verificar que los datos estén completos
     for (let i = 1; i < encabezados.length; i++) {
       const dia = encabezados[i];
       if (!data || !data[dia] || Object.keys(data[dia]).length === 0) {
@@ -249,48 +249,86 @@ const Minutas = () => {
           listaplatos: listaplatos,
           aprobado: false,
         };
-          //Se agregan las minutas al array minutasAEnviar
-          minutasAEnviar.push(minutaDia); 
+        minutasAEnviar.push(minutaDia);
       }
 
-      // Verificar si hay errores potenciales (en este caso, si la lista de platos está vacía)
+      // Validacion de errores
       let hayErrores = false;
+      const ensaladas = {};
       for (const minuta of minutasAEnviar) {
+        // Error: Minuta vacia
         if (minuta.listaplatos.length === 0) {
           hayErrores = true;
-          alert(`Error potencial: La minuta para ${minuta.nombre} no tiene platos.`);
-          break;
+          alert(`Error : La minuta para ${minuta.nombre} no tiene platos.`);
         }
+
+        const fechaISO = dayjs(minuta.fecha).format('YYYY-MM-DD');
+        ensaladas[fechaISO] = [];
+
+        minuta.listaplatos.forEach(plato => {
+          if (plato.fila.startsWith("ENSALADA")) {
+            ensaladas[fechaISO].push(plato.platoId);
+          }
+        });
+      }
+
+      // Verificar combinaciones de ensaladas repetidas en otros dias
+      for (const fecha of Object.keys(ensaladas)) {
+          const combinacionActual = ensaladas[fecha];
+          if (combinacionActual && combinacionActual.length > 0) { 
+              for (const otraFecha of Object.keys(ensaladas)) {
+                  if (fecha !== otraFecha) {
+                      const otraCombinacion = ensaladas[otraFecha];
+                      const sonIguales = combinacionActual.length === otraCombinacion.length &&
+                          combinacionActual.every(ensaladaId => otraCombinacion.includes(ensaladaId));
+          
+                      if (sonIguales) {
+                          hayErrores = true;
+                          const fechaActual = dayjs(fecha).format('dddd DD [de] MMMM');
+                          const otraFechaFormateada = dayjs(otraFecha).format('dddd DD [de] MMMM');
+                          alert(`Error: La combinación de ensaladas del ${fechaActual} ya existe en la fecha ${otraFechaFormateada}.`);
+                          break; 
+                      }
+                  }
+              }
+          }
+          if (hayErrores) break; 
       }
 
       if (!hayErrores) {
         try {
           const token = localStorage.getItem('token')?.trim();
-          // Enviar todas las minutas a la API
           for (const minuta of minutasAEnviar) {
-            const response = await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
+            await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
               headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
               }
             });
           }
-          alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
+          alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
           navigate('/home');
         } catch (error) {
           console.error("Error al enviar las minutas:", error);
+
           if (error.response && error.response.status === 401) {
             localStorage.removeItem('token');
             localStorage.setItem('error', 'error de sesion');
             navigate("/login");
           } else if (error.response) {
-            alert(`Error del servidor: ${error.response.status} - ${error.response.data.error.message || 'Detalles no disponibles'}`);
+            alert(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`);
           } else if (error.request) {
             alert("No se recibió respuesta del servidor.");
+          } else {
+            alert("Se produjo un error al crear la minuta. Por favor, inténtalo de nuevo.");
           }
         }
       } else {
-        alert("Se encontraron errores en algunas minutas. No se creará ninguna minuta.");
+        if(hayErrores){
+          alert("Se encontraron errores en algunas minutas. No se creará ninguna minuta.");
+        } else {
+          alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
+        }
       }
     } else {
       alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
@@ -298,120 +336,150 @@ const Minutas = () => {
   };
 
   const opcionesFiltradasPorFila = useMemo(() => {
-  const opciones = {};
-
-  filas.forEach((fila) => {
-    let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
-    encabezados.slice(1).forEach((encabezado) => {
-      const encabezadoNormalizado = encabezado
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-
-      if (!opciones[fila]) {
-        opciones[fila] = {};
-      }
-
-      if (
-        platosDisponibles[encabezadoNormalizado] &&
-        platosDisponibles[encabezadoNormalizado].length > 0
-      ) {
-        let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
-          (plato) => plato.categoria === tipoPlatoFiltrado
-        );
-
-        // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
-        if (tipoPlatoFiltrado === "PLATO DE FONDO") {
-          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
-              const otroEncabezadoNormalizado = otroEncabezado
+    const opciones = {};
+  
+    filas.forEach((fila) => {
+      let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
+      encabezados.slice(1).forEach((encabezado) => {
+        const encabezadoNormalizado = encabezado
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+  
+        if (!opciones[fila]) {
+          opciones[fila] = {};
+        }
+  
+        if (
+          platosDisponibles[encabezadoNormalizado] &&
+          platosDisponibles[encabezadoNormalizado].length > 0
+        ) {
+          let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
+            (plato) => plato.categoria === tipoPlatoFiltrado
+          );
+  
+          // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
+          if (tipoPlatoFiltrado === "PLATO DE FONDO") {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+                const otroEncabezadoNormalizado = otroEncabezado
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "");
+  
+                if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+                  return filas.some((otraFila) => {
+                    return (
+                      otraFila !== fila &&
+                      tipoPlatoPorFila[otraFila] === "PLATO DE FONDO" &&
+                      data[encabezadoNormalizado]?.[otraFila] === plato._id
+                    );
+                  });
+                }
+  
+                return (
+                  otroEncabezadoNormalizado !== encabezadoNormalizado &&
+                  Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+                );
+              });
+  
+              return !yaSeleccionado;
+            });
+          }
+          
+          // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
+          if (tipoPlatoFiltrado === "GUARNICIÓN") {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+                const otroEncabezadoNormalizado = otroEncabezado
                 .normalize("NFD")
                 .replace(/[\u0300-\u036f]/g, "");
+                
+                if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+                  return filas.some((otraFila) => {
+                    return (
+                      otraFila !== fila &&
+                      tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
+                      data[encabezadoNormalizado]?.[otraFila] === plato._id
+                    );
+                  });
+                }
+                return (
+                  otroEncabezadoNormalizado !== encabezadoNormalizado &&
+                  Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+                );
+              });
+              
+              
+              return !yaSeleccionado;
+            });
+          }
+          
+          // Restricción: No repetir ensaladas en el mismo día
+          if (tipoPlatoFiltrado === "ENSALADA") {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionadoEnDia = filas.some((otraFila) => {
+                return (
+                  otraFila !== fila &&
+                  tipoPlatoPorFila[otraFila] === "ENSALADA" &&
+                  data[encabezadoNormalizado]?.[otraFila] === plato._id
+                );
+              });
+              return !yaSeleccionadoEnDia;
+            });
+          }
 
-              if (otroEncabezadoNormalizado === encabezadoNormalizado) {
-                return filas.some((otraFila) => {
+          if (fila === "VEGETARIANA") {
+            opcionesFiltradas = opcionesFiltradas.concat(
+              platosDisponibles[encabezadoNormalizado].filter(
+                (plato) => plato.categoria === "VEGANA"
+              )
+            );
+          }
+
+          if (fila === "VEGANA") {
+            opcionesFiltradas = opcionesFiltradas.concat(
+              platosDisponibles[encabezadoNormalizado].filter(
+                (plato) => plato.categoria === "VEGETARIANO"
+              )
+            );
+          }
+
+          // HIPOCALORICO, VEGETARIANA y VEGANA: No permitir en la misma semana
+          if (["HIPOCALORICO", "VEGETARIANO", "VEGANA"].includes(tipoPlatoFiltrado)) {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionadoEnSemana = encabezados.slice(1).some((otroEncabezado) => {
+                const otroEncabezadoNormalizado = otroEncabezado
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "");
+  
+                if (otroEncabezadoNormalizado !== encabezadoNormalizado) {
                   return (
-                    otraFila !== fila &&
-                    tipoPlatoPorFila[otraFila] === "PLATO DE FONDO" &&
-                    data[encabezadoNormalizado]?.[otraFila] === plato._id
+                    !data[otroEncabezadoNormalizado]?.["VEGETARIANA"] === plato._id ||
+                    !data[otroEncabezadoNormalizado]?.["VEGANA"] === plato._id ||
+                    Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
                   );
-                });
-              }
-
-              return (
-                otroEncabezadoNormalizado !== encabezadoNormalizado &&
-                Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
-              );
+                }
+                return false;
+              });
+  
+              return !yaSeleccionadoEnSemana;
             });
+          }
 
-            return !yaSeleccionado;
-          });
+          if (fila === "SOPA DIA") {
+            opcionesFiltradas = opcionesFiltradas.concat(
+              platosDisponibles[encabezadoNormalizado].filter(
+                (plato) => plato.categoria === "CREMAS"
+              )
+            );
+          }
+          
+          opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
+        } else {
+          opciones[fila][encabezadoNormalizado] = [];
         }
-
-        // Restricción: No repetir ensaladas en el mismo día
-        if (tipoPlatoFiltrado === "ENSALADA") {
-          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            const yaSeleccionadoEnDia = filas.some((otraFila) => {
-              return (
-                otraFila !== fila &&
-                tipoPlatoPorFila[otraFila] === "ENSALADA" &&
-                data[encabezadoNormalizado]?.[otraFila] === plato._id
-              );
-            });
-            return !yaSeleccionadoEnDia;
-          });
-        }
-
-        // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
-        if (tipoPlatoFiltrado === "GUARNICIÓN") {
-          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
-              const otroEncabezadoNormalizado = otroEncabezado
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
-
-              if (otroEncabezadoNormalizado === encabezadoNormalizado) {
-                return filas.some((otraFila) => {
-                  return (
-                    otraFila !== fila &&
-                    tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
-                    data[encabezadoNormalizado]?.[otraFila] === plato._id
-                  );
-                });
-              }
-
-              return (
-                otroEncabezadoNormalizado !== encabezadoNormalizado &&
-                Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
-              );
-            });
-
-            return !yaSeleccionado;
-          });
-        }
-
-        if (fila === "SOPA DIA") {
-          opcionesFiltradas = opcionesFiltradas.concat(
-            platosDisponibles[encabezadoNormalizado].filter(
-              (plato) => plato.categoria === "CREMAS"
-            )
-          );
-        }
-
-        if (fila === "VEGANA") {
-          opcionesFiltradas = opcionesFiltradas.concat(
-            platosDisponibles[encabezadoNormalizado].filter(
-              (plato) => plato.categoria === "VEGETARIANO"
-            )
-          );
-        }
-
-        opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
-      } else {
-        opciones[fila][encabezadoNormalizado] = [];
-      }
+      });
     });
-  });
-  return opciones;
+    return opciones;
   }, [platosDisponibles, year, week, data]);
   
   const getValueForAutocomplete = (row, col) => {
@@ -423,35 +491,39 @@ const Minutas = () => {
   };
   
   return (
-    <div>
-      <Header />
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        bgcolor: 'white', 
-        padding: 2, 
-        borderRadius: '25px', 
-        margin: '2rem auto',
-        width: 'calc(100% - 4rem)', // Ancho dinámico con margen
-        maxWidth: '2200px', // Ancho máximo
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        overflowX: 'auto',
-      }}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Box
-            sx={{
-              display: 'flex',
-              gap: 3,
-              height: '5rem',
-              alignItems: 'center',
-              p: 2, 
-              mb: 2, 
-              backgroundColor: '#f5f5f5',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          >
+    <Grid2 container direction="column" style={{ minHeight: '100vh' }}>
+      <Grid2 item>
+        <Header />
+      </Grid2>
+      <Grid2 item container justifyContent="center" style={{ flexGrow: 1 }}>
+        <Grid2 item xs={12} md={11}> {/* Ajusta el Grid2 item para que ocupe el ancho deseado */}
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            bgcolor: 'white',
+            padding: 2,
+            borderRadius: '25px',
+            my: '2rem', // Margen superior e inferior
+            width: '100%',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          }}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 3,
+                  height: '5rem',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  p: 2,
+                  mb: 2,
+                  backgroundColor: '#f5f5f5',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  width: '100rem',
+                }}
+              >
             <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
             <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
             <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
@@ -466,7 +538,7 @@ const Minutas = () => {
                   label="Sucursal"
                   sx={{
                     '& .MuiSelect-select': {
-                      paddingTop: '10.5px', // Ajuste para centrar el texto
+                      paddingTop: '10.5px',
                     },
                   }}
                 >
@@ -490,12 +562,12 @@ const Minutas = () => {
             >
               Crear Minuta
             </Button>
-          </Box>
-        </LocalizationProvider>
+            </Box>
+            </LocalizationProvider>
 
-        <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
-          <Table sx={{ width: '150%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">
-            <TableHead>
+            <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
+              <Table sx={{ width: '100%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">
+              <TableHead>
               <TableRow>
                 <TableCell key="empty-cell" sx={{backgroundColor: '#2E8B57', width: '15%'}}></TableCell>
                 {weekDays.map((day) => (
@@ -567,10 +639,12 @@ const Minutas = () => {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
-          </TableContainer>
-      </Box>
-    </div>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Grid2>
+      </Grid2>
+    </Grid2>
   );
 }
   

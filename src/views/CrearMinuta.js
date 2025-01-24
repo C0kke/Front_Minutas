@@ -210,7 +210,7 @@ const Minutas = () => {
   const handleCrearMinuta = async () => {
     const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
     let datosCompletos = true;
-    const minutasAEnviar = []; // Array para almacenar las minutas
+    const minutasAEnviar = []; 
 
     // Verificar si existen datos en los 5 encabezados
     for (let i = 1; i < encabezados.length; i++) {
@@ -249,24 +249,28 @@ const Minutas = () => {
           listaplatos: listaplatos,
           aprobado: false,
         };
-          //Se agregan las minutas al array minutasAEnviar
           minutasAEnviar.push(minutaDia); 
       }
 
       // Verificar si hay errores potenciales (en este caso, si la lista de platos está vacía)
       let hayErrores = false;
+      const ensaladas = [];
       for (const minuta of minutasAEnviar) {
         if (minuta.listaplatos.length === 0) {
           hayErrores = true;
-          alert(`Error potencial: La minuta para ${minuta.nombre} no tiene platos.`);
+          alert(`Error : La minuta para ${minuta.nombre} no tiene platos.`);
           break;
         }
+        minuta.listaplatos.map(plato => {
+          if (plato.categoria === "ENSALADA") {
+            ensaladas.push(plato);
+          }
+        })
       }
 
       if (!hayErrores) {
         try {
           const token = localStorage.getItem('token')?.trim();
-          // Enviar todas las minutas a la API
           for (const minuta of minutasAEnviar) {
             const response = await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
               headers: {
@@ -298,120 +302,120 @@ const Minutas = () => {
   };
 
   const opcionesFiltradasPorFila = useMemo(() => {
-  const opciones = {};
+    const opciones = {};
 
-  filas.forEach((fila) => {
-    let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
-    encabezados.slice(1).forEach((encabezado) => {
-      const encabezadoNormalizado = encabezado
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+    filas.forEach((fila) => {
+      let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
+      encabezados.slice(1).forEach((encabezado) => {
+        const encabezadoNormalizado = encabezado
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
 
-      if (!opciones[fila]) {
-        opciones[fila] = {};
-      }
-
-      if (
-        platosDisponibles[encabezadoNormalizado] &&
-        platosDisponibles[encabezadoNormalizado].length > 0
-      ) {
-        let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
-          (plato) => plato.categoria === tipoPlatoFiltrado
-        );
-
-        // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
-        if (tipoPlatoFiltrado === "PLATO DE FONDO") {
-          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
-              const otroEncabezadoNormalizado = otroEncabezado
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
-
-              if (otroEncabezadoNormalizado === encabezadoNormalizado) {
-                return filas.some((otraFila) => {
-                  return (
-                    otraFila !== fila &&
-                    tipoPlatoPorFila[otraFila] === "PLATO DE FONDO" &&
-                    data[encabezadoNormalizado]?.[otraFila] === plato._id
-                  );
-                });
-              }
-
-              return (
-                otroEncabezadoNormalizado !== encabezadoNormalizado &&
-                Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
-              );
-            });
-
-            return !yaSeleccionado;
-          });
+        if (!opciones[fila]) {
+          opciones[fila] = {};
         }
 
-        // Restricción: No repetir ensaladas en el mismo día
-        if (tipoPlatoFiltrado === "ENSALADA") {
-          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            const yaSeleccionadoEnDia = filas.some((otraFila) => {
-              return (
-                otraFila !== fila &&
-                tipoPlatoPorFila[otraFila] === "ENSALADA" &&
-                data[encabezadoNormalizado]?.[otraFila] === plato._id
-              );
-            });
-            return !yaSeleccionadoEnDia;
-          });
-        }
-
-        // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
-        if (tipoPlatoFiltrado === "GUARNICIÓN") {
-          opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-            const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
-              const otroEncabezadoNormalizado = otroEncabezado
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
-
-              if (otroEncabezadoNormalizado === encabezadoNormalizado) {
-                return filas.some((otraFila) => {
-                  return (
-                    otraFila !== fila &&
-                    tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
-                    data[encabezadoNormalizado]?.[otraFila] === plato._id
-                  );
-                });
-              }
-
-              return (
-                otroEncabezadoNormalizado !== encabezadoNormalizado &&
-                Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
-              );
-            });
-
-            return !yaSeleccionado;
-          });
-        }
-
-        if (fila === "SOPA DIA") {
-          opcionesFiltradas = opcionesFiltradas.concat(
-            platosDisponibles[encabezadoNormalizado].filter(
-              (plato) => plato.categoria === "CREMAS"
-            )
+        if (
+          platosDisponibles[encabezadoNormalizado] &&
+          platosDisponibles[encabezadoNormalizado].length > 0
+        ) {
+          let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
+            (plato) => plato.categoria === tipoPlatoFiltrado
           );
-        }
 
-        if (fila === "VEGANA") {
-          opcionesFiltradas = opcionesFiltradas.concat(
-            platosDisponibles[encabezadoNormalizado].filter(
-              (plato) => plato.categoria === "VEGETARIANO"
-            )
-          );
-        }
+          // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
+          if (tipoPlatoFiltrado === "PLATO DE FONDO") {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+                const otroEncabezadoNormalizado = otroEncabezado
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "");
 
-        opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
-      } else {
-        opciones[fila][encabezadoNormalizado] = [];
-      }
-    });
-  });
-  return opciones;
+                if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+                  return filas.some((otraFila) => {
+                    return (
+                      otraFila !== fila &&
+                      tipoPlatoPorFila[otraFila] === "PLATO DE FONDO" &&
+                      data[encabezadoNormalizado]?.[otraFila] === plato._id
+                    );
+                  });
+                }
+
+                return (
+                  otroEncabezadoNormalizado !== encabezadoNormalizado &&
+                  Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+                );
+              });
+
+              return !yaSeleccionado;
+            });
+          }
+
+          // Restricción: No repetir ensaladas en el mismo día
+          if (tipoPlatoFiltrado === "ENSALADA") {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionadoEnDia = filas.some((otraFila) => {
+                return (
+                  otraFila !== fila &&
+                  tipoPlatoPorFila[otraFila] === "ENSALADA" &&
+                  data[encabezadoNormalizado]?.[otraFila] === plato._id
+                );
+              });
+              return !yaSeleccionadoEnDia;
+            });
+          }
+
+          // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
+          if (tipoPlatoFiltrado === "GUARNICIÓN") {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+                const otroEncabezadoNormalizado = otroEncabezado
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "");
+
+                if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+                  return filas.some((otraFila) => {
+                    return (
+                      otraFila !== fila &&
+                      tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
+                      data[encabezadoNormalizado]?.[otraFila] === plato._id
+                    );
+                  });
+                }
+
+                return (
+                  otroEncabezadoNormalizado !== encabezadoNormalizado &&
+                  Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+                );
+              });
+
+              return !yaSeleccionado;
+            });
+          }
+
+          if (fila === "SOPA DIA") {
+            opcionesFiltradas = opcionesFiltradas.concat(
+              platosDisponibles[encabezadoNormalizado].filter(
+                (plato) => plato.categoria === "CREMAS"
+              )
+            );
+          }
+
+          if (fila === "VEGANA") {
+            opcionesFiltradas = opcionesFiltradas.concat(
+              platosDisponibles[encabezadoNormalizado].filter(
+                (plato) => plato.categoria === "VEGETARIANO"
+              )
+            );
+          }
+
+          opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
+        } else {
+          opciones[fila][encabezadoNormalizado] = [];
+        }
+      });
+    }); 
+    return opciones;
   }, [platosDisponibles, year, week, data]);
   
   const getValueForAutocomplete = (row, col) => {

@@ -9,6 +9,7 @@ const Proyeccion = () => {
   const [error, setError] = useState(null);
   const [openProyecciones, setOpenProyecciones] = useState({});
   const [openFechas, setOpenFechas] = useState({});
+  const [proyeccionesConFechas, setProyeccionesConFechas] = useState({}); // Nuevo estado
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -28,10 +29,22 @@ const Proyeccion = () => {
     fetchData();
   }, [token]);
 
-  if (loading) return <div className="loading">Cargando...</div>;
-  if (error) return <div className="error">{error}</div>;
+  // useEffect para actualizar proyeccionesConFechas cuando cambie data
+  useEffect(() => {
+  
+    const actualizarProyeccionesConFechas = () => {
+      const nuevasProyeccionesConFechas = {};
+      data.forEach((proyeccion) => {
+        nuevasProyeccionesConFechas[proyeccion._id] = agruparPorFecha(proyeccion.lista);
+      });
+      setProyeccionesConFechas(nuevasProyeccionesConFechas);
+    };
 
-  // Función para agrupar platos por fecha
+    if (data.length > 0) {
+      actualizarProyeccionesConFechas();
+    }
+  }, [data]);
+
   const agruparPorFecha = (lista) => {
     const agrupado = {};
     lista.forEach((item) => {
@@ -45,52 +58,60 @@ const Proyeccion = () => {
 
   const handleToggleProyeccion = (proyeccionId) => {
     setOpenProyecciones((prev) => ({
-      ...prev,
       [proyeccionId]: !prev[proyeccionId]
     }));
     if (!openProyecciones[proyeccionId]) {
-      setOpenFechas({}); // Reiniciar fechas abiertas al abrir otra proyección
+      setOpenFechas({});
     }
   };
 
   const handleToggleFecha = (proyeccionId, fecha) => {
     setOpenFechas((prev) => ({
-      ...prev,
       [`${proyeccionId}-${fecha}`]: !prev[`${proyeccionId}-${fecha}`]
     }));
   };
 
+  const handleExportExcel = () => {
+    
+  }
+
+  if (loading) return <div className="loading">Cargando...</div>;
+  if (error) return <div className="error">{error}</div>;
+
   return (
     <div>
       <Header />
-      <h1 className="title">Proyecciones</h1>
       <div className="proyeccion-container">
-        {data.length ? (
-          data.map((proyeccion) => {
-            const platosPorFecha = agruparPorFecha(proyeccion.lista);
+        <h1 className="title" style={{color:'#009b15'}}>Proyecciones</h1>
+        {Object.keys(proyeccionesConFechas).length > 0 ? (
+          Object.keys(proyeccionesConFechas).map((proyeccionId) => {
+            const proyeccion = data.find((p) => p._id === proyeccionId);
             return (
-              <div key={proyeccion._id} className="proyeccion-item">
+              <div key={proyeccionId} className="proyeccion-item">
                 <p
                   className="proyeccion-titulo"
-                  onClick={() => handleToggleProyeccion(proyeccion._id)}
+                  onClick={() => handleToggleProyeccion(proyeccionId)}
                 >
-                  Proyección: {proyeccion.nombreSucursal || "N/A"}{" "}
-                  {openProyecciones[proyeccion._id] ? "▲" : "▼"}
+                  Proyección: {proyeccion.nombreSucursal || "N/A"}
+                  {openProyecciones[proyeccionId] ? " ▲" : " ▼"}
                 </p>
-                {openProyecciones[proyeccion._id] && (
-                  <div className="fechas-container">
-                    {Object.keys(platosPorFecha).map((fecha) => (
-                      <div key={`${proyeccion._id}-${fecha}`} className="fecha-item">
+                <button onClick={handleExportExcel}>
+                  Exportar a excel
+                </button>
+                {openProyecciones[proyeccionId] && (
+                  <div className={`fechas-container ${openProyecciones[proyeccion._id] ? "open" : ""}`}>
+                    {Object.keys(proyeccionesConFechas[proyeccionId]).map((fecha) => (
+                      <div key={`${proyeccionId}-${fecha}`} className="fecha-item">
                         <p
                           className="fecha"
-                          onClick={() => handleToggleFecha(proyeccion._id, fecha)}
+                          onClick={() => handleToggleFecha(proyeccionId, fecha)}
                         >
-                          Fecha: {fecha}{" "}
-                          {openFechas[`${proyeccion._id}-${fecha}`] ? "▲" : "▼"}
+                          Fecha: {fecha}
+                          {openFechas[`${proyeccionId}-${fecha}`] ? " ▲" : " ▼"}
                         </p>
-                        {openFechas[`${proyeccion._id}-${fecha}`] && (
-                          <ul className="lista">
-                            {platosPorFecha[fecha].map((plato) => (
+                        {openFechas[`${proyeccionId}-${fecha}`] && (
+                          <ul className={`lista ${openFechas[`${proyeccion._id}-${fecha}`] ? "open" : ""}`}>
+                            {proyeccionesConFechas[proyeccionId][fecha].map((plato) => (
                               <li key={plato._id} className="lista-item">
                                 <p><strong>Nombre del Plato:</strong> {plato.Nombreplato || "No disponible"}</p>
                                 <p><strong>Cantidad:</strong> {plato.cantidad || "N/A"}</p>
@@ -106,7 +127,7 @@ const Proyeccion = () => {
             );
           })
         ) : (
-          <div className="empty">No hay proyecciones disponibles.</div>
+          <div className="empty">No hay proyecciones disponibles en este momento.</div>
         )}
       </div>
     </div>

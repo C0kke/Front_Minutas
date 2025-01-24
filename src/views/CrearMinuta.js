@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, FormControl } from '@mui/material';
+import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, Grid2, FormControl } from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -491,35 +491,39 @@ const Minutas = () => {
   };
   
   return (
-    <div>
-      <Header />
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        bgcolor: 'white', 
-        padding: 2, 
-        borderRadius: '25px', 
-        margin: '2rem auto',
-        width: 'calc(100% - 4rem)', // Ancho dinámico con margen
-        maxWidth: '2200px', // Ancho máximo
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        overflowX: 'auto',
-      }}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Box
-            sx={{
-              display: 'flex',
-              gap: 3,
-              height: '5rem',
-              alignItems: 'center',
-              p: 2, 
-              mb: 2, 
-              backgroundColor: '#f5f5f5',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          >
+    <Grid2 container direction="column" style={{ minHeight: '100vh' }}>
+      <Grid2 item>
+        <Header />
+      </Grid2>
+      <Grid2 item container justifyContent="center" style={{ flexGrow: 1 }}>
+        <Grid2 item xs={12} md={11}> {/* Ajusta el Grid2 item para que ocupe el ancho deseado */}
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            bgcolor: 'white',
+            padding: 2,
+            borderRadius: '25px',
+            my: '2rem', // Margen superior e inferior
+            width: '100%',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          }}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 3,
+                  height: '5rem',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  p: 2,
+                  mb: 2,
+                  backgroundColor: '#f5f5f5',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  width: '100rem',
+                }}
+              >
             <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
             <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
             <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
@@ -534,7 +538,7 @@ const Minutas = () => {
                   label="Sucursal"
                   sx={{
                     '& .MuiSelect-select': {
-                      paddingTop: '10.5px', // Ajuste para centrar el texto
+                      paddingTop: '10.5px',
                     },
                   }}
                 >
@@ -558,12 +562,12 @@ const Minutas = () => {
             >
               Crear Minuta
             </Button>
-          </Box>
-        </LocalizationProvider>
+            </Box>
+            </LocalizationProvider>
 
-        <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
-          <Table sx={{ width: '150%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">
-            <TableHead>
+            <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
+              <Table sx={{ width: '100%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">
+              <TableHead>
               <TableRow>
                 <TableCell key="empty-cell" sx={{backgroundColor: '#2E8B57', width: '15%'}}></TableCell>
                 {weekDays.map((day) => (
@@ -635,10 +639,12 @@ const Minutas = () => {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
-          </TableContainer>
-      </Box>
-    </div>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Grid2>
+      </Grid2>
+    </Grid2>
   );
 }
   

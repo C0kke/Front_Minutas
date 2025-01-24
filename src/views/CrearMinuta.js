@@ -193,26 +193,26 @@ const Minutas = () => {
   };
 
   const handleAutocompleteChange = (event, value, row, col) => {
-  const colNormalizado = col.toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    const colNormalizado = col.toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
 
-  setData((prevData) => {
-    const newData = { ...prevData };
-    if (!newData[colNormalizado]) {
-      newData[colNormalizado] = {};
-    }
-    newData[colNormalizado][row] = value ? value._id : null;
-    return newData;
-  });
-};
+    setData((prevData) => {
+      const newData = { ...prevData };
+      if (!newData[colNormalizado]) {
+        newData[colNormalizado] = {};
+      }
+      newData[colNormalizado][row] = value ? value._id : null;
+      return newData;
+    });
+  };
 
   const handleCrearMinuta = async () => {
     const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
     let datosCompletos = true;
-    const minutasAEnviar = []; 
+    const minutasAEnviar = [];
 
-    // Verificar si existen datos en los 5 encabezados
+    // Verificar que los datos estén completos
     for (let i = 1; i < encabezados.length; i++) {
       const dia = encabezados[i];
       if (!data || !data[dia] || Object.keys(data[dia]).length === 0) {
@@ -249,52 +249,86 @@ const Minutas = () => {
           listaplatos: listaplatos,
           aprobado: false,
         };
-          minutasAEnviar.push(minutaDia); 
+        minutasAEnviar.push(minutaDia);
       }
 
-      // Verificar si hay errores potenciales (en este caso, si la lista de platos está vacía)
+      // Validacion de errores
       let hayErrores = false;
-      const ensaladas = [];
+      const ensaladas = {};
       for (const minuta of minutasAEnviar) {
+        // Error: Minuta vacia
         if (minuta.listaplatos.length === 0) {
           hayErrores = true;
           alert(`Error : La minuta para ${minuta.nombre} no tiene platos.`);
-          break;
         }
-        minuta.listaplatos.map(plato => {
-          if (plato.categoria === "ENSALADA") {
-            ensaladas.push(plato);
+
+        const fechaISO = dayjs(minuta.fecha).format('YYYY-MM-DD');
+        ensaladas[fechaISO] = [];
+
+        minuta.listaplatos.forEach(plato => {
+          if (plato.fila.startsWith("ENSALADA")) {
+            ensaladas[fechaISO].push(plato.platoId);
           }
-        })
+        });
+      }
+
+      // Verificar combinaciones de ensaladas repetidas en otros dias
+      for (const fecha of Object.keys(ensaladas)) {
+          const combinacionActual = ensaladas[fecha];
+          if (combinacionActual && combinacionActual.length > 0) { 
+              for (const otraFecha of Object.keys(ensaladas)) {
+                  if (fecha !== otraFecha) {
+                      const otraCombinacion = ensaladas[otraFecha];
+                      const sonIguales = combinacionActual.length === otraCombinacion.length &&
+                          combinacionActual.every(ensaladaId => otraCombinacion.includes(ensaladaId));
+          
+                      if (sonIguales) {
+                          hayErrores = true;
+                          const fechaActual = dayjs(fecha).format('dddd DD [de] MMMM');
+                          const otraFechaFormateada = dayjs(otraFecha).format('dddd DD [de] MMMM');
+                          alert(`Error: La combinación de ensaladas del ${fechaActual} ya existe en la fecha ${otraFechaFormateada}.`);
+                          break; 
+                      }
+                  }
+              }
+          }
+          if (hayErrores) break; 
       }
 
       if (!hayErrores) {
         try {
           const token = localStorage.getItem('token')?.trim();
           for (const minuta of minutasAEnviar) {
-            const response = await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
+            await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
               headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
               }
             });
           }
-          alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`)
+          alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
           navigate('/home');
         } catch (error) {
           console.error("Error al enviar las minutas:", error);
+
           if (error.response && error.response.status === 401) {
             localStorage.removeItem('token');
             localStorage.setItem('error', 'error de sesion');
             navigate("/login");
           } else if (error.response) {
-            alert(`Error del servidor: ${error.response.status} - ${error.response.data.error.message || 'Detalles no disponibles'}`);
+            alert(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`);
           } else if (error.request) {
             alert("No se recibió respuesta del servidor.");
+          } else {
+            alert("Se produjo un error al crear la minuta. Por favor, inténtalo de nuevo.");
           }
         }
       } else {
-        alert("Se encontraron errores en algunas minutas. No se creará ninguna minuta.");
+        if(hayErrores){
+          alert("Se encontraron errores en algunas minutas. No se creará ninguna minuta.");
+        } else {
+          alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
+        }
       }
     } else {
       alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
@@ -303,18 +337,18 @@ const Minutas = () => {
 
   const opcionesFiltradasPorFila = useMemo(() => {
     const opciones = {};
-
+  
     filas.forEach((fila) => {
       let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
       encabezados.slice(1).forEach((encabezado) => {
         const encabezadoNormalizado = encabezado
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "");
-
+  
         if (!opciones[fila]) {
           opciones[fila] = {};
         }
-
+  
         if (
           platosDisponibles[encabezadoNormalizado] &&
           platosDisponibles[encabezadoNormalizado].length > 0
@@ -322,7 +356,7 @@ const Minutas = () => {
           let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
             (plato) => plato.categoria === tipoPlatoFiltrado
           );
-
+  
           // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
           if (tipoPlatoFiltrado === "PLATO DE FONDO") {
             opcionesFiltradas = opcionesFiltradas.filter((plato) => {
@@ -330,7 +364,7 @@ const Minutas = () => {
                 const otroEncabezadoNormalizado = otroEncabezado
                   .normalize("NFD")
                   .replace(/[\u0300-\u036f]/g, "");
-
+  
                 if (otroEncabezadoNormalizado === encabezadoNormalizado) {
                   return filas.some((otraFila) => {
                     return (
@@ -340,17 +374,45 @@ const Minutas = () => {
                     );
                   });
                 }
-
+  
                 return (
                   otroEncabezadoNormalizado !== encabezadoNormalizado &&
                   Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
                 );
               });
-
+  
               return !yaSeleccionado;
             });
           }
-
+          
+          // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
+          if (tipoPlatoFiltrado === "GUARNICIÓN") {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+                const otroEncabezadoNormalizado = otroEncabezado
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+                
+                if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+                  return filas.some((otraFila) => {
+                    return (
+                      otraFila !== fila &&
+                      tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
+                      data[encabezadoNormalizado]?.[otraFila] === plato._id
+                    );
+                  });
+                }
+                return (
+                  otroEncabezadoNormalizado !== encabezadoNormalizado &&
+                  Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+                );
+              });
+              
+              
+              return !yaSeleccionado;
+            });
+          }
+          
           // Restricción: No repetir ensaladas en el mismo día
           if (tipoPlatoFiltrado === "ENSALADA") {
             opcionesFiltradas = opcionesFiltradas.filter((plato) => {
@@ -365,38 +427,10 @@ const Minutas = () => {
             });
           }
 
-          // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
-          if (tipoPlatoFiltrado === "GUARNICIÓN") {
-            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-              const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
-                const otroEncabezadoNormalizado = otroEncabezado
-                  .normalize("NFD")
-                  .replace(/[\u0300-\u036f]/g, "");
-
-                if (otroEncabezadoNormalizado === encabezadoNormalizado) {
-                  return filas.some((otraFila) => {
-                    return (
-                      otraFila !== fila &&
-                      tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
-                      data[encabezadoNormalizado]?.[otraFila] === plato._id
-                    );
-                  });
-                }
-
-                return (
-                  otroEncabezadoNormalizado !== encabezadoNormalizado &&
-                  Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
-                );
-              });
-
-              return !yaSeleccionado;
-            });
-          }
-
-          if (fila === "SOPA DIA") {
+          if (fila === "VEGETARIANA") {
             opcionesFiltradas = opcionesFiltradas.concat(
               platosDisponibles[encabezadoNormalizado].filter(
-                (plato) => plato.categoria === "CREMAS"
+                (plato) => plato.categoria === "VEGANA"
               )
             );
           }
@@ -409,12 +443,42 @@ const Minutas = () => {
             );
           }
 
+          // HIPOCALORICO, VEGETARIANA y VEGANA: No permitir en la misma semana
+          if (["HIPOCALORICO", "VEGETARIANO", "VEGANA"].includes(tipoPlatoFiltrado)) {
+            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+              const yaSeleccionadoEnSemana = encabezados.slice(1).some((otroEncabezado) => {
+                const otroEncabezadoNormalizado = otroEncabezado
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "");
+  
+                if (otroEncabezadoNormalizado !== encabezadoNormalizado) {
+                  return (
+                    !data[otroEncabezadoNormalizado]?.["VEGETARIANA"] === plato._id ||
+                    !data[otroEncabezadoNormalizado]?.["VEGANA"] === plato._id ||
+                    Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+                  );
+                }
+                return false;
+              });
+  
+              return !yaSeleccionadoEnSemana;
+            });
+          }
+
+          if (fila === "SOPA DIA") {
+            opcionesFiltradas = opcionesFiltradas.concat(
+              platosDisponibles[encabezadoNormalizado].filter(
+                (plato) => plato.categoria === "CREMAS"
+              )
+            );
+          }
+          
           opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
         } else {
           opciones[fila][encabezadoNormalizado] = [];
         }
       });
-    }); 
+    });
     return opciones;
   }, [platosDisponibles, year, week, data]);
   

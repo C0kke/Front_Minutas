@@ -298,16 +298,25 @@ const Minutas = () => {
       if (!hayErrores) {
         try {
           const token = localStorage.getItem('token')?.trim();
-          for (const minuta of minutasAEnviar) {
-            await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              }
-            });
+          const response = await axios.post('http://localhost:3000/api/v1/menudiario/validate-menus', minutasAEnviar, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+          console.log(response) 
+          if (response.data.valid === true){
+            for (const minuta of minutasAEnviar) {
+              await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                }
+              }); 
+            }
+            alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
+            navigate('/home');
           }
-          alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
-          navigate('/home');
         } catch (error) {
           console.error("Error al enviar las minutas:", error);
 

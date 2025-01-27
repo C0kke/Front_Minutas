@@ -443,7 +443,7 @@ const Minutas = () => {
             );
           }
 
-          // HIPOCALORICO, VEGETARIANA y VEGANA: No permitir en la misma semana
+          // HIPOCALORICO, VEGETARIANA y VEGANA: no repetir en la misma semana
           if (["HIPOCALORICO", "VEGETARIANO", "VEGANA"].includes(tipoPlatoFiltrado)) {
             opcionesFiltradas = opcionesFiltradas.filter((plato) => {
               const yaSeleccionadoEnSemana = encabezados.slice(1).some((otroEncabezado) => {

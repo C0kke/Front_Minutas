@@ -304,7 +304,6 @@ const Minutas = () => {
               'Content-Type': 'application/json',
             }
           });
-          console.log(response) 
           if (response.data.valid === true){
             for (const minuta of minutasAEnviar) {
               await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
@@ -316,6 +315,9 @@ const Minutas = () => {
             }
             alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
             navigate('/home');
+          } else {
+            console.log(response.data)
+            response.data.errors.forEach(e => alert(e.error))
           }
         } catch (error) {
           console.error("Error al enviar las minutas:", error);

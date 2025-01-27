@@ -140,7 +140,7 @@ const GenerarReporte = () => {
     const reportData = {
       fechaInicio,
       fechaFin,
-      sucursal,
+      sucursal: sucursalObj.nombresucursal,
       platosConCantidad: Object.entries(platosPorFecha).flatMap(([fecha, platos]) =>
         platos
           .filter(plato => plato.cantidad > 0)
@@ -256,7 +256,7 @@ const GenerarReporte = () => {
                   <CircularProgress size={24} />
                 ) : (
                   <Select
-                    value={sucursal}
+                    value={sucursal.nombresucursal}
                     onChange={handleSucursalChange}
                     label="Sucursal"
                   >

@@ -76,7 +76,6 @@ const generateWeekDays = (year, week) => {
 
 const Minutas = () => {
   const [sucursal, setSucursal] = useState('');
-  const [sucursales, setSucursales] = useState([]);
   const [platos, setPlatos] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({}); 
   const currentYear = dayjs().year();
@@ -125,7 +124,7 @@ const Minutas = () => {
         const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setSucursales(response.data);
+        setSucursal(response.data[0]);
       } catch (error) {
         if (error.response && error.response.status === 401) {
           localStorage.removeItem('token');
@@ -173,10 +172,6 @@ const Minutas = () => {
 
   obtenerPlatosDisponibles();
 }, [year, week]);
-
-  const handleSucursalChange = (event) => {
-    setSucursal(event.target.value);
-  };
 
   const handleYearChange = (event) => {
     const newYear = parseInt(event.target.value, 10) || currentYear;
@@ -538,29 +533,7 @@ const Minutas = () => {
             <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
             <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
             <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
-            <FormControl sx={{ width: '15rem' }}>
-              <InputLabel>Sucursal</InputLabel>
-              {loading ? (
-                <CircularProgress size={24} />
-              ) : (
-                <Select
-                  value={sucursal}
-                  onChange={handleSucursalChange}
-                  label="Sucursal"
-                  sx={{
-                    '& .MuiSelect-select': {
-                      paddingTop: '10.5px',
-                    },
-                  }}
-                >
-                  {sucursales.map((s) => (
-                    <MenuItem key={s._id} value={s._id}>
-                      {s.nombresucursal}
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            </FormControl>
+            <TextField defaultValue={"Central"} value={sucursal.nombresucursal} disabled>Central</TextField>
             <Button
               variant="contained"
               sx={{

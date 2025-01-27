@@ -2,7 +2,6 @@
   "name": "front_minutas",
   "version": "0.1.0",
   "main": "src/index.js",
-  "type": "module", 
   "private": true,
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -52,5 +51,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "engines": {
+   "node": ">=18.0.0"
+ }
 }

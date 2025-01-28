@@ -10,7 +10,6 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import 'dayjs/locale/es';
 
-import './styles/CrearMinuta.css';
 import Header from '../components/Header';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';

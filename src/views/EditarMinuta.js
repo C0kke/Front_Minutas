@@ -31,15 +31,6 @@ import "dayjs/locale/es";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
-const encabezados = [
-  "",
-  "LUNES",
-  "MARTES",
-  "MIERCOLES",
-  "JUEVES",
-  "VIERNES",
-];
-
 const filas = [
   "PROTEINA 1",
   "PROTEINA 2",
@@ -94,11 +85,14 @@ const EditarMinuta = () => {
   const [platos, setPlatos] = useState([]);
   const [loading, setLoading] = useState(true);
   const currentYear = dayjs().year();
+  const [selectedYear, setSelectedYear] = useState(null);
   const [selectedWeek, setSelectedWeek] = useState(dayjs().week());
   const [weekDays, setWeekDays] = useState(
-    generateWeekDays(currentYear, selectedWeek)
+    generateWeekDays(selectedYear, selectedWeek)
   );
+  
   const [availableWeeks, setAvailableWeeks] = useState([]);
+  const [availableWeeksAndYears, setAvailableWeeksAndYears] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({});
   const [allMenus, setAllMenus] = useState([]); // **Nuevo estado para todos los menús**
 
@@ -134,7 +128,22 @@ const EditarMinuta = () => {
         const menusNoAprobados = menusResponse.data.filter(
           (menu) => menu.aprobado === false
         );
-        setAllMenus(menusNoAprobados); 
+        
+        const weeksAndYears = menusNoAprobados.map((menu) => {
+          const menuDate = dayjs(menu.fecha);
+          return {
+              week: menu.semana,
+              year: menuDate.year(),
+          };
+        });
+
+        // Filtrar duplicados y ordenar
+        const uniqueWeeksAndYears = Array.from(
+            new Set(weeksAndYears.map(JSON.stringify))
+        ).map(JSON.parse).sort((a, b) => a.year - b.year || a.week - b.week);
+
+        setAvailableWeeksAndYears(uniqueWeeksAndYears);
+        setAllMenus(menusNoAprobados);
       } catch (error) {
         console.error("Error al obtener menús:", error);
       }
@@ -142,25 +151,20 @@ const EditarMinuta = () => {
     fetchMenus();
   }, [token]);
 
-  // Establecer Semana Seleccionada, generar días y filtrar menús
   useEffect(() => {
-    const initialWeek = availableWeeks.length > 0 ? availableWeeks[0] : dayjs().week();
-
-    if (!availableWeeks.includes(selectedWeek)) {
-        setSelectedWeek(initialWeek);
+    if (availableWeeksAndYears.length > 0) {
+        const initialWeekAndYear = availableWeeksAndYears[0];
+        setSelectedWeek(initialWeekAndYear.week);
+        setSelectedYear(initialWeekAndYear.year);
+        setWeekDays(generateWeekDays(initialWeekAndYear.year, initialWeekAndYear.week));
+        setMenus(allMenus.filter((menu) => menu.semana === initialWeekAndYear.week));
     }
-    
-    setWeekDays(generateWeekDays(currentYear, initialWeek));
+  }, [availableWeeksAndYears, allMenus]);
 
-    setMenus(allMenus.filter((menu) => menu.semana === selectedWeek));
-}, [availableWeeks, currentYear, allMenus]);
-
-  // **Filtrar los menús por la semana seleccionada al cambiar selectedWeek**
   useEffect(() => {
     setMenus(allMenus.filter((menu) => menu.semana === selectedWeek));
   }, [selectedWeek, allMenus]);
 
-  // **Actualizar availableWeeks cuando cambie allMenus**
   useEffect(() => {
     const fetchedWeeks = [
       ...new Set(allMenus.map((menu) => menu.semana)),
@@ -168,41 +172,42 @@ const EditarMinuta = () => {
     setAvailableWeeks(fetchedWeeks);
   }, [allMenus]);
 
-  // Obtener Platos Disponibles para la Semana Seleccionada
   useEffect(() => {
     const fetchPlatosDisponibles = async () => {
-      setLoading(true);
-      try {
-        const newPlatosDisponibles = {};
-        for (const day of weekDays) {
-          const fechaFormateada = day.format("YYYY-MM-DD");
-          const response = await axios.get(
-            `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          const nombreDia = day.format("dddd").toUpperCase();
-          const nombreDiaNormalizado = nombreDia
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "");
-          newPlatosDisponibles[nombreDiaNormalizado] = response.data;
+        setLoading(true);
+        try {
+            const newPlatosDisponibles = {};
+            for (const day of weekDays) {
+                const fechaFormateada = day.format("YYYY-MM-DD");
+                const response = await axios.get(
+                    `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                const nombreDia = day
+                                .format("dddd")
+                                .toUpperCase()
+                                .normalize("NFD")
+                                .replace(/[\u0300-\u036f]/g, "") 
+                newPlatosDisponibles[nombreDia] = response.data; 
+            }
+            setPlatosDisponibles(newPlatosDisponibles);
+        } catch (error) {
+            console.error("Error al obtener platos disponibles:", error);
+        } finally {
+            setLoading(false);
         }
-        setPlatosDisponibles(newPlatosDisponibles);
-      } catch (error) {
-        console.error("Error al obtener platos disponibles:", error);
-      } finally {
-        setLoading(false);
-      }
     };
-    if (weekDays.length > 0) {
-      fetchPlatosDisponibles();
+    if (weekDays.length > 0 && selectedYear) {
+        fetchPlatosDisponibles();
     }
-  }, [weekDays, token]);
+}, [weekDays, token, selectedYear]);
 
   // Actualizar la semana seleccionada usando el selector
   const handleWeekChange = (event) => {
-    const newSelectedWeek = parseInt(event.target.value, 10);
-    setSelectedWeek(newSelectedWeek);
-    setWeekDays(generateWeekDays(currentYear, newSelectedWeek));
+    const selectedWeekAndYear = JSON.parse(event.target.value);
+    setSelectedWeek(selectedWeekAndYear.week);
+    setSelectedYear(selectedWeekAndYear.year);
+    setWeekDays(generateWeekDays(selectedWeekAndYear.year, selectedWeekAndYear.week));
   };
 
   // Actualizar la lista de platos del menú seleccionado
@@ -238,7 +243,7 @@ const EditarMinuta = () => {
   
     for (const menu of menus) {
       const listaplatosToUpdate = menu.listaplatos.map(plato => ({
-        platoId: plato.platoId._id, // Ahora platoId es un string
+        platoId: plato.platoId._id, 
         fila: plato.fila
       }));
   
@@ -262,7 +267,7 @@ const EditarMinuta = () => {
       }
       updatedMenu.listaplatos.forEach(plato => {
         if (plato.fila.startsWith("ENSALADA") && plato.platoId) {
-          ensaladasPorFecha[fechaISO].push(plato.platoId); // Corrección aquí
+          ensaladasPorFecha[fechaISO].push(plato.platoId);
         }
       });
     }
@@ -490,48 +495,48 @@ const EditarMinuta = () => {
                     backgroundColor: "#f5f5f5",
                     border: "1px solid #ddd",
                     borderRadius: "4px",
-                    width: '100rem',
+                    width: '80rem',
                   }}
                 >
                   <FormControl fullWidth margin="normal" sx={{ width: "25%" }}>
                     <InputLabel
-                      id="week-select-label"
-                      sx={{
-                        fontWeight: "bold",
-                        color: "#0d47a1",
-                      }}
+                        id="week-year-select-label"
+                        sx={{
+                            fontWeight: "bold",
+                            color: "#0d47a1",
+                        }}
                     >
-                      Semana
+                        Semana y Año
                     </InputLabel>
                     <Select
-                      labelId="week-select-label"
-                      id="week-select"
-                      value={selectedWeek}
-                      label="Semana"
-                      onChange={handleWeekChange}
-                      sx={{
-                        bgcolor: "white",
-                        borderRadius: "4px",
-                        "& .MuiSelect-select": {
-                          fontWeight: "bold",
-                          color: "#1565c0",
-                        },
-                      }}
+                        labelId="week-year-select-label"
+                        id="week-year-select"
+                        value={JSON.stringify({ week: selectedWeek, year: selectedYear })}
+                        label="Semana y Año"
+                        onChange={handleWeekChange}
+                        sx={{
+                            bgcolor: "white",
+                            borderRadius: "4px",
+                            "& .MuiSelect-select": {
+                                fontWeight: "bold",
+                                color: "#1565c0",
+                            },
+                        }}
                     >
-                      {availableWeeks.map((week) => (
-                        <MenuItem
-                          key={week}
-                          value={week}
-                          sx={{
-                            fontWeight: "bold",
-                            color: "#1565c0",
-                          }}
-                        >
-                          Semana {week}
-                        </MenuItem>
-                      ))}
+                        {availableWeeksAndYears.map((weekAndYear) => (
+                            <MenuItem
+                              key={`${weekAndYear.week}-${weekAndYear.year}`}
+                              value={JSON.stringify(weekAndYear)}
+                              sx={{
+                                fontWeight: "bold",
+                                color: "#1565c0",
+                              }}
+                            >
+                              Semana {weekAndYear.week} - {weekAndYear.year}
+                            </MenuItem>
+                        ))}
                     </Select>
-                  </FormControl>
+                </FormControl>
                   <Button
                     variant="contained"
                     color="primary"
@@ -548,17 +553,15 @@ const EditarMinuta = () => {
                 <Table sx={{ width: '100%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">
                   <TableHead>
                     <TableRow>
-                      <TableCell
-                        key="empty-cell"
-                        sx={{ backgroundColor: "#2e7d32", width: "15%", border: "none" }}
-                      ></TableCell>
+                      <TableCell key="empty-cell" sx={{ backgroundColor: "#2E8B57", width: "10%", border: "none" }}></TableCell>
                       {weekDays.map((day) => (
                         <TableCell
                           key={day.toString()}
                           align="center"
                           sx={{
-                            width: "17%",
-                            backgroundColor: "#2e7d32",
+                            width: "17.5%",
+                            height: "40px",
+                            backgroundColor: "#2E8B57",
                             color: "white",
                             textTransform: "uppercase",
                             fontWeight: "bold",
@@ -568,12 +571,7 @@ const EditarMinuta = () => {
                             border: "none",
                           }}
                         >
-                          {day
-                            .format("dddd DD [de] MMMM")
-                            .replace(
-                              day.format("dddd"),
-                              day.format("dddd").slice(0, 3)
-                            )}
+                          {day.format("dddd DD [de] MMMM")}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -593,12 +591,12 @@ const EditarMinuta = () => {
                           scope="row"
                           align="center"
                           sx={{
-                            width: "15%",
+                            width: "10%",
                             minWidth: "150px",
                             p: 1,
                             fontSize: "14px",
                             fontWeight: "bold",
-                            backgroundColor: "#2e7d32",
+                            backgroundColor: "#2E8B57",
                             color: "white",
                             border: "none",
                           }}
@@ -619,7 +617,7 @@ const EditarMinuta = () => {
                               key={`${day.format("YYYY-MM-DD")}-${fila}`}
                               align="center"
                               sx={{
-                                p: 1,
+                                p: 1.2,
                                 fontSize: "12px",
                                 wordBreak: "break-word",
                                 border: "none",
@@ -670,20 +668,20 @@ const EditarMinuta = () => {
                                     size="small"
                                     sx={{
                                       width: "100%",
-                                      color: "#2e7d32",
+                                      color: "#2E8B57",
                                       "& .MuiInputLabel-root": {
                                         fontWeight: "bold",
                                         fontSize: "14px",
                                       },
                                       "& .MuiOutlinedInput-root": {
                                         "& fieldset": {
-                                          borderColor: "#2e7d32",
+                                          borderColor: "#2E8B57",
                                         },
                                         "&:hover fieldset": {
-                                          borderColor: "#2e7d32",
+                                          borderColor: "#2E8B57",
                                         },
                                         "&.Mui-focused fieldset": {
-                                          borderColor: "#2e7d32",
+                                          borderColor: "#2E8B57",
                                         },
                                       },
                                     }}

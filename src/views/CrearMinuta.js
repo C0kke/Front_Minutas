@@ -75,7 +75,6 @@ const generateWeekDays = (year, week) => {
 };
 
 const Minutas = () => {
-  const [sucursal, setSucursal] = useState('');
   const [platos, setPlatos] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({}); 
   const currentYear = dayjs().year();
@@ -115,33 +114,6 @@ const Minutas = () => {
       }
     };
     fetchPlatos();
-  }, [navigate]);
-
-  // Obtención de Sucursales
-  useEffect(() => {
-    const fetchSucursales = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setSucursal(response.data[0]);
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.setItem('error', 'error en la sesion');
-        navigate("/login");
-        } else if (error.response) {
-          setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
-        } else if (error.request) {
-          setError(new Error("No se recibió respuesta del servidor."));
-        } else {
-          setError(new Error("Error al configurar la solicitud."));
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSucursales();
   }, [navigate]);
 
   // Obtener platos disponibles por fecha
@@ -239,7 +211,6 @@ const Minutas = () => {
           fecha: fechaDia,
           semana: week,
           year: year,
-          id_sucursal: sucursal,
           estado: "Activo",
           listaplatos: listaplatos,
           aprobado: false,

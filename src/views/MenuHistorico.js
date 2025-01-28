@@ -24,9 +24,10 @@ const MinutaLista = () => {
         const response = await axios.get('http://localhost:3000/api/v1/menudiario', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const groupedMinutas = groupBySemanaYAño(response.data); //Actualizar groupBySemana
+        const groupedMinutas = groupBySemanaYAño(response.data); 
         setMinutasAgrupadas(groupedMinutas);
 
+        // Se obtienen las semanas de cada minuta una única vez
         const semanasUnicas = Object.keys(groupedMinutas).map(key => {
             const [año, semana] = key.split('-');
             return { semana: Number(semana), año: Number(año) };
@@ -46,7 +47,7 @@ const MinutaLista = () => {
   const groupBySemanaYAño = (data) => {
     return data.reduce((acc, minuta) => {
       const semana = minuta.semana;
-      const año = new Date(minuta.fecha).getFullYear();
+      const año = minuta.year;
       const key = `${año}-${semana}`;
       if (!acc[key]) {
         acc[key] = [];
@@ -57,6 +58,10 @@ const MinutaLista = () => {
   };
 
   const handleSemanaClick = (semana, año) => {
+    if (selectedSemana == semana) {
+      setMostrarTabla(!mostrarTabla);
+    }
+    
     setSelectedSemana(semana);
     setSelectedAño(año);
     setMostrarTabla(true);
@@ -104,7 +109,10 @@ const MinutaLista = () => {
               className="filter-input"
               placeholder="Filtrar por año..."
               value={filterAño}
-              onChange={(e) => setFilterAño(e.target.value)}
+              onChange={(e) => {
+                setMostrarTabla(false)
+                setFilterAño(e.target.value)}
+              }
               min={2024}
               defaultValue={2024}
             />
@@ -116,7 +124,10 @@ const MinutaLista = () => {
               className="filter-input"
               placeholder="Filtrar por semana..."
               value={filterSemana}
-              onChange={(e) => setFilterSemana(e.target.value)}
+              onChange={(e) => {
+                setMostrarTabla(false)
+                setFilterSemana(e.target.value)}
+              }
               min={1}
             />
           </div>
@@ -137,8 +148,7 @@ const MinutaLista = () => {
             </div>
           )}
 
-          {/* Mensaje cuando no hay filtro o no hay coincidencias */}
-          {(!(filterSemana || filterAño) || filteredWeeks.length === 0) && (
+          {(!(filterSemana || filterAño || filteredWeeks)) && (
             <p>
               {filterSemana 
                 ? "No hay semanas que coincidan con el filtro."
@@ -147,7 +157,6 @@ const MinutaLista = () => {
           )}
         </div>
 
-        {/* Mostrar la tabla al seleccionar una semana */}
         {selectedSemana && mostrarTabla && (
           <div className="tabla-minuta-container">
             <TablaMinutaAprobacion

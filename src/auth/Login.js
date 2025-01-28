@@ -44,14 +44,14 @@ function Login() {
         localStorage.removeItem('error');
         setTimeout(function () {
             alert('Error en la sesión, ingresa nuevamente');
-        }, 500);
+        }, 250);
     }
 
     if (localStorage.getItem('logout')) {
         localStorage.removeItem('logout');
         setTimeout(function () {
             alert('Has cerrado sesión');
-        }, 500);
+        }, 250);
     }
 
     return (

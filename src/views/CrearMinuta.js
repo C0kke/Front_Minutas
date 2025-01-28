@@ -132,7 +132,7 @@ const Minutas = () => {
         const nombreDiaNormalizado = nombreDia
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "");
-        newPlatosDisponibles[nombreDiaNormalizado] = response.data;
+        newPlatosDisponibles[nombreDiaNormalizado] = response.data.filter(plato => plato.descontinuado === false);
       } catch (error) {
         console.error("Error al obtener platos disponibles:", error);
       }

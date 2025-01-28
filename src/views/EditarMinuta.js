@@ -188,7 +188,7 @@ const EditarMinuta = () => {
                                 .toUpperCase()
                                 .normalize("NFD")
                                 .replace(/[\u0300-\u036f]/g, "") 
-                newPlatosDisponibles[nombreDia] = response.data; 
+                newPlatosDisponibles[nombreDia] = response.data.filter(plato => plato.descontinuado === false); 
             }
             setPlatosDisponibles(newPlatosDisponibles);
         } catch (error) {

@@ -502,7 +502,7 @@ const Minutas = () => {
         <Header />
       </Grid2>
       <Grid2 item container justifyContent="center" style={{ flexGrow: 1 }}>
-        <Grid2 item xs={12} md={11}> {/* Ajusta el Grid2 item para que ocupe el ancho deseado */}
+        <Grid2 item xs={12} md={11}>
           <Box sx={{
             display: 'flex',
             flexDirection: 'column',
@@ -510,7 +510,7 @@ const Minutas = () => {
             bgcolor: 'white',
             padding: 2,
             borderRadius: '25px',
-            my: '2rem', // Margen superior e inferior
+            my: '2rem',
             width: '100%',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
           }}>
@@ -533,7 +533,6 @@ const Minutas = () => {
             <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
             <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
             <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
-            <TextField defaultValue={"Central"} value={sucursal.nombresucursal} disabled>Central</TextField>
             <Button
               variant="contained"
               sx={{

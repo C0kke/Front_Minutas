@@ -9,17 +9,6 @@ import CloseIcon from '@mui/icons-material/Close';
 
 Modal.setAppElement('#root');
 
-const categorias = [
-    "PLATO DE FONDO",
-    "VEGETARIANO",
-    "VEGANA",
-    "GUARNICIÓN",
-    "HIPOCALORICO",
-    "ENSALADA",
-    "SOPA",
-    "POSTRES",
-]
-
 const Platos = () => {
     const [platos, setPlatos] = useState([]);
     const [selectedPlato, setSelectedPlato] = useState(null);
@@ -32,6 +21,7 @@ const Platos = () => {
     const [error, setError] = useState(null);
     const [selectedStatus, setSelectedStatus] = useState('Todos');
     const [eliminacion, setEliminacion] = useState(false);
+    const [categorias, setCategorias] = useState([]);
 
     const [pageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
@@ -54,8 +44,18 @@ const Platos = () => {
                 const response = await axios.get('http://localhost:3000/api/v1/plato', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setTotalPages(Math.ceil(response.data.length / pageSize));   
-                setPlatos(response.data);
+                // Ordenar platos alfabéticamente
+                const sortedPlatos = response.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+                // Obtener categorías únicas
+                const categoriasUnicas = new Set();
+                sortedPlatos.forEach(plato => {
+                    categoriasUnicas.add(plato.categoria);
+                });
+
+                setTotalPages(Math.ceil(sortedPlatos.length / pageSize));
+                setPlatos(sortedPlatos);
+                setCategorias(['Todas', ...categoriasUnicas]);
             } catch (error) {
                 console.error("Error al obtener platos:", error);
                 if (error.response && error.response.status === 401) {

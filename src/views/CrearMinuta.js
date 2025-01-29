@@ -50,8 +50,8 @@ const tipoPlatoPorFila = {
   "PROTEINA 1": "PLATO DE FONDO",
   "PROTEINA 2": "PLATO DE FONDO",
   "PROTEINA 3": "PLATO DE FONDO",
-  "VEGETARIANA": "VEGETARIANO",
-  "VEGANA": "VEGANA",
+  "VEGETARIANA": "VEGANA/VEGETARIANA",
+  "VEGANA": "VEGANA/VEGETARIANA",
   "GUARNICION 1": "GUARNICIÓN",
   "GUARNICION 2": "GUARNICIÓN",
   "HIPOCALORICO": "HIPOCALORICO",
@@ -137,7 +137,7 @@ const Minutas = () => {
         console.error("Error al obtener platos disponibles:", error);
       }
     }
-
+    console.log("newPlatosDisponibles:", newPlatosDisponibles); // Añade esta línea
     setPlatosDisponibles(newPlatosDisponibles);
   };
 
@@ -420,13 +420,13 @@ const Minutas = () => {
           }
 
           // HIPOCALORICO, VEGETARIANA y VEGANA: no repetir en la misma semana
-          if (["HIPOCALORICO", "VEGETARIANO", "VEGANA"].includes(tipoPlatoFiltrado)) {
+          if (["HIPOCALORICO", "VEGANA/VEGETARIANA"].includes(tipoPlatoFiltrado)) {
             opcionesFiltradas = opcionesFiltradas.filter((plato) => {
               const yaSeleccionadoEnSemana = encabezados.slice(1).some((otroEncabezado) => {
                 const otroEncabezadoNormalizado = otroEncabezado
                   .normalize("NFD")
                   .replace(/[\u0300-\u036f]/g, "");
-  
+    
                 if (otroEncabezadoNormalizado !== encabezadoNormalizado) {
                   return (
                     !data[otroEncabezadoNormalizado]?.["VEGETARIANA"] === plato._id ||
@@ -436,7 +436,6 @@ const Minutas = () => {
                 }
                 return false;
               });
-  
               return !yaSeleccionadoEnSemana;
             });
           }

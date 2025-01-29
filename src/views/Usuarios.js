@@ -53,7 +53,7 @@ const Usuarios = () => {
     };
 
     const closeModalCrear = () => {
-        alert("Usuario Creado con exito")
+        
         setModalCrearIsOpen(false);
     };
 
@@ -78,6 +78,7 @@ const Usuarios = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUsuarios((prevUsuarios) => [...prevUsuarios, response.data]);
+            alert("Usuario Creado con exito")
             closeModalCrear();
         } catch (error) {
             console.error("Error al crear usuario:", error);

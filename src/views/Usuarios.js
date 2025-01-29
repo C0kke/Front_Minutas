@@ -81,7 +81,11 @@ const Usuarios = () => {
             closeModalCrear();
         } catch (error) {
             console.error("Error al crear usuario:", error);
-    
+            
+            if (error.response.status === 400){
+                alert("TIENES QUE LLENAR TODOS LOS CAMPOS")
+            return
+            }
             // Verifica si el error tiene la estructura esperada para un error de MongoDB
             if (error.response.data.error.errorResponse.errmsg) {
                 const errorMessage = error.response.data.error.errorResponse.errmsg

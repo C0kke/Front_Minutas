@@ -198,9 +198,11 @@ const Platos = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPlatos([...platos, response.data]);
+            const idNuevoPlato = response.data._id; 
             alert(`PLATO ${nuevoPlato.nombre} CREADO CON ÉXITO`)
             closeModalCrear();
             setNuevoPlato({ nombre: '', categoria: '', descripcion: '' });
+            //setSelectedPlato(nuevoPlato)
         } catch (err) {
             console.error("Error al crear plato:", err);
             alert("Ocurrió un error al crear el plato.");

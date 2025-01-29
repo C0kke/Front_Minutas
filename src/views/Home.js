@@ -42,29 +42,32 @@ const Home = () => {
     if (role === "admin") {
       return (
         <>
+          <button className="home-button" onClick={() => navigate("/usuarios")}>
+            Crear / Editar Usuarios
+          </button>
+          <button className="home-button" onClick={() => navigate("/aprobarmenu")}>
+            Aprobar Minuta
+          </button>
+          <button className="home-button" onClick={() => navigate("/proyecciones")}>
+            Ver Proyecciones
+          </button>
+          <button className="home-button" onClick={() => navigate("/calculoingrediente")}>
+            Generar Reporte
+          </button>
+          <button className="home-button" onClick={() => navigate("/menuhistorico")}>
+            Ver Historial de Minutas
+          </button>
           <button className="home-button" onClick={() => navigate("/crear-minuta")}>
             Crear Minuta Semanal
           </button>
           <button className="home-button" onClick={() => navigate("/editarmenu")}> 
             Editar Minutas 
           </button>    
-          <button className="home-button" onClick={() => navigate("/menuhistorico")}>
-            Ver Historial de Minutas
-          </button>
           <button className="home-button" onClick={() => navigate("/listaingredientes")}>
             Ver Ingredientes
           </button>
           <button className="home-button" onClick={() => navigate("/platos")}>
             Ver Platos
-          </button>
-          <button className="home-button" onClick={() => navigate("/calculoingrediente")}>
-            Generar Reporte
-          </button>
-          <button className="home-button" onClick={() => navigate("/proyecciones")}>
-            Ver Proyecciones
-          </button>
-          <button className="home-button" onClick={() => navigate("/aprobarmenu")}>
-            Aprobar Minuta
           </button>
         </>
       );

@@ -53,12 +53,18 @@ const Usuarios = () => {
     };
 
     const closeModalCrear = () => {
+        alert("Usuario Creado con exito")
         setModalCrearIsOpen(false);
     };
 
     const openModal = (user) => {
-        setNewUser(user);  // Cargar los datos del usuario en el estado
+        setNewUser(user);  // Cargar los datos del usuario en el estado para editar
         setModalIsOpen(true);
+    };
+
+    const openModalCrear = () => {
+        setNewUser({ name: '', username: '', email: '', password: '', role: '' });  // Resetear a un objeto vacío para crear un nuevo usuario
+        setModalCrearIsOpen(true);
     };
 
     const handleCreateUserChange = (event) => {
@@ -75,7 +81,26 @@ const Usuarios = () => {
             closeModalCrear();
         } catch (error) {
             console.error("Error al crear usuario:", error);
-            setError(new Error("No se pudo crear el usuario."));
+    
+            // Verifica si el error tiene la estructura esperada para un error de MongoDB
+            if (error.response.data.error.errorResponse.errmsg) {
+                const errorMessage = error.response.data.error.errorResponse.errmsg
+    ;
+                console.log(errorMessage)
+                console.log("alo")
+                
+                // Captura el error específico y le pasa un mensaje más claro al usuario
+                if (errorMessage.includes('username')) {
+                    alert("El nombre de usuario ya está en uso.");
+                } else if (errorMessage.includes('email')) {
+                    alert("El correo electrónico ya está en uso.");
+                } else {
+                    alert("No se pudo crear el usuario debido a un error desconocido.");
+                }
+            } else {
+                // Si el error no tiene una respuesta esperada, muestra un mensaje genérico
+                alert("No se pudo crear el usuario.");
+            }
         }
     };
 
@@ -130,7 +155,7 @@ const Usuarios = () => {
                 />
             </Box>
             <Button
-                onClick={() => setModalCrearIsOpen(true)}
+                onClick={openModalCrear}  // Cambié esta parte para abrir el modal de crear usuario
                 variant="contained"
                 sx={{ marginBottom: '16px', backgroundColor: '#2E8B57', color: 'white', '&:hover': { backgroundColor: '#1A5230' } }}
             >
@@ -143,6 +168,76 @@ const Usuarios = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Modal para crear un nuevo usuario */}
+            <Modal
+                open={modalCrearIsOpen}
+                onClose={closeModalCrear}
+                aria-labelledby="modal-crear-usuario"
+                aria-describedby="modal-crear-usuario-descripcion"
+            >
+                <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4, borderRadius: '8px' }}>
+                    <Typography variant="h6" component="h2" gutterBottom>
+                        Crear Nuevo Usuario
+                    </Typography>
+                    <TextField
+                        label="Nombre"
+                        name="name"
+                        value={newUser.name}
+                        onChange={handleCreateUserChange}
+                        fullWidth
+                        margin="normal"
+                    />
+                    <TextField
+                        label="Username"
+                        name="username"
+                        value={newUser.username}
+                        onChange={handleCreateUserChange}
+                        fullWidth
+                        margin="normal"
+                    />
+                    <TextField
+                        label="Email"
+                        name="email"
+                        value={newUser.email}
+                        onChange={handleCreateUserChange}
+                        fullWidth
+                        margin="normal"
+                    />
+                    <TextField
+                        label="Contraseña"
+                        name="password"
+                        type="password"
+                        value={newUser.password}
+                        onChange={handleCreateUserChange}
+                        fullWidth
+                        margin="normal"
+                    />
+                    <TextField
+                        select
+                        label="Rol"
+                        name="role"
+                        value={newUser.role}
+                        onChange={handleCreateUserChange}
+                        fullWidth
+                        margin="normal"
+                    >
+                        <MenuItem value="nutricionista">Nutricionista</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="logistica">Logística</MenuItem>
+                    </TextField>
+                    <Box mt={2} display="flex" justifyContent="space-between">
+                        <Button onClick={closeModalCrear} sx={{ marginRight: 2, color: '#2E8B57', '&:hover': { backgroundColor: '#f5f5f5' } }}>
+                            Cancelar
+                        </Button>
+                        <Box>
+                            <Button onClick={handleCreateUser} variant="contained" sx={{ backgroundColor: '#2E8B57', color: 'white', '&:hover': { backgroundColor: '#1A5230' } }}>
+                                Crear
+                            </Button>
+                        </Box>
+                    </Box>
+                </Box>
+            </Modal>
 
             {/* Modal para editar o eliminar usuario */}
             <Modal
@@ -184,7 +279,6 @@ const Usuarios = () => {
                         name="password"
                         type="password"
                         value={newUser.password}
-                        
                         onChange={handleCreateUserChange}
                         fullWidth
                         margin="normal"
@@ -219,6 +313,6 @@ const Usuarios = () => {
             </Modal>
         </div>
     );
-}
+};
 
 export default Usuarios;

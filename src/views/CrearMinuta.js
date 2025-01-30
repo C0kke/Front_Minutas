@@ -158,7 +158,7 @@ const Minutas = () => {
     }
   };
 
-  const handleAutocompleteChange = (event, value, row, col) => {
+  const handleAutocompleteChange = (value, row, col) => {
     const colNormalizado = col.toUpperCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
@@ -401,22 +401,6 @@ const Minutas = () => {
               });
               return !yaSeleccionadoEnDia;
             });
-          }
-
-          if (fila === "VEGETARIANA") {
-            opcionesFiltradas = opcionesFiltradas.concat(
-              platosDisponibles[encabezadoNormalizado].filter(
-                (plato) => plato.categoria === "VEGANA"
-              )
-            );
-          }
-
-          if (fila === "VEGANA") {
-            opcionesFiltradas = opcionesFiltradas.concat(
-              platosDisponibles[encabezadoNormalizado].filter(
-                (plato) => plato.categoria === "VEGETARIANO"
-              )
-            );
           }
 
           // HIPOCALORICO, VEGETARIANA y VEGANA: no repetir en la misma semana

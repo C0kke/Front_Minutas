@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import './styles/Aprobar.css';
-import { Box, Alert, Button } from '@mui/material';
+import { Box, Alert, Button, Modal, TextField } from '@mui/material';
 import Header from '../components/Header';
 import ExportToExcel from '../components/ExportToExcel';
 import TablaMinutaAprobacion from '../components/TablaMinuta';
@@ -15,6 +15,8 @@ const MenuSemanalAprobacion = () => {
   const [selectedSemana, setSelectedSemana] = useState(null);
   const [error, setError] = useState(null);
   const [loadingMenu, setLoadingMenu] = useState(false); 
+  const [openModal, setOpenModal] = useState(false);
+  const [mensaje, setMensaje] = useState('');
   const tableRef = useRef(null);
 
   const token = localStorage.getItem('token')?.trim();
@@ -76,7 +78,7 @@ const MenuSemanalAprobacion = () => {
         setMenusPendientes(prevState => prevState.map(menu => 
           selectedSemana.menus.some(m => m._id === menu._id) ? { ...menu, aprobado: true } : menu
         ));
-        alert(`Minuta de la semana ${selectedSemana._id.semana} aprobado exitosamente`)
+        alert(`Minuta de la semana ${selectedSemana._id.semana} aprobado exitosamente`);
        
         setSelectedMenu(null);
         setSelectedSemana(null);
@@ -96,6 +98,27 @@ const MenuSemanalAprobacion = () => {
       return;
     }
     setSelectedSemana(null);
+  };
+
+  const handleMensaje = () => {
+    setOpenModal(true);
+  };
+
+  const handleEnviarMensaje = async () => {
+    if (selectedSemana) {
+      try {
+        await axios.patch(`http://localhost:3000/api/v1/menudiario/${selectedSemana.menus[0]._id}/mensaje`, 
+          { mensaje },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        alert('Mensaje enviado exitosamente');
+        setOpenModal(false);
+        setMensaje('');
+      } catch (error) {
+        console.error('Error al enviar el mensaje:', error);
+        setError('Hubo un error al enviar el mensaje.');
+      }
+    }
   };
 
   if (loading) {
@@ -126,7 +149,7 @@ const MenuSemanalAprobacion = () => {
                       width: '15rem',
                       height: '3rem',
                       color: 'white',
-                      backgroundColor: '#2e8b57',
+                      backgroundColor: 'white',
                       borderRadius: '25px',
                     }}  
                   >
@@ -134,21 +157,38 @@ const MenuSemanalAprobacion = () => {
                   </Button>
                   {selectedSemana && selectedSemana._id.semana === semana._id.semana && (
                       <>
-                          <TablaMinutaAprobacion semana={selectedSemana} tableRef={tableRef} />
-                          <Button 
-                          onClick={() => handleAprobar()}
+                        <TablaMinutaAprobacion semana={selectedSemana} tableRef={tableRef} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Button 
+                        onClick={() => handleAprobar()}
+                        sx={{
+                          mt: 2,
+                          backgroundColor: '#4CAF50',
+                          color: 'white',
+                          '&:hover': {
+                            backgroundColor: '#45a049',
+                          },
+                        }}
+                      >
+                        Aprobar Menú
+                      </Button>
+
+                        <Button 
+                        onClick={() => handleMensaje()}
                           sx={{
-                              mt: 2,
-                              backgroundColor: '#4CAF50',
-                              color: 'white',
-                              '&:hover': {
-                              backgroundColor: '#45a049',
-                              },
+                            mt: 2,
+                            backgroundColor: 'FF9800', // Color naranja
+                            color: 'white',
+                            '&:hover': {
+                              backgroundColor: '#FB8C00', // Más oscuro al pasar el mouse
+                            },
                           }}
-                          >
-                          Aprobar Menú
-                          </Button>
-                      </>
+                        >
+                          Feedback Rechazo
+                        </Button>
+                      </div>
+                     
+                    </>
                   )}
                 </li>
               ))}
@@ -156,6 +196,57 @@ const MenuSemanalAprobacion = () => {
           </div>
         )}
       </div>
+
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <h2 style={{ color: 'black' }}>Enviar Feedback de Rechazo de minuta </h2>
+          <TextField
+            fullWidth
+            label="Mensaje de Rechazo"
+            value={mensaje}
+            onChange={(e) => setMensaje(e.target.value)}
+            multiline
+            rows={4}
+            sx={{ mt: 2 ,
+              color:"black"
+            }}
+          />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Button
+              sx={{ mr: 2 }}
+              onClick={() => setOpenModal(false)}
+              color="secondary"
+              variant="outlined"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleEnviarMensaje}
+              sx={{
+                backgroundColor: '#FF9800',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: '#FB8C00',
+                },
+              }}
+            >
+              Enviar
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 };

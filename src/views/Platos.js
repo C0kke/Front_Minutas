@@ -61,7 +61,7 @@ const Platos = () => {
                  //Obtener tipos de cortes 
                  const tipodecortesUnicos = new Set();
                  sortedPlatos.forEach(plato => {
-                     tipodecortesUnicos.add(plato.familia);
+                     tipodecortesUnicos.add(plato.tipo_corte);
                  });
            
                  settipodecorte([...tipodecortesUnicos]);

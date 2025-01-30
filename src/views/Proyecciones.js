@@ -194,6 +194,12 @@ const Proyeccion = () => {
                       </div>
                     ))}
                   </div>
+                  <button 
+                  className="exportar-excel-btn"
+                  onClick={handleExportExcel}
+                >
+                  Exportar a Excel
+                </button>
                 </div>
               );
             })
@@ -234,12 +240,7 @@ const Proyeccion = () => {
               </div>
               
               <div className="modal-footer">
-                <button 
-                  className="exportar-excel-btn"
-                  onClick={handleExportExcel}
-                >
-                  Exportar a Excel
-                </button>
+               
                 <button
                   className="cerrar-modal-btn"
                   onClick={() => setModalAbierto(false)}

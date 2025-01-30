@@ -201,6 +201,7 @@
   cursor: pointer;
   font-weight: 600;
   transition: all 0.2s ease;
+  margin-top: 25px;
 }
 
 .cerrar-modal-btn {

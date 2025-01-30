@@ -495,13 +495,7 @@ const Platos = () => {
                         </Select>
                     </FormControl>   
                    
-                    <TextField
-                        label="Temporada"
-                        value={nuevoPlato.temporada}
-                        onChange={(e) => setNuevoPlato({ ...nuevoPlato, temporada: e.target.value })}
-                        sx={{width: "80%"}}
-                        margin="normal"
-                    />
+                    
                     <div className="ButtonContainer">
                         <Button
                             variant="contained"

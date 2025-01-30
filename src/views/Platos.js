@@ -22,6 +22,9 @@ const Platos = () => {
     const [selectedStatus, setSelectedStatus] = useState('Todos');
     const [eliminacion, setEliminacion] = useState(false);
     const [categorias, setCategorias] = useState([]);
+    const [familias, setFamilias] = useState([]);
+    const [tipodeCorte, settipodecorte] = useState([]);
+    const [temporadas, settemporadas] = useState([])
 
     const [pageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
@@ -47,6 +50,33 @@ const Platos = () => {
                 // Ordenar platos alfabéticamente
                 const sortedPlatos = response.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
+                 //Obtener familias unicas
+                 const temporadasUnicas = new Set();
+                 sortedPlatos.forEach(plato => {
+                     temporadasUnicas.add(plato.temporada);
+                 });
+                 
+                 settemporadas([...temporadasUnicas]);
+ 
+                 //Obtener tipos de cortes 
+                 const tipodecortesUnicos = new Set();
+                 sortedPlatos.forEach(plato => {
+                     tipodecortesUnicos.add(plato.familia);
+                 });
+           
+                 settipodecorte([...tipodecortesUnicos]);
+ 
+
+
+                //Obtener familias unicas
+                const FamiliasUnicas = new Set();
+                sortedPlatos.forEach(plato => {
+                    FamiliasUnicas.add(plato.familia);
+                });
+                
+                setFamilias([...FamiliasUnicas]);
+
+
                 // Obtener categorías únicas
                 const categoriasUnicas = new Set();
                 sortedPlatos.forEach(plato => {
@@ -56,6 +86,7 @@ const Platos = () => {
                 setTotalPages(Math.ceil(sortedPlatos.length / pageSize));
                 setPlatos(sortedPlatos);
                 setCategorias([...categoriasUnicas]);
+
             } catch (error) {
                 console.error("Error al obtener platos:", error);
                 if (error.response && error.response.status === 401) {
@@ -417,20 +448,53 @@ const Platos = () => {
                             ))}
                         </Select>
                     </FormControl>
-                    <TextField
-                        label="Familia"
+                    <FormControl fullWidth margin="normal">
+                    <InputLabel>Familia</InputLabel>
+                    <Select 
                         value={nuevoPlato.familia}
                         onChange={(e) => setNuevoPlato({ ...nuevoPlato, familia: e.target.value })}
                         sx={{width: "80%"}}
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Tipo de Corte"
-                        value={nuevoPlato.tipo_corte}
-                        onChange={(e) => setNuevoPlato({ ...nuevoPlato, tipo_corte: e.target.value })}
-                        sx={{width: "80%"}}
-                        margin="normal"
-                    />
+                        margin="normal">
+                    {familias.map((familia) => (
+                                <MenuItem key={familia} value={familia}>
+                                    {familia}
+                                </MenuItem>
+                            ))}
+
+                    </Select>
+                    </FormControl>   
+                    <FormControl fullWidth margin="normal">
+                        <InputLabel>Tipo De Corte</InputLabel>
+                        <Select
+                            sx={{width: "80%"}}
+                            margin="normal"
+                            value={nuevoPlato.tipo_corte}
+                            onChange={(e) => setNuevoPlato({ ...nuevoPlato, tipo_corte: e.target.value })}
+                        >
+                            {tipodeCorte.map((tipo_corte) => (
+                                <MenuItem key={tipo_corte} value={tipo_corte}>
+                                    {tipo_corte}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>   
+                        
+                    <FormControl fullWidth margin="normal">
+                        <InputLabel>Temporada</InputLabel>
+                        <Select
+                            sx={{width: "80%"}}
+                            margin="normal"
+                            value={nuevoPlato.temporada}
+                            onChange={(e) => setNuevoPlato({ ...nuevoPlato, temporada: e.target.value })}
+                        >
+                            {temporadas.map((temporada) => (
+                                <MenuItem key={temporada} value={temporada}>
+                                    {temporada}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>   
+                   
                     <TextField
                         label="Temporada"
                         value={nuevoPlato.temporada}

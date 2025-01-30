@@ -195,7 +195,7 @@ const Platos = () => {
 
         nuevoPlato.descontinuado = true
         try {
-            await axios.post('http://localhost:3000/api/v1/plato', nuevoPlato, {
+    const response = await axios.post('http://localhost:3000/api/v1/plato', nuevoPlato, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPlatos([...platos, response.data]);

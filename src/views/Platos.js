@@ -55,7 +55,7 @@ const Platos = () => {
 
                 setTotalPages(Math.ceil(sortedPlatos.length / pageSize));
                 setPlatos(sortedPlatos);
-                setCategorias(['Todas', ...categoriasUnicas]);
+                setCategorias([...categoriasUnicas]);
             } catch (error) {
                 console.error("Error al obtener platos:", error);
                 if (error.response && error.response.status === 401) {
@@ -193,16 +193,15 @@ const Platos = () => {
             return;
         }
 
+        nuevoPlato.descontinuado = true
         try {
-            const response = await axios.post('http://localhost:3000/api/v1/plato', nuevoPlato, {
+            await axios.post('http://localhost:3000/api/v1/plato', nuevoPlato, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPlatos([...platos, response.data]);
-            const idNuevoPlato = response.data._id; 
             alert(`PLATO ${nuevoPlato.nombre} CREADO CON ÉXITO`)
             closeModalCrear();
-            setNuevoPlato({ nombre: '', categoria: '', descripcion: '' });
-            //setSelectedPlato(nuevoPlato)
+            setNuevoPlato({ nombre: '', categoria: '', familia: '', tipo_corte: '', temporada: '' });
         } catch (err) {
             console.error("Error al crear plato:", err);
             alert("Ocurrió un error al crear el plato.");
@@ -266,19 +265,19 @@ const Platos = () => {
                     </Select>
                 </FormControl>
                 <FormControl sx={{ m: 1, minWidth: 120 }}>
-    <InputLabel id="estado-select-label">Estado</InputLabel>
-    <Select
-        labelId="estado-select-label"
-        id="estado-select"
-        value={selectedStatus}
-        label="Estado"
-        onChange={handleStatusChange}
-    >
-        <MenuItem value="Todos">Todos</MenuItem>
-        <MenuItem value="Activos">Activos</MenuItem>
-        <MenuItem value="Descontinuados">Descontinuados</MenuItem>
-    </Select>
-</FormControl>
+                    <InputLabel id="estado-select-label">Estado</InputLabel>
+                    <Select
+                        labelId="estado-select-label"
+                        id="estado-select"
+                        value={selectedStatus}
+                        label="Estado"
+                        onChange={handleStatusChange}
+                    >
+                        <MenuItem value="Todos">Todos</MenuItem>
+                        <MenuItem value="Activos">Activos</MenuItem>
+                        <MenuItem value="Descontinuados">Descontinuados</MenuItem>
+                    </Select>
+                </FormControl>
             </Box>
             <Button
                 onClick={() => setModalCrearIsOpen(true)}
@@ -400,12 +399,14 @@ const Platos = () => {
                         label="Nombre"
                         value={nuevoPlato.nombre}
                         onChange={(e) => setNuevoPlato({ ...nuevoPlato, nombre: e.target.value })}
-                        fullWidth
+                        sx={{width: "80%"}}
                         margin="normal"
                     />
                     <FormControl fullWidth margin="normal">
                         <InputLabel>Categoría</InputLabel>
                         <Select
+                            sx={{width: "80%"}}
+                            margin="normal"
                             value={nuevoPlato.categoria}
                             onChange={(e) => setNuevoPlato({ ...nuevoPlato, categoria: e.target.value })}
                         >
@@ -417,13 +418,25 @@ const Platos = () => {
                         </Select>
                     </FormControl>
                     <TextField
-                        label="Descripción"
-                        value={nuevoPlato.descripcion}
-                        onChange={(e) => setNuevoPlato({ ...nuevoPlato, descripcion: e.target.value })}
-                        fullWidth
+                        label="Familia"
+                        value={nuevoPlato.familia}
+                        onChange={(e) => setNuevoPlato({ ...nuevoPlato, familia: e.target.value })}
+                        sx={{width: "80%"}}
                         margin="normal"
-                        multiline
-                        rows={4}
+                    />
+                    <TextField
+                        label="Tipo de Corte"
+                        value={nuevoPlato.tipo_corte}
+                        onChange={(e) => setNuevoPlato({ ...nuevoPlato, tipo_corte: e.target.value })}
+                        sx={{width: "80%"}}
+                        margin="normal"
+                    />
+                    <TextField
+                        label="Temporada"
+                        value={nuevoPlato.temporada}
+                        onChange={(e) => setNuevoPlato({ ...nuevoPlato, temporada: e.target.value })}
+                        sx={{width: "80%"}}
+                        margin="normal"
                     />
                     <div className="ButtonContainer">
                         <Button

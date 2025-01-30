@@ -537,6 +537,15 @@ const EditarMinuta = () => {
                         ))}
                     </Select>
                 </FormControl>
+                <Button
+                     //onClick={}
+                   variant="contained"
+                   color="warning"
+                   disabled={loading}
+                   sx={{ marginLeft: "2rem" }}> 
+
+                    Ver Feedback Minuta
+                  </Button>
                   <Button
                     variant="contained"
                     color="primary"

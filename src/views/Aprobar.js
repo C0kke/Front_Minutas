@@ -18,7 +18,7 @@ const MenuSemanalAprobacion = () => {
   const [openModal, setOpenModal] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const tableRef = useRef(null);
-
+  const [actualizado, setActualizado] = useState(false)
   const token = localStorage.getItem('token')?.trim();
   const navigate = useNavigate();
 
@@ -40,7 +40,7 @@ const MenuSemanalAprobacion = () => {
     };
 
     fetchMenusPendientes();
-  }, []);
+  }, [actualizado]);
 
   const agruparPorSemana = (menus) => {
     const menusPorSemana = {};
@@ -113,7 +113,9 @@ const MenuSemanalAprobacion = () => {
         );
         alert('Mensaje enviado exitosamente');
         setOpenModal(false);
+        setSelectedSemana(null)
         setMensaje('');
+        setActualizado(true)
       } catch (error) {
         console.error('Error al enviar el mensaje:', error);
         setError('Hubo un error al enviar el mensaje.');
@@ -142,24 +144,36 @@ const MenuSemanalAprobacion = () => {
             <ul>
               {menusAgrupados.map(semana => (
                 <li key={`${semana._id.año}-${semana._id.semana}`}>
-                  <Button 
-                    onClick={() => handleSemanaClick(semana)} 
-                    className='semanaContainer'
-                    sx={{
-                      width: '15rem',
-                      height: '3rem',
-                      color: 'white',
-                      backgroundColor: 'white',
-                      borderRadius: '25px',
-                    }}  
-                  >
-                    Semana {semana._id.semana} - {semana._id.año}
-                  </Button>
+                  <Box className="item">
+                    <Button 
+                      onClick={() => handleSemanaClick(semana)} 
+                      className='semanaContainer'
+                      sx={{
+                        width: '15rem',
+                        height: '3rem',
+                        color: 'white',
+                        my: '2px',
+                        borderRadius: '25px',
+                        backgroundColor: semana.menus[0]?.mensaje != "sin mensaje" ? '#FB8C00' : '#008000',
+                        '&:hover': {
+                          backgroundColor: semana.menus[0]?.mensaje != "sin mensaje" ? '#FB8C00' : '#008000',
+                        },
+                      }}  
+                      >
+                      Semana {semana._id.semana} - {semana._id.año}
+                    </Button>
+                    <p>
+                      {semana.menus[0]?.mensaje != 'sin mensaje'? (
+                        "Esperando edición"
+                      ) : ""}
+                    </p>
+                  </Box>
                   {selectedSemana && selectedSemana._id.semana === semana._id.semana && (
                       <>
                         <TablaMinutaAprobacion semana={selectedSemana} tableRef={tableRef} />
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Button 
+                        className='buttons'
                         onClick={() => handleAprobar()}
                         sx={{
                           mt: 2,
@@ -174,7 +188,8 @@ const MenuSemanalAprobacion = () => {
                       </Button>
 
                         <Button 
-                        onClick={() => handleMensaje()}
+                          className='buttons'
+                          onClick={() => handleMensaje()}
                           sx={{
                             mt: 2,
                             backgroundColor: 'FF9800', // Color naranja

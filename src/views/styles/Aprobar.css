@@ -2,7 +2,6 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: bold;
 }
 
-/* Menú Pendiente de Aprobación */
 .menu-pendiente {
   background-color: white;
   color: green;
@@ -16,7 +15,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 24px;
 }
 
-.menu-pendiente button {
+.menu-pendiente .buttons {
   background-color: green;
   color: white;
   border: none;
@@ -26,16 +25,6 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 16px;
 }
 
-.menu-pendiente button:hover {
-  background-color: #135f34;
-}
-
-.semanaContainer {
-  width: 2rem;
-  height: 1em;
-  color: white;
-  background-color: #2e8b57; /* Fondo suave */
-}
 /* Vista de Menú Diario */
 .menu-diario {
   background-color: white;
@@ -54,17 +43,6 @@ h1, h2, h3, h4, h5, h6 {
   padding: 8px 0;
   font-size: 16px;
   color: var(--color-text-muted);
-}
-
-.button {
-  background-color: var(--color-accent);
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 18px;
-  transition: background-color 0.3s ease;
 }
 
 .button:hover {
@@ -103,3 +81,13 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 18px;
   color: var(--color-text-muted);
   margin-top: 20px;}
+
+.item {
+  display: flex;
+  flex-direction: column;
+}
+
+.item p {
+  font-size: 20px;
+  color: #c56c00;
+}

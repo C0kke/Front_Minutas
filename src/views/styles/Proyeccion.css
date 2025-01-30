@@ -3,17 +3,27 @@
   max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  background: #fff;
+  background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #000000;
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #ecf0f1;
+}
+
+/* Tarjetas de proyección */
 .lista-proyecciones {
   display: grid;
   gap: 1.5rem;
 }
 
-/* Tarjetas de proyección */
 .proyeccion-card {
   background: #f8f9fa;
   border-radius: 10px;
@@ -27,21 +37,20 @@
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #eee;
-  color: black;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 .proyeccion-header h3 {
   margin: 0;
-  color: #2c3e50;
+  color: #1a365d; /* Azul oscuro */
   font-size: 1.25rem;
+  font-weight: 600;
 }
 
 /* Listado de fechas */
 .fechas-list {
   display: grid;
   gap: 0.75rem;
-  color: black;
 }
 
 .fecha-item {
@@ -53,26 +62,32 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: black;
+  border: 1px solid #e0e0e0;
 }
 
 .fecha-item:hover {
-  transform: translateX(5px);
+  transform: translateX(3px);
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
+.fecha-text {
+  color: #000000;
+  font-weight: 500;
+}
+
 .ver-detalle-btn {
-  background: #009b15;
+  background: #1a365d; /* Azul oscuro */
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .ver-detalle-btn:hover {
-  background: #007a12;
+  background: #122547;
 }
 
 /* Modal */
@@ -87,13 +102,12 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  color: #009B15;
 }
 
 .modal-contenido {
   background: white;
   width: 90%;
-  max-width: 600px;
+  max-width: 800px; /* Ancho aumentado */
   max-height: 80vh;
   border-radius: 12px;
   display: flex;
@@ -102,16 +116,28 @@
 
 .modal-header {
   padding: 1.5rem;
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid #e0e0e0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #1a365d; /* Azul oscuro */
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h2 {
+  color: white;
+  margin: 0;
+  font-size: 1.5rem;
 }
 
 .cerrar-modal {
+  background: none;
   border: none;
-  font-size: 25px;
-  color: #007a12;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
 }
 
 .modal-body {
@@ -124,41 +150,121 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
-  background: #f8f8f8;
-  border-radius: 8px;
+  padding: 1rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
 }
 
 .plato-nombre {
   flex: 1;
-  margin-right: 1rem;
+  color: #000000;
   word-break: break-word;
+  padding-right: 1rem;
+  font-weight: 500;
 }
 
+/* Input cantidad en modal */
+.cantidad-input {
+  width: 100px;
+  min-width: 100px;
+  border: 1px solid #e0e0e0 !important;
+  background: #f8f8f8;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 500;
+  color: #000000;
+}
+
+.cantidad-input:focus {
+  outline: none;
+  border-color: #009b15 !important;
+  box-shadow: 0 0 0 2px rgba(0, 155, 21, 0.1);
+}
+
+/* Footer del modal */
 .modal-footer {
   display: flex;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 2px solid #eee;
+  border-top: 2px solid #e0e0e0;
+  background: #f8f8f8;
+  border-radius: 0 0 12px 12px;
 }
 
 .exportar-excel-btn {
-  background: #009b15;
+  background: #009b15; /* Verde oscuro */
   color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 2rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .cerrar-modal-btn {
-  background: #e0e0e0;
-  color: #333;
-  padding: 0.75rem 1.5rem;
+  background: #1a365d; /* Azul oscuro */
+  color: white;
+  padding: 0.75rem 2rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.exportar-excel-btn:hover {
+  background: #007a12;
+}
+
+.cerrar-modal-btn:hover {
+  background: #122547;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .proyeccion-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .modal-contenido {
+    width: 95%;
+  }
+
+  .plato-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .cantidad-input {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
 }

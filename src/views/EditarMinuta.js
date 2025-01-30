@@ -20,6 +20,7 @@ import {
   FormControl,
   Button,
   Grid,
+  Modal,
 } from "@mui/material";
 
 import dayjs from "dayjs";
@@ -90,7 +91,7 @@ const EditarMinuta = () => {
   const [weekDays, setWeekDays] = useState(
     generateWeekDays(selectedYear, selectedWeek)
   );
-  
+  const [openFeedbackModal, setOpenFeedbackModal] = useState(false);
   const [availableWeeks, setAvailableWeeks] = useState([]);
   const [availableWeeksAndYears, setAvailableWeeksAndYears] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({});
@@ -202,6 +203,13 @@ const EditarMinuta = () => {
     }
 }, [weekDays, token, selectedYear]);
 
+  const handleOpenFeedback = () => {
+    if (menus.length > 0 && menus[0].mensaje) {
+      setOpenFeedbackModal(true);
+    } else {
+      alert("No hay feedback disponible para esta minuta");
+    }
+  };
   // Actualizar la semana seleccionada usando el selector
   const handleWeekChange = (event) => {
     const selectedWeekAndYear = JSON.parse(event.target.value);
@@ -538,14 +546,14 @@ const EditarMinuta = () => {
                     </Select>
                 </FormControl>
                 <Button
-                     //onClick={}
-                   variant="contained"
-                   color="warning"
-                   disabled={loading}
-                   sx={{ marginLeft: "2rem" }}> 
-
-                    Ver Feedback Minuta
-                  </Button>
+                  onClick={handleOpenFeedback}
+                  variant="contained"
+                  color="warning"
+                  disabled={!menus.length || !menus[0]?.mensaje || menus[0]?.mensaje === "sin mensaje"}
+                  sx={{ marginLeft: "2rem" }}
+                >
+                  Ver Feedback Minuta
+                </Button>
                   <Button
                     variant="contained"
                     color="primary"
@@ -705,10 +713,53 @@ const EditarMinuta = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+              <Modal open={openFeedbackModal} onClose={() => setOpenFeedbackModal(false)}>
+  <Box
+    sx={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: 400,
+      bgcolor: 'background.paper',
+      boxShadow: 24,
+      p: 4,
+      borderRadius: 2,
+    }}
+  >
+    <h2 style={{ color: '#FF9800', marginBottom: '1rem' }}>Feedback de Rechazo</h2>
+    <TextField
+      fullWidth
+      value={menus[0]?.mensaje || ''}
+      multiline
+      rows={4}
+      InputProps={{
+        readOnly: true,
+      }}
+      sx={{
+        '& .MuiInputBase-root': {
+          color: '#616161',
+        },
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#FF9800',
+        }
+      }}
+    />
+    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+      <Button
+        onClick={() => setOpenFeedbackModal(false)}
+        sx={{ color: '#FF9800' }}
+      >
+        Cerrar
+      </Button>
+    </Box>
+  </Box>
+</Modal>
             </Box>
           </Grid>
         </Grid>
-      </Grid>
+      </Grid> 
+      
     );
   };
   

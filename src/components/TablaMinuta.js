@@ -42,6 +42,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
   const [tablaData, setTablaData] = useState({});
   const token = localStorage.getItem("token")?.trim();
 
+  const [filasOrdenadas, setFilasOrdenadas] = useState([]);
   // Obtener los platos segun los ids
   useEffect(() => {
     const obtenerNombresPlatos = async () => {
@@ -107,13 +108,26 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
           });
         });
 
+        // Verificar si existen filas SALAD BAR y agregar las tres filas si es necesario
+        const tieneSaladBar = [...filasUnicas].some(fila => fila.startsWith('SALAD BAR'));
+        if (tieneSaladBar) {
+          ['SALAD BAR 1', 'SALAD BAR 2', 'SALAD BAR 3'].forEach(fila => {
+            filasUnicas.add(fila);
+            Object.values(data).forEach(dia => {
+              if (!dia[fila]) {
+                dia[fila] = [];
+              }
+            });
+          });
+        }
+
         setTablaData(data);
         setFilasOrdenadas(Array.from(filasUnicas));
       };
 
       construirTablaData();
     }
-  }, [platosData, semana]);
+  }, [platosData, semana, filasOrdenadas]);
 
   const obtenerDiaSemana = (fecha) => {
     const dias = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
@@ -144,7 +158,45 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
     return encabezados;
   }, [semana]);
 
-  const [filasOrdenadas, setFilasOrdenadas] = useState([]);
+  
+  // Definir el orden de prioridad para las filas
+  const ordenPrioridades = {
+    "PROTEINA 1": 1,
+    "PROTEINA 2": 2,
+    "PROTEINA 3": 3,
+    "VEGETARIANA": 8,
+    "VEGANA": 9,
+    "GUARNICION 1": 11,
+    "GUARNICION 2": 12,
+    "ENSALADA 1": 15,
+    "ENSALADA 2": 16,
+    "ENSALADA 3": 17,
+    "SOPA DIA": 21,
+
+    "FONDO 1": 4,
+    "GUARNICIÓN 1": 5,
+    "FONDO 2": 6,
+    "GUARNICIÓN 2": 7,
+    "HIPOCALÓRICO": 10,
+    "VEGETARIANO": 13,
+    "VEGANO": 14,
+    "SALAD BAR 1": 18,
+    "SALAD BAR 2": 19,
+    "SALAD BAR 3": 20,
+    "SOPA": 22,
+    "POSTRE": 23,
+  };
+
+  useEffect(() => {
+    if (filasOrdenadas.length > 0) {
+      // Ordenar las filas según el orden de prioridades
+      const filasOrdenadasPorPrioridad = filasOrdenadas.sort((a, b) => {
+        return (ordenPrioridades[a]) - (ordenPrioridades[b]);
+      });
+
+      setFilasOrdenadas(filasOrdenadasPorPrioridad);
+    }
+  }, [filasOrdenadas]);
 
   if (loading) {
     return <div>Cargando platos...</div>;

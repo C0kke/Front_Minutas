@@ -160,6 +160,7 @@ const GenerarReporte = () => {
         platos
           .filter(plato => plato.cantidad > 0)
           .map(plato => ({
+            platoid : plato.id,
             fecha, // Fecha del plato
             Nombreplato: plato.nombre, // Nombre del plato
             cantidad: plato.cantidad.toString(), // Cantidad convertida a string

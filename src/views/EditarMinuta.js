@@ -52,8 +52,8 @@ const tipoPlatoPorFila = {
   "PROTEINA 1": "PLATO DE FONDO",
   "PROTEINA 2": "PLATO DE FONDO",
   "PROTEINA 3": "PLATO DE FONDO",
-  "VEGETARIANA": "VEGETARIANO",
-  "VEGANA": "VEGANA",
+  "VEGETARIANA": "VEGANA/VEGETARIANA",
+  "VEGANA": "VEGANA/VEGETARIANA",
   "GUARNICION 1": "GUARNICIÓN",
   "GUARNICION 2": "GUARNICIÓN",
   "HIPOCALORICO": "HIPOCALORICO",
@@ -407,26 +407,30 @@ const EditarMinuta = () => {
                     return false;
                   });
                 }
-              } else if (["HIPOCALORICO", "VEGETARIANO", "VEGANA"].includes(tipoPlatoFiltrado)) {
-                // Para HIPOCALORICO, VEGETARIANO y VEGANA, no se debe repetir en la semana
+              } else if (["HIPOCALORICO","VEGANA/VEGETARIANA"].includes(tipoPlatoFiltrado)) {
                 if (esMismaSemana) {
-                    return menus.some(otroMenu => {
-                        if (otroMenu.semana === selectedWeek) {
-                            return filas.some(otraFila => {
-                                if (["VEGETARIANO", "VEGANA", "HIPOCALORICO"].includes(tipoPlatoPorFila[otraFila])) {
-                                    const platoEnOtraFila = otroMenu.listaplatos.find(
-                                        p => p.fila.toUpperCase() === otraFila.toUpperCase()
-                                    );
-                                    return platoEnOtraFila?.platoId?._id === plato._id;
-                                }
-                                return false;
-                            });
-                        }
-                        return false;
-                    });
+                  return menus.some(otroMenu => {
+                    if (otroMenu.semana === selectedWeek) {
+                      const esOtroDia = !dayjs(otroMenu.fecha).isSame(
+                        weekDays[dias.indexOf(dia)],
+                        "day"
+                      );
+                      if (esOtroDia) {
+                        return filas.some(otraFila => {
+                          if (["VEGANA/VEGETARIANA", "HIPOCALORICO"].includes(tipoPlatoPorFila[otraFila])) {
+                            const platoEnOtraFila = otroMenu.listaplatos.find(
+                              p => p.fila.toUpperCase() === otraFila.toUpperCase()
+                            );
+                            return platoEnOtraFila?.platoId?._id === plato._id;
+                          }
+                          return false;
+                        });
+                      }
+                    }
+                    return false;
+                  });
                 }
-            }
-
+              }
               // Para otros tipos de plato, no hay restricciones
               return false;
             });

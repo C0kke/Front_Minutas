@@ -134,9 +134,35 @@ const Proyeccion = () => {
     }));
   };
 
-  const handleExportExcel = () => {
-    
-  }
+
+
+  const handleExportExcel = async (proyeccionId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/v1/proyeccion/${proyeccionId}/reporte-insumos`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob', // Importante para manejar archivos binarios
+        }
+      );
+  
+      // Crear un enlace temporal para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+  
+      // Establecer el nombre del archivo (puedes personalizarlo según el backend)
+      link.setAttribute('download', `reporte-insumos-${proyeccionId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+  
+      // Limpiar el enlace temporal
+      link.remove();
+    } catch (error) {
+      console.error('Error al descargar el archivo:', error);
+      alert('Error al generar el reporte. Intenta nuevamente más tarde.');
+    }
+  };
 
   const parseFecha = (fechaStr) => {
     const [dia, mes, anio] = fechaStr.split("-").map(Number);
@@ -176,31 +202,41 @@ const Proyeccion = () => {
               const fechas = Object.keys(proyeccionesConFechas[proyeccionId]);
 
               return (
-                <div key={proyeccionId} className="proyeccion-card">
-                  <div className="proyeccion-header">
-                    <h3>{proyeccion.nombreSucursal}</h3>
-                    <span>{fechas.length} Fechas programadas</span>
-                  </div>
-                  
-                  <div className="fechas-list">
-                    {fechas.map((fecha) => (
-                      <div 
-                        key={fecha}
-                        className="fecha-item"
-                        onClick={() => handleFechaClick(proyeccionId, fecha)}
-                      >
-                        <span className="fecha-text">{fecha}</span>
-                        <button className="ver-detalle-btn">Ver proyección</button>
-                      </div>
-                    ))}
-                  </div>
-                  <button 
-                  className="exportar-excel-btn"
-                  onClick={handleExportExcel}
-                >
-                  Exportar a Excel
-                </button>
-                </div>
+                <div className="proyeccion-card">
+  <div className="proyeccion-header">
+    <h3>{proyeccion.nombreSucursal}</h3>
+    <span>{fechas.length} Fechas programadas</span>
+  </div>
+
+  <div className="fechas-list">
+    {fechas.map((fecha) => (
+      <div
+        key={fecha}
+        className="fecha-item"
+        onClick={() => handleFechaClick(proyeccionId, fecha)}
+      >
+        <span className="fecha-text">{fecha}</span>
+        <button className="ver-detalle-btn">Ver proyección</button>
+      </div>
+    ))}
+  </div>
+
+  {/* Contenedor de botones */}
+  <div className="botones-container">
+    <button
+      className="exportar-excel-btn"
+      onClick={() => handleExportExcel(proyeccionId)}
+    >
+      Exportar a Excel
+    </button>
+    <button
+      className="butoon-editar-modal-btn"
+      onClick={() => guardarProyeccion(proyeccionId)}
+    >
+      Editar
+    </button>
+  </div>
+</div>
               );
             })
           ) : (
@@ -240,7 +276,7 @@ const Proyeccion = () => {
               </div>
               
               <div className="modal-footer">
-               
+             
                 <button
                   className="cerrar-modal-btn"
                   onClick={() => setModalAbierto(false)}

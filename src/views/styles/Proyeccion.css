@@ -29,6 +29,7 @@
   border-radius: 10px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  justify-content: space-between;
 }
 
 .proyeccion-header {
@@ -191,7 +192,17 @@
   background: #f8f8f8;
   border-radius: 0 0 12px 12px;
 }
-
+.butoon-editar-modal-btn{
+  background: #e6ca17; /* Verde oscuro */
+  color: white;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  margin-top: 25px;
+}
 .exportar-excel-btn {
   background: #009b15; /* Verde oscuro */
   color: white;
@@ -267,5 +278,30 @@
 
   .modal-footer {
     flex-direction: column;
+  }
+
+  .botones-container {
+    display: flex;
+    justify-content: space-between; /* Distribuye los botones: uno a la izquierda y otro a la derecha */
+    align-items: center; /* Alinea verticalmente los botones */
+    margin-top: 10px; /* Espacio superior opcional */
+  }
+  
+  .exportar-excel-btn {
+    background-color: #007bff; /* Color azul para el botón de Excel */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .butoon-editar-modal-btn {
+    background-color: #28a745; /* Color verde para el botón de Editar */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
   }
 }

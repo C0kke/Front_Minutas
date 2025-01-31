@@ -24,7 +24,7 @@ const MinutaLista = () => {
         const response = await axios.get('http://localhost:3000/api/v1/menudiario', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const groupedMinutas = groupBySemanaYAño(response.data); 
+        const groupedMinutas = groupBySemanaYAño(response.data.filter((menu) => menu.aprobado === true)); 
         setMinutasAgrupadas(groupedMinutas);
 
         // Se obtienen las semanas de cada minuta una única vez

@@ -15,7 +15,6 @@ import 'dayjs/locale/es';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import ExportToExcel from "./ExportToExcel";
-
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.locale('es');
@@ -41,7 +40,6 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tablaData, setTablaData] = useState({});
-
   const token = localStorage.getItem("token")?.trim();
 
   // Obtener los platos segun los ids
@@ -82,26 +80,12 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
     if (Object.keys(platosData).length > 0) {
       const construirTablaData = () => {
         const data = {};
+        const filasUnicas = new Set();
 
         semana.menus.forEach((menu) => {
-          // Convertir la fecha a la zona horaria deseada (ej. UTC-3)
           const fecha = dayjs(menu.fecha).tz('America/Argentina/Buenos_Aires').format("DD/MM/YYYY");
           const diaSemana = obtenerDiaSemana(dayjs(menu.fecha).tz('America/Argentina/Buenos_Aires'));
-
           data[fecha] = {
-            "PROTEINA 1": [],
-            "PROTEINA 2": [],
-            "PROTEINA 3": [],
-            "VEGETARIANA": [],
-            "VEGANA": [],
-            "GUARNICION 1": [],
-            "GUARNICION 2": [],
-            "HIPOCALORICO": [],
-            "ENSALADA 1": [],
-            "ENSALADA 2": [],
-            "ENSALADA 3": [],
-            "SOPA DIA": [],
-            "POSTRE": [],
             diaSemana: diaSemana,
           };
 
@@ -109,38 +93,43 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
             const plato = platosData[item.platoId];
             const fila = item.fila;
 
-            if (plato && fila && data[fecha][fila]) {
+            if (plato && fila) {
+              filasUnicas.add(fila);
+
+              if (!data[fecha][fila]) {
+                data[fecha][fila] = [];
+              }
+
               if (!data[fecha][fila].includes(plato.nombre)) {
                 data[fecha][fila].push(plato.nombre);
               }
             }
           });
         });
+
         setTablaData(data);
+        setFilasOrdenadas(Array.from(filasUnicas));
       };
+
       construirTablaData();
     }
   }, [platosData, semana]);
 
-  // Función obtenerDiaSemana (ahora usa dayjs internamente)
   const obtenerDiaSemana = (fecha) => {
     const dias = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
     return dias[fecha.day()];
   };
 
-  // useMemo para encabezadosFecha
   const encabezadosFecha = useMemo(() => {
     const { menus } = semana;
     const fechasSet = new Set();
     const encabezados = [];
 
     menus.forEach((menu) => {
-      // Convertir la fecha a la zona horaria deseada (ej. UTC-3)
       const fecha = dayjs(menu.fecha).tz('America/Argentina/Buenos_Aires');
       const fechaFormateada = fecha.format("DD/MM/YYYY");
       const diaSemana = obtenerDiaSemana(fecha);
 
-      // Verificar si la fecha ya fue agregada
       if (!fechasSet.has(fechaFormateada)) {
         fechasSet.add(fechaFormateada);
         encabezados.push({
@@ -151,27 +140,11 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
       }
     });
 
-    // Ordenar los encabezados por fecha
     encabezados.sort((a, b) => dayjs(a.fecha, "DD/MM/YYYY").diff(dayjs(b.fecha, "DD/MM/YYYY")));
-
     return encabezados;
   }, [semana]);
 
-  const filasOrdenadas = [
-    "PROTEINA 1",
-    "PROTEINA 2",
-    "PROTEINA 3",
-    "VEGETARIANA",
-    "VEGANA",
-    "GUARNICION 1",
-    "GUARNICION 2",
-    "HIPOCALORICO",
-    "ENSALADA 1",
-    "ENSALADA 2",
-    "ENSALADA 3",
-    "SOPA DIA",
-    "POSTRE",
-  ];
+  const [filasOrdenadas, setFilasOrdenadas] = useState([]);
 
   if (loading) {
     return <div>Cargando platos...</div>;
@@ -185,40 +158,39 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
     const excelData = [];
     const headers = ["SEMANA " + semana._id.semana + " - " + semana._id.año, ...encabezadosFecha.map(h => `${h.diaSemana} ${h.fecha}`)];
     excelData.push(headers);
+
     filasOrdenadas.forEach(fila => {
-        const row = [fila];
-        encabezadosFecha.forEach(encabezado => {
-            const fecha = encabezado.fecha;
-            const cellValue = (fecha && tablaData[fecha] && tablaData[fecha][fila]) ? tablaData[fecha][fila].join(", ") : "-";
-            row.push(cellValue);
-        });
-        excelData.push(row);
+      const row = [fila];
+      encabezadosFecha.forEach(encabezado => {
+        const fecha = encabezado.fecha;
+        const cellValue = (fecha && tablaData[fecha] && tablaData[fecha][fila]) ? tablaData[fecha][fila].join(", ") : "-";
+        row.push(cellValue);
+      });
+      excelData.push(row);
     });
 
-    // Aplanar la estructura para que sea un array de objetos
     const flattenedData = excelData.map(row => {
-        const rowObject = {};
-        row.forEach((cell, index) => {
-            rowObject[headers[index]] = cell;
-        });
-        return rowObject;
+      const rowObject = {};
+      row.forEach((cell, index) => {
+        rowObject[headers[index]] = cell;
+      });
+      return rowObject;
     });
 
     return flattenedData;
   };
-  
 
   return (
     <div>
       <TableContainer component={Paper} ref={tableRef}>
-      <ExportToExcel
-        data={prepareDataForExcel()}
-        fileName={`PLANIFICACIÓN DE MINUTA ${semana._id.semana} - ${semana._id.año}`}
-        sheetName={`MINUTA`}
-        semana={semana}
-        encabezadosFecha={encabezadosFecha}
-        buttonLabel="Exportar a Excel"
-      />
+        <ExportToExcel
+          data={prepareDataForExcel()}
+          fileName={`PLANIFICACIÓN DE MINUTA ${semana._id.semana} - ${semana._id.año}`}
+          sheetName={`MINUTA`}
+          semana={semana}
+          encabezadosFecha={encabezadosFecha}
+          buttonLabel="Exportar a Excel"
+        />
         <Table sx={{ minWidth: 650 }} aria-label="tabla de aprobación de minuta">
           <TableHead>
             <TableRow>
@@ -227,9 +199,9 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
               </StyledTableCell>
               {encabezadosFecha.map((encabezado) => (
                 <StyledTableCell
-                key={encabezado.id}
-                align="center"
-                className="encabezado"
+                  key={encabezado.id}
+                  align="center"
+                  className="encabezado"
                 >
                   <div>{encabezado.diaSemana}</div>
                   <div>{encabezado.fecha}</div>
@@ -244,7 +216,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
                   component="th"
                   scope="row"
                   className="subtitulo"
-                  >
+                >
                   {fila}
                 </StyledTableCell>
                 {encabezadosFecha.map((encabezado) => (

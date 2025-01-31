@@ -33,34 +33,32 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const filas = [
-  "PROTEINA 1",
-  "PROTEINA 2",
-  "PROTEINA 3",
-  "VEGETARIANA",
-  "VEGANA",
-  "GUARNICION 1",
-  "GUARNICION 2",
-  "HIPOCALORICO",
-  "ENSALADA 1",
-  "ENSALADA 2",
-  "ENSALADA 3",
-  "SOPA DIA",
+  "FONDO 1",
+  "GUARNICIÓN 1",
+  "FONDO 2",
+  "GUARNICIÓN 2",
+  "HIPOCALÓRICO",
+  "VEGETARIANO",
+  "VEGANO",
+  "SALAD BAR 1",
+  "SALAD BAR 2",
+  "SALAD BAR 3",
+  "SOPA",
   "POSTRE",
 ];
 
 const tipoPlatoPorFila = {
-  "PROTEINA 1": "PLATO DE FONDO",
-  "PROTEINA 2": "PLATO DE FONDO",
-  "PROTEINA 3": "PLATO DE FONDO",
-  "VEGETARIANA": "VEGANA/VEGETARIANA",
-  "VEGANA": "VEGANA/VEGETARIANA",
-  "GUARNICION 1": "GUARNICIÓN",
-  "GUARNICION 2": "GUARNICIÓN",
-  "HIPOCALORICO": "HIPOCALORICO",
-  "ENSALADA 1": "ENSALADA",
-  "ENSALADA 2": "ENSALADA",
-  "ENSALADA 3": "ENSALADA",
-  "SOPA DIA": "SOPA",
+  "FONDO 1": "PLATO DE FONDO",
+  "GUARNICIÓN 1": "GUARNICIÓN",
+  "FONDO 2": "PLATO DE FONDO",
+  "GUARNICIÓN 2": "GUARNICIÓN",
+  "HIPOCALÓRICO": "HIPOCALORICO",
+  "VEGETARIANO": "VEGANA/VEGETARIANA",
+  "VEGANO": "VEGANA/VEGETARIANA",
+  "SALAD BAR 1": "ENSALADA",
+  "SALAD BAR 2": "ENSALADA",
+  "SALAD BAR 3": "ENSALADA",
+  "SOPA": "SOPA",
   "POSTRE": "POSTRES",
 };
 
@@ -279,7 +277,7 @@ const EditarMinuta = () => {
         ensaladasPorFecha[fechaISO] = [];
       }
       updatedMenu.listaplatos.forEach(plato => {
-        if (plato.fila.startsWith("ENSALADA") && plato.platoId) {
+        if (plato.fila.startsWith("SALAD BAR") && plato.platoId) {
           ensaladasPorFecha[fechaISO].push(plato.platoId);
         }
       });
@@ -444,7 +442,7 @@ const EditarMinuta = () => {
           });
 
           // **Casos Especiales: SOPA DIA y VEGANA**
-          if (fila === "SOPA DIA") {
+          if (fila === "SOPA") {
             opcionesFiltradas = opcionesFiltradas.concat(
               platosDisponibles[diaNormalizado].filter(
                 (plato) => plato.categoria === "CREMAS"

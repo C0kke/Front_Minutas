@@ -208,7 +208,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
 
   const prepareDataForExcel = () => {
     const excelData = [];
-    const headers = ["SEMANA " + semana._id.semana + " - " + semana._id.año, ...encabezadosFecha.map(h => `${h.diaSemana} ${h.fecha}`)];
+    const headers = ["FILA", ...encabezadosFecha.map(h => `${h.diaSemana} ${h.fecha}`)];
     excelData.push(headers);
 
     filasOrdenadas.forEach(fila => {

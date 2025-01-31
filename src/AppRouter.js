@@ -13,6 +13,7 @@ import MenuSemanalAprobacion from './views/Aprobar';
 import Proyeccion from './views/Proyecciones';
 import EditarMinuta from './views/EditarMinuta';
 import Usuarios from './views/Usuarios';
+import Estructura from './views/EstructuraAlimentaria';
 
 function AppRouter() {
   const token = localStorage.getItem('token');
@@ -33,6 +34,7 @@ function AppRouter() {
         <Route path="/editarmenu" element={token ? <EditarMinuta /> : <Navigate to="/login" />} />
         <Route path="/proyecciones" element={token ? <Proyeccion /> : <Navigate to="/login" />} />
         <Route path="/usuarios" element={token ? <Usuarios /> : <Navigate to="/login" />} />
+        <Route path="/estructura" element={token ? <Estructura /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

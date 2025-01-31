@@ -223,14 +223,18 @@ const EditarMinuta = () => {
     setMenus((prevMenus) => {
       return prevMenus.map((menu) => {
         if (dayjs(menu.fecha).isSame(day, "day")) {
+          // Filtrar los platos existentes para eliminar el plato correspondiente a esta fila
           const updatedListaplatos = menu.listaplatos.filter(
             (plato) => plato.fila.toUpperCase() !== fila.toUpperCase()
           );
   
-          updatedListaplatos.push({
-            fila: fila,
-            platoId: { _id: newPlato._id, nombre: newPlato.nombre },
-          });
+          // Si hay un nuevo plato seleccionado, lo agregamos a la lista
+          if (newPlato) {
+            updatedListaplatos.push({
+              fila: fila,
+              platoId: { _id: newPlato._id, nombre: newPlato.nombre },
+            });
+          }
   
           return {
             ...menu,
@@ -263,6 +267,7 @@ const EditarMinuta = () => {
         semana: menu.semana,
         id_sucursal: menu.id_sucursal,
         estado: menu.estado,
+        mensaje: "sin mensaje",
       };
 
   
@@ -670,9 +675,8 @@ const EditarMinuta = () => {
                                     : null)
                                 }
                                 onChange={(event, newValue) => {
-                                  if (newValue) {
-                                    handlePlatoChange(day, fila, newValue);
-                                  }
+                                  // Llamamos a handlePlatoChange con newValue (que puede ser null)
+                                  handlePlatoChange(day, fila, newValue);
                                 }}
                                 isOptionEqualToValue={(option, value) =>
                                   option?._id === value?._id

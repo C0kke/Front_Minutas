@@ -17,6 +17,8 @@
     margin: 5px;
     padding: 10px;
     display: flex;
+    word-wrap: break-word;
+    max-width: 850px;
     justify-content: space-between;
     background-color: rgb(255, 255, 255); /* Fondo suave */
     color: #2E8B57; /* Texto verde */

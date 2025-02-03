@@ -253,7 +253,7 @@ const Estructura = () => {
                   <TableRow>
                     <TableCell sx={{ backgroundColor: "#1C2D58", color: "white", fontWeight: "bold", textAlign: "center" }}>CATEGORÍA</TableCell>
                     {dias.map((dia) => (
-                      <TableCell key={dia} sx={{ backgroundColor: "#1C2D58", color: "white", fontWeight: "bold", textAlign: "center" }}>
+                      <TableCell key={dia} sx={{ backgroundColor: "#1C2D58", color: "white", textAlign: "center"}}>
                         {dia}
                       </TableCell>
                     ))}
@@ -265,24 +265,22 @@ const Estructura = () => {
                       <TableCell sx={{ backgroundColor: "#1C2D58", color: "white", fontWeight: "bold", textAlign: "center"}}>{fila}</TableCell>
                       {dias.map((dia) => (
                         <TableCell key={`${fila}-${dia}`} sx={{ padding: 0 }}>
-                          <Grid container spacing={2} direction="column" >
+                          <Grid container spacing={2} direction="column" mb={2} ml={1}>
                             {(editedData[dia]?.[fila] || []).map((entry, index) => (
                               <Grid item key={index} xs={8}>
                                 <Grid container spacing={2} alignItems="center" marginTop={1}>
-                                  <Grid item xs={6}>
+                                  <Grid item xs={4.5}>
                                     <TextField
                                       label="Familia"
                                       value={entry.familia}
                                       onChange={(e) => handleCellChange(dia, fila, index, "familia", e.target.value)}
-                                      fullWidth
                                     />
                                   </Grid>
-                                  <Grid item xs={6}>
+                                  <Grid item xs={4.5}>
                                     <TextField
                                       label="Tipo de corte"
                                       value={entry.corteqlo}
                                       onChange={(e) => handleCellChange(dia, fila, index, "corteqlo", e.target.value)}
-                                      fullWidth
                                     />
                                   </Grid>
                                   <Grid item>
@@ -293,7 +291,7 @@ const Estructura = () => {
                                 </Grid>
                               </Grid>
                             ))}
-                            <Grid item xs={12}>
+                            <Grid item xs={8} alignSelf={'end'} mr={5}>
                               <Button
                                 variant="outlined"
                                 startIcon={<AddIcon />}

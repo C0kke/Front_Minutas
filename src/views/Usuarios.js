@@ -5,15 +5,13 @@ import { Box, Button, Modal, TextField, Typography, MenuItem } from "@mui/materi
 import Header from "../components/Header";
 
 const Usuarios = () => {
-    const [user, setUser] = useState(null);
     const [usuarios, setUsuarios] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [modalCrearIsOpen, setModalCrearIsOpen] = useState(false);
-    const [error, setError] = useState(null); // Declare error state
+    const [ error , setError] = useState(null); // Declare error state
     const [newUser, setNewUser] = useState({ name: '', username: '', email: '', password: '', role: '' }); // Declare new user state
-    const [currentPage, setCurrentPage] = useState(1); // Declare currentPage state
-    const [deletionConfirmation, setDeletionConfirmation] = useState(0); // For the delete confirmation
+   
+  // For the delete confirmation
 
     const token = localStorage.getItem('token');
     const navigate = useNavigate();
@@ -43,10 +41,6 @@ const Usuarios = () => {
         fetchUsuarios();
     }, [navigate, token]);
 
-    const handleSearchChange = (event) => {
-        setSearchTerm(event.target.value);
-        setCurrentPage(1);
-    };
 
     const closeModal = () => {
         setModalIsOpen(false);
@@ -131,6 +125,7 @@ const Usuarios = () => {
             const confirmedSecond = window.confirm("Este es el segundo paso de la confirmación. ¿Seguro que desea continuar?");
             if (confirmedSecond) {
                 const confirmedThird = window.confirm("¡Última confirmación! ¿Realmente desea eliminar este usuario?");
+                console.log(error)
                 if (confirmedThird) {
                     try {
                         await axios.delete(`http://localhost:3000/api/v1/user/${newUser._id}`, {
@@ -150,15 +145,7 @@ const Usuarios = () => {
     return (
         <div>
             <Header />
-            <Box className='FilterBox'>
-                <TextField
-                    label="Buscar usuario"
-                    variant="outlined"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    sx={{ flexGrow: 1, marginRight: '16px' }}
-                />
-            </Box>
+          
             <Button
                 onClick={openModalCrear}  // Cambié esta parte para abrir el modal de crear usuario
                 variant="contained"

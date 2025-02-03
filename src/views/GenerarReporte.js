@@ -52,7 +52,7 @@ const GenerarReporte = () => {
     };
 
     fetchSucursales();
-  }, []);
+  }, [token]);
 
   const handleSemanaChange = (e) => {
     const selectedWeek = e.target.value;
@@ -170,7 +170,7 @@ const GenerarReporte = () => {
     console.log(proyeccionData);
   
     try {
-      const reportResponse = await axios.post(
+       await axios.post(
         'http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes',
         reportData,
         {
@@ -183,7 +183,7 @@ const GenerarReporte = () => {
       alert(`Reporte para ${sucursalObj.nombresucursal} generado correctamente en la ruta 'Downloads/archivos'`);
   
       // Crear la proyección
-      const proyeccionResponse = await axios.post(
+      await axios.post(
         'http://localhost:3000/api/v1/proyeccion',
         proyeccionData,
         {
@@ -194,6 +194,7 @@ const GenerarReporte = () => {
       );
   
       alert('Proyección creada correctamente.');
+      
       navigate("/home");
     } catch (error) {
       console.error("Error al generar el reporte o crear la proyección:", error);

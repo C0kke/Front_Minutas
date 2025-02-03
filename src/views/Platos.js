@@ -101,7 +101,7 @@ const Platos = () => {
         };
 
         fetchPlatos();
-    }, [currentPage, eliminacion]);
+    }, [currentPage, eliminacion,navigate, pageSize, token]);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -161,7 +161,7 @@ const Platos = () => {
             descontinuado: !selectedPlato.descontinuado,
         }
         try {
-            const response = await axios.put(`http://localhost:3000/api/v1/plato/${selectedPlato._id}`, platoData, {
+            await axios.put(`http://localhost:3000/api/v1/plato/${selectedPlato._id}`, platoData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             selectedPlato.descontinuado = !selectedPlato.descontinuado;

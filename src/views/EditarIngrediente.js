@@ -22,7 +22,7 @@ const EditarIngredientes = () => {
   const platoId = localStorage.getItem("id_plato");
   const [plato, setPlato] = useState(null);
   const [ingredientes, setIngredientes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [ setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -68,7 +68,7 @@ const EditarIngredientes = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigate, platoId]);
+  }, [navigate, platoId, setLoading]);
 
   useEffect(() => {
     if (platoId) {

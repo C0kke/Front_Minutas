@@ -3,7 +3,6 @@ import axios from 'axios';
 import './styles/Aprobar.css';
 import { Box, Alert, Button, Modal, TextField } from '@mui/material';
 import Header from '../components/Header';
-import ExportToExcel from '../components/ExportToExcel';
 import TablaMinutaAprobacion from '../components/TablaMinuta';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
@@ -11,10 +10,10 @@ import { useNavigate } from 'react-router-dom';
 const MenuSemanalAprobacion = () => {
   const [menusPendientes, setMenusPendientes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMenu, setSelectedMenu] = useState(null);  
+  const [ setSelectedMenu] = useState(null);  
   const [selectedSemana, setSelectedSemana] = useState(null);
   const [error, setError] = useState(null);
-  const [loadingMenu, setLoadingMenu] = useState(false); 
+
   const [openModal, setOpenModal] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const tableRef = useRef(null);
@@ -40,7 +39,7 @@ const MenuSemanalAprobacion = () => {
     };
 
     fetchMenusPendientes();
-  }, [actualizado]);
+  }, [actualizado,token]);
 
   const agruparPorSemana = (menus) => {
     const menusPorSemana = {};
@@ -59,11 +58,6 @@ const MenuSemanalAprobacion = () => {
     });
   };
 
-  const handleMenuClick = async (menu) => {
-    setLoadingMenu(true);
-    setSelectedMenu(menu);
-    setLoadingMenu(false);
-  };
 
   const handleAprobar = async () => {
     if (selectedSemana) {
@@ -154,16 +148,16 @@ const MenuSemanalAprobacion = () => {
                         color: 'white',
                         my: '2px',
                         borderRadius: '25px',
-                        backgroundColor: semana.menus[0]?.mensaje != "sin mensaje" ? '#FB8C00' : '#008000',
+                        backgroundColor: semana.menus[0]?.mensaje !== "sin mensaje" ? '#FB8C00' : '#008000',
                         '&:hover': {
-                          backgroundColor: semana.menus[0]?.mensaje != "sin mensaje" ? '#FB8C00' : '#008000',
+                          backgroundColor: semana.menus[0]?.mensaje !== "sin mensaje" ? '#FB8C00' : '#008000',
                         },
                       }}  
                       >
                       Semana {semana._id.semana} - {semana._id.año}
                     </Button>
                     <p>
-                      {semana.menus[0]?.mensaje != 'sin mensaje'? (
+                      {semana.menus[0]?.mensaje !== 'sin mensaje'? (
                         "Esperando edición"
                       ) : ""}
                     </p>

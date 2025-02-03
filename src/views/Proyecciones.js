@@ -7,8 +7,6 @@ const Proyeccion = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [openProyecciones, setOpenProyecciones] = useState({});
-  const [openFechas, setOpenFechas] = useState({});
   const [proyeccionesConFechas, setProyeccionesConFechas] = useState({});
   const [cantidadesEditadas, setCantidadesEditadas] = useState({});
   const token = localStorage.getItem('token');
@@ -119,20 +117,9 @@ const Proyeccion = () => {
     setModalAbierto(true);
   };
 
-  const handleToggleProyeccion = (proyeccionId) => {
-    setOpenProyecciones((prev) => ({
-      [proyeccionId]: !prev[proyeccionId]
-    }));
-    if (!openProyecciones[proyeccionId]) {
-      setOpenFechas({});
-    }
-  };
+ 
 
-  const handleToggleFecha = (proyeccionId, fecha) => {
-    setOpenFechas((prev) => ({
-      [`${proyeccionId}-${fecha}`]: !prev[`${proyeccionId}-${fecha}`]
-    }));
-  };
+  
 
 
 
@@ -164,26 +151,8 @@ const Proyeccion = () => {
     }
   };
 
-  const parseFecha = (fechaStr) => {
-    const [dia, mes, anio] = fechaStr.split("-").map(Number);
-    return new Date(anio, mes - 1, dia);
-  };
-
-  // Función para formatear fecha de objeto Date a DD-MM-YYYY
-  const formatearFecha = (fecha) => {
-    const dia = fecha.getDate().toString().padStart(2, '0');
-    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-    const anio = fecha.getFullYear();
-    return `${dia}-${mes}-${anio}`;
-  };
-
-  const hayCambios = (proyeccionId) => {
-    const proyeccion = data.find(p => p._id === proyeccionId);
-    return proyeccion.lista.some(item => 
-      cantidadesEditadas[item._id] !== undefined &&
-      cantidadesEditadas[item._id] !== item.cantidad
-    );
-  };
+ 
+  
 
   if (loading) return <div className="loading">Cargando...</div>;
   if (error) return <div className="error">{error}</div>;

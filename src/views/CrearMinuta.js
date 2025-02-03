@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button, InputLabel, CircularProgress, Select, MenuItem, Grid2, FormControl } from '@mui/material';
+import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button,Grid2 } from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -72,14 +72,14 @@ const generateWeekDays = (year, week) => {
 };
 
 const Minutas = () => {
-  const [platos, setPlatos] = useState([]);
+  const [ setPlatos] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({}); 
   const currentYear = dayjs().year();
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
   const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [ loading,setLoading] = useState(true);
+  const [ error,setError] = useState(null);
   const [data, setData] = useState({});
   const navigate = useNavigate(); 
   const token = localStorage.getItem('token')?.trim();  
@@ -111,7 +111,7 @@ const Minutas = () => {
       }
     };
     fetchPlatos();
-  }, [navigate]);
+  }, [navigate,setError, setLoading, setPlatos, token]);
 
   // Obtener platos disponibles por fecha
   useEffect(() => {
@@ -140,7 +140,7 @@ const Minutas = () => {
   };
 
   obtenerPlatosDisponibles();
-}, [year, week]);
+}, [year, week,token]);
 
   const handleYearChange = (event) => {
     const newYear = parseInt(event.target.value, 10) || currentYear;
@@ -437,7 +437,7 @@ const Minutas = () => {
       });
     });
     return opciones;
-  }, [platosDisponibles, year, week, data]);
+  }, [platosDisponibles, data]);
   
   const getValueForAutocomplete = (row, col) => {
     const dia = col.toUpperCase();

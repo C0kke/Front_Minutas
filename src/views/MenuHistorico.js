@@ -42,7 +42,7 @@ const MinutaLista = () => {
     };
 
     fetchMinutas();
-  }, []);
+  }, [token]);
 
   const groupBySemanaYAño = (data) => {
     return data.reduce((acc, minuta) => {
@@ -58,7 +58,7 @@ const MinutaLista = () => {
   };
 
   const handleSemanaClick = (semana, año) => {
-    if (selectedSemana == semana) {
+    if (selectedSemana === semana) {
       setMostrarTabla(!mostrarTabla);
     }
     

@@ -52,7 +52,7 @@ const GenerarReporte = () => {
     };
 
     fetchSucursales();
-  }, [token]);
+  }, [navigate]);
 
   const handleSemanaChange = (e) => {
     const selectedWeek = e.target.value;

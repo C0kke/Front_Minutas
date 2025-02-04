@@ -72,14 +72,14 @@ const generateWeekDays = (year, week) => {
 };
 
 const Minutas = () => {
-  const [ setPlatos] = useState([]);
+  const [platos, setPlatos] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({}); 
   const currentYear = dayjs().year();
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
   const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));  
-  const [ loading,setLoading] = useState(true);
-  const [ error,setError] = useState(null);
+  const [loading ,setLoading] = useState(true);
+  const [error ,setError] = useState(null);
   const [data, setData] = useState({});
   const navigate = useNavigate(); 
   const token = localStorage.getItem('token')?.trim();  
@@ -111,7 +111,7 @@ const Minutas = () => {
       }
     };
     fetchPlatos();
-  }, [navigate,setError, setLoading, setPlatos, token]);
+  }, [navigate]);
 
   // Obtener platos disponibles por fecha
   useEffect(() => {
@@ -140,7 +140,7 @@ const Minutas = () => {
   };
 
   obtenerPlatosDisponibles();
-}, [year, week,token]);
+}, [year, week, token, platosDisponibles]);
 
   const handleYearChange = (event) => {
     const newYear = parseInt(event.target.value, 10) || currentYear;
@@ -437,7 +437,7 @@ const Minutas = () => {
       });
     });
     return opciones;
-  }, [platosDisponibles, data]);
+  }, [platosDisponibles, data, week, year]);
   
   const getValueForAutocomplete = (row, col) => {
     const dia = col.toUpperCase();

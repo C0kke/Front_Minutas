@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 const MenuSemanalAprobacion = () => {
   const [menusPendientes, setMenusPendientes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [ setSelectedMenu] = useState(null);  
+  const [selectedMenu, setSelectedMenu] = useState(null);  
   const [selectedSemana, setSelectedSemana] = useState(null);
   const [error, setError] = useState(null);
 

@@ -81,7 +81,7 @@ const generateWeekDays = (year, week) => {
 
 const EditarMinuta = () => {
   const [menus, setMenus] = useState([]);
-  const [ setPlatos] = useState([]);
+  const [platos, setPlatos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedWeek, setSelectedWeek] = useState(dayjs().week());
@@ -89,7 +89,7 @@ const EditarMinuta = () => {
     generateWeekDays(selectedYear, selectedWeek)
   );
   const [openFeedbackModal, setOpenFeedbackModal] = useState(false);
-  const [ setAvailableWeeks] = useState([]);
+  const [availableWeeks, setAvailableWeeks] = useState([]);
   const [availableWeeksAndYears, setAvailableWeeksAndYears] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({});
   const [allMenus, setAllMenus] = useState([]); // **Nuevo estado para todos los menús**
@@ -111,7 +111,7 @@ const EditarMinuta = () => {
       }
     };
     fetchPlatos();
-  }, [token,setPlatos]);
+  }, [navigate]);
 
   // Obtención de Menús No Aprobados
   useEffect(() => {
@@ -168,7 +168,7 @@ const EditarMinuta = () => {
       ...new Set(allMenus.map((menu) => menu.semana)),
     ].sort((a, b) => a - b);
     setAvailableWeeks(fetchedWeeks);
-  }, [allMenus, setAvailableWeeks]);
+  }, [allMenus]);
 
   useEffect(() => {
     const fetchPlatosDisponibles = async () => {
@@ -457,7 +457,7 @@ const EditarMinuta = () => {
     });
 
     return opciones;
-  }, [platosDisponibles, selectedWeek, menus,weekDays]);
+  }, [platosDisponibles, selectedWeek, menus, selectedYear]);
 
 
   if (loading) {

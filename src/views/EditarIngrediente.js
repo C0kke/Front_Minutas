@@ -68,7 +68,7 @@ const EditarIngredientes = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigate, platoId, setLoading]);
+  }, [navigate, platoId]);
 
   useEffect(() => {
     if (platoId) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button,Grid2 } from '@mui/material';
+import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button,Grid2, Checkbox } from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -75,9 +75,12 @@ const Minutas = () => {
   const [platos, setPlatos] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({}); 
   const currentYear = dayjs().year();
+
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
   const [semanaEstructura, setSemanaEstructura] = useState(dayjs().week());
+  const [filtrandoPorEstructura, setFiltrandoPorEstructura] = useState(true);
+
   const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));  
   const [loading ,setLoading] = useState(true);
   const [error ,setError] = useState(null);
@@ -489,23 +492,28 @@ const Minutas = () => {
                   width: '100rem',
                 }}
               >
-            <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
-            <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
-            <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
-            <TextField label="Estructura N° (1-5)" type="number" value={semanaEstructura} onChange={handleStructureWeekChange} sx={{ width: '9rem' }} />
-            <Button
-              variant="contained"
-              sx={{
-                height: '3rem',
-                borderRadius: '4px', 
-                px: 3, 
-                fontSize: '1rem',
-              }}
-              onClick={handleCrearMinuta}
-            >
-              Crear Minuta
-            </Button>
-            </Box>
+                <Box>
+                  <Checkbox label = "Usando filtro de estructura" defaultChecked value={filtrandoPorEstructura}></Checkbox>
+                  <TextField label="Estructura N° (1-5)" type="number" value={semanaEstructura} onChange={handleStructureWeekChange} sx={{ width: '9rem' }} />
+                </Box>
+                <Box>
+                  <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
+                  <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
+                  <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
+                  <Button
+                    variant="contained"
+                    sx={{
+                      height: '3rem',
+                      borderRadius: '4px', 
+                      px: 3, 
+                      fontSize: '1rem',
+                    }}
+                    onClick={handleCrearMinuta}
+                  >
+                    Crear Minuta
+                  </Button>
+                </Box>
+              </Box>
             </LocalizationProvider>
 
             <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>

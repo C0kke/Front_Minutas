@@ -226,11 +226,7 @@ const Platos = () => {
 
         nuevoPlato.descontinuado = true
         try {
-<<<<<<< Updated upstream
-    const response = await axios.post('http://localhost:3000/api/v1/plato', nuevoPlato, {
-=======
             const response = await axios.post('http://localhost:3000/api/v1/plato', nuevoPlato, {
->>>>>>> Stashed changes
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPlatos([...platos, response.data]);

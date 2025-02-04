@@ -77,6 +77,7 @@ const Minutas = () => {
   const currentYear = dayjs().year();
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
+  const [semanaEstructura, setSemanaEstructura] = useState(dayjs().week());
   const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));  
   const [loading ,setLoading] = useState(true);
   const [error ,setError] = useState(null);
@@ -153,6 +154,13 @@ const Minutas = () => {
     if (newWeek > 0 && newWeek < 53) {
       setWeek(newWeek);
       setWeekDays(generateWeekDays(year, newWeek));
+    }
+  };
+
+  const handleStructureWeekChange = (event) => {
+    const newWeek = parseInt(event.target.value, 10);
+    if (newWeek > 0 && newWeek < 6) {
+      setSemanaEstructura(newWeek);
     }
   };
 
@@ -484,6 +492,7 @@ const Minutas = () => {
             <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
             <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
             <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
+            <TextField label="Estructura N° (1-5)" type="number" value={semanaEstructura} onChange={handleStructureWeekChange} sx={{ width: '9rem' }} />
             <Button
               variant="contained"
               sx={{

@@ -1,5 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button,Grid2, Checkbox, Typography } from '@mui/material';
+import { 
+  TextField, 
+  Box, 
+  Table, 
+  TableBody,
+  TableCell,
+  TableContainer, 
+  TableHead, 
+  TableRow, 
+  Paper, 
+  Autocomplete, 
+  Button,
+  Grid2, 
+  Checkbox, 
+  Typography, 
+  Modal 
+} from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -13,6 +29,7 @@ import 'dayjs/locale/es';
 import Header from '../components/Header';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import WeekStructureModal from '../components/ModalEstructura';
 
 // Formato de fechas y semanas
 dayjs.extend(isLeapYear);
@@ -66,7 +83,7 @@ const generateWeekDays = (year, week) => {
   const weekDays = [];
   for (let i = 0; i < 5; i++) {
     const day = firstDayOfWeek.add(i, 'day');
-    const nombreDia = encabezados[i + 1]; // Use the predefined Spanish names
+    const nombreDia = encabezados[i + 1];
     weekDays.push({ date: day, nombreDia });
   }
   return weekDays;
@@ -76,7 +93,8 @@ const Minutas = () => {
   const [platos, setPlatos] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({}); 
   const currentYear = dayjs().year();
-  const [estructuras, setEstructuras] = useState([]);
+  const [openStructureModal, setOpenStructureModal] = useState(false); 
+  const [selectedWeekStructure, setSelectedWeekStructure] = useState(null);
 
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
@@ -121,8 +139,6 @@ const Minutas = () => {
     fetchPlatos();
   }, [navigate]);
 
-
-
   // Obtener platos disponibles por fecha
   useEffect(() => {
     const obtenerPlatosDisponibles = async () => {
@@ -154,7 +170,7 @@ const Minutas = () => {
       setPlatosDisponibles(newPlatosDisponibles);
     };
     obtenerPlatosDisponibles();
-  }, [year, week, filtrandoPorEstructura]);
+  }, [year, week, filtrandoPorEstructura, semanaEstructura]);
 
   const handleYearChange = (event) => {
     const newYear = parseInt(event.target.value, 10) || currentYear;
@@ -463,7 +479,42 @@ const Minutas = () => {
     });
     return opciones;
   }, [platosDisponibles, data, week, year]);
-  
+
+  const groupDataByWeekAndDay = (data) => {
+    return data.reduce((acc, item) => {
+      if (!acc[item.semana]) acc[item.semana] = {};
+      if (!acc[item.semana][item.dia]) acc[item.semana][item.dia] = {};
+      if (!acc[item.semana][item.dia][item.categoria]) acc[item.semana][item.dia][item.categoria] = [];
+      acc[item.semana][item.dia][item.categoria].push({
+        familia: item.familia || "",
+        corteqlo: item.corteqlo || "",
+      });
+      return acc;
+    }, {});
+  };
+
+  const handleViewStructureByWeek = async (semana) => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/v1/estructura', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      const groupedData = groupDataByWeekAndDay(response.data);
+      console.log("Datos agrupados:", groupedData); // Verifica los datos
+      setSelectedWeekStructure(groupedData[semana] || {});
+      setOpenStructureModal(true);
+    } catch (error) {
+      console.error("Error al obtener la estructura:", error);
+      if (error.response && error.response.status === 404) {
+        alert(`No se encontraron estructuras para la semana "${semana}".`);
+      }
+    }
+  };
+
+  const handleCloseStructureModal = () => {
+    setOpenStructureModal(false);
+    setSelectedWeekStructure(null);
+  };
+
   const getValueForAutocomplete = (row, col) => {
     const dia = col.toUpperCase();
     const platoId = data[dia]?.[row];
@@ -510,6 +561,18 @@ const Minutas = () => {
                   <Typography color='#2E8B57' mt={2} width={'10em'}>{filtrandoPorEstructura ? "Filtrando activado" : "Filtrando desactivado"}</Typography>
                   <Checkbox checked={filtrandoPorEstructura} onChange={handleCheckChange}></Checkbox>
                   <TextField label="Estructura N° (1-5)" type="number" value={semanaEstructura} onChange={handleStructureWeekChange} sx={{ width: '9rem' }} disabled={!filtrandoPorEstructura} />
+                  <Button 
+                    variant='contained'
+                    sx={{
+                      height: '3rem',
+                      borderRadius: '4px', 
+                      mt: 0.2, 
+                      fontSize: '1rem',
+                    }}
+                    onClick={() => handleViewStructureByWeek(semanaEstructura)}
+                  >
+                    Ver Estructura
+                  </Button>
                 </Box>
                 <Box display={'flex'} gap={5}>
                   <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
@@ -580,7 +643,7 @@ const Minutas = () => {
                   >
                       {fila}
                     </TableCell>
-                    {encabezados.slice(1).map((encabezado, index) => (
+                    {encabezados.slice(1).map((encabezado) => (
                       <TableCell key={`${encabezado}-${fila}`} align="center" sx={{ p: 1.5, fontSize: '12px', wordBreak: 'break-word'}}>
                         <Autocomplete
                           disablePortal
@@ -610,6 +673,11 @@ const Minutas = () => {
           </Box>
         </Grid2>
       </Grid2>
+      <WeekStructureModal
+        open={openStructureModal}
+        onClose={handleCloseStructureModal}
+        weekStructure={selectedWeekStructure}
+      />
     </Grid2>
   );
 }

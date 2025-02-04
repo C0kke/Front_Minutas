@@ -22,7 +22,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const filas = ["FONDO 1", "GUARNICIÓN 1", "FONDO 2", "GUARNICIÓN 2"];
-const dias = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES"];
+const dias = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES"];
 
 const Estructura = () => {
   const [estructuras, setEstructuras] = useState({});
@@ -238,8 +238,8 @@ const Estructura = () => {
               border: '2px solid #000',
               boxShadow: 24,
               p: 4,
-              overflowY: 'auto', // Agregar scroll si es necesario
-              maxHeight: '90vh', // Limitar la altura máxima del modal
+              overflowY: 'auto', 
+              maxHeight: '90vh',
             }}
           >
             <Typography variant="h6" component="h2" mx={'50rem'} textAlign={'center'}>

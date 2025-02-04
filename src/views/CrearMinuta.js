@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button,Grid2, Checkbox } from '@mui/material';
+import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, Button,Grid2, Checkbox, Typography } from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -61,12 +61,13 @@ const tipoPlatoPorFila = {
 };
 
 const generateWeekDays = (year, week) => {
-  const firstDayOfYear = dayjs().year(year).startOf('year').isoWeekday(1);
+  const firstDayOfYear = dayjs().locale('es').year(year).startOf('year').isoWeekday(1);
   const firstDayOfWeek = firstDayOfYear.add(week - 1, 'week');
-
   const weekDays = [];
   for (let i = 0; i < 5; i++) {
-    weekDays.push(firstDayOfWeek.add(i, 'day'));
+    const day = firstDayOfWeek.add(i, 'day');
+    const nombreDia = encabezados[i + 1]; // Use the predefined Spanish names
+    weekDays.push({ date: day, nombreDia });
   }
   return weekDays;
 };
@@ -75,10 +76,11 @@ const Minutas = () => {
   const [platos, setPlatos] = useState([]);
   const [platosDisponibles, setPlatosDisponibles] = useState({}); 
   const currentYear = dayjs().year();
+  const [estructuras, setEstructuras] = useState([]);
 
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
-  const [semanaEstructura, setSemanaEstructura] = useState(dayjs().week());
+  const [semanaEstructura, setSemanaEstructura] = useState(dayjs().week() % 5);
   const [filtrandoPorEstructura, setFiltrandoPorEstructura] = useState(true);
 
   const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));  
@@ -114,37 +116,45 @@ const Minutas = () => {
         setLoading(false);
       }
     };
+
+
     fetchPlatos();
   }, [navigate]);
 
+
+
   // Obtener platos disponibles por fecha
   useEffect(() => {
-  const obtenerPlatosDisponibles = async () => {
-    const days = generateWeekDays(year, week);
-    const newPlatosDisponibles = {};
-
-    for (const day of days) {
-      const fechaFormateada = day.format('YYYY-MM-DD');
-      try {
-        const response = await axios.get(
-          `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const nombreDia = day.format('dddd').toUpperCase();
-        const nombreDiaNormalizado = nombreDia
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "");
-        newPlatosDisponibles[nombreDiaNormalizado] = response.data.filter(plato => plato.descontinuado === false);
-      } catch (error) {
-        console.error("Error al obtener platos disponibles:", error);
+    const obtenerPlatosDisponibles = async () => {
+      const days = generateWeekDays(year, week);
+      const newPlatosDisponibles = {};
+      for (const { date, nombreDia } of days) {
+        const fechaFormateada = date.format('YYYY-MM-DD');
+        try {
+          const response = await axios.get(
+            `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles`,
+            { 
+              params: {
+                fecha: fechaFormateada,
+                filtrar: filtrandoPorEstructura, // 'true' or 'false'
+                semana: semanaEstructura,
+                dia: nombreDia, // Use the Spanish day name
+              },
+              headers: { 
+                Authorization: `Bearer ${token}` 
+              } 
+            }
+          );
+          console.log(response)
+          newPlatosDisponibles[nombreDia] = response.data.filter(plato => plato.descontinuado === false);
+        } catch (error) {
+          console.error("Error al obtener platos disponibles:", error);
+        }
       }
-    }
-    console.log("newPlatosDisponibles:", newPlatosDisponibles); // Añade esta línea
-    setPlatosDisponibles(newPlatosDisponibles);
-  };
-
-  obtenerPlatosDisponibles();
-}, [year, week, token, platosDisponibles]);
+      setPlatosDisponibles(newPlatosDisponibles);
+    };
+    obtenerPlatosDisponibles();
+  }, [year, week, filtrandoPorEstructura]);
 
   const handleYearChange = (event) => {
     const newYear = parseInt(event.target.value, 10) || currentYear;
@@ -165,6 +175,10 @@ const Minutas = () => {
     if (newWeek > 0 && newWeek < 6) {
       setSemanaEstructura(newWeek);
     }
+  };
+
+  const handleCheckChange = (event) => {
+    setFiltrandoPorEstructura(event.target.checked);
   };
 
   const handleAutocompleteChange = (event, value, row, col) => {
@@ -483,7 +497,7 @@ const Minutas = () => {
                   gap: 3,
                   height: '5rem',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'space-around',
                   p: 2,
                   mb: 2,
                   backgroundColor: '#f5f5f5',
@@ -492,11 +506,12 @@ const Minutas = () => {
                   width: '100rem',
                 }}
               >
-                <Box>
-                  <Checkbox label = "Usando filtro de estructura" defaultChecked value={filtrandoPorEstructura}></Checkbox>
-                  <TextField label="Estructura N° (1-5)" type="number" value={semanaEstructura} onChange={handleStructureWeekChange} sx={{ width: '9rem' }} />
+                <Box display={'flex'} gap={1}>
+                  <Typography color='#2E8B57' mt={2} width={'10em'}>{filtrandoPorEstructura ? "Filtrando activado" : "Filtrando desactivado"}</Typography>
+                  <Checkbox checked={filtrandoPorEstructura} onChange={handleCheckChange}></Checkbox>
+                  <TextField label="Estructura N° (1-5)" type="number" value={semanaEstructura} onChange={handleStructureWeekChange} sx={{ width: '9rem' }} disabled={!filtrandoPorEstructura} />
                 </Box>
-                <Box>
+                <Box display={'flex'} gap={5}>
                   <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
                   <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
                   <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
@@ -505,7 +520,7 @@ const Minutas = () => {
                     sx={{
                       height: '3rem',
                       borderRadius: '4px', 
-                      px: 3, 
+                      mt: 0.2, 
                       fontSize: '1rem',
                     }}
                     onClick={handleCrearMinuta}
@@ -535,7 +550,7 @@ const Minutas = () => {
                       padding: '20px 15px',
                     }}
                   >
-                    {day.format('dddd DD [de] MMMM')}
+                    {day.nombreDia} {day.date.format('DD [de] MMMM')}
                   </TableCell>
                 ))}
               </TableRow>

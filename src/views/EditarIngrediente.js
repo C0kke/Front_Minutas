@@ -31,19 +31,18 @@ const EditarIngredientes = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // Función para cargar los datos iniciales
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     setMensaje("Cargando datos...");
     const token = localStorage.getItem("token")?.trim();
-
     if (!token) {
       console.error("Token no encontrado.");
       setMensaje("Sesión no válida. Redirigiendo...");
       navigate("/");
       return;
     }
-
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const platoResponse = await axios.get(
@@ -51,7 +50,6 @@ const EditarIngredientes = () => {
         { headers }
       );
       setPlato(platoResponse.data);
-
       const ingredientesResponse = await axios.get(
         `http://localhost:3000/api/v1/ingredientexplato/plato/${platoId}`,
         { headers }
@@ -80,43 +78,70 @@ const EditarIngredientes = () => {
     }
   }, [fetchData, navigate, platoId]);
 
+  // Manejar cambios en los campos de los ingredientes
   const handleChange = useCallback(
     (index, field, newValue) => {
       setIngredientes((prevIngredientes) => {
         const nuevosIngredientes = [...prevIngredientes];
         nuevosIngredientes[index][field] = newValue;
-
         if (field === "porcion_neta" || field === "rendimiento") {
           nuevosIngredientes[index].peso_bruto =
             (nuevosIngredientes[index].porcion_neta * 100) /
             nuevosIngredientes[index].rendimiento;
         }
-
         return nuevosIngredientes;
       });
     },
     []
   );
 
+  // Manejar la eliminación de un ingrediente
+  const handleEliminarIngrediente = useCallback(
+    async (id) => {
+      const token = localStorage.getItem("token")?.trim();
+      if (!token) {
+        console.error("Token no encontrado.");
+        return;
+      }
+
+      try {
+        await axios.delete(`http://localhost:3000/api/v1/ingredientexplato/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Actualizar el estado local eliminando el ingrediente
+        setIngredientes((prevIngredientes) =>
+          prevIngredientes.filter((ingrediente) => ingrediente._id !== id)
+        );
+
+        setMensaje("Ingrediente eliminado correctamente.");
+      } catch (error) {
+        console.error("Error al eliminar el ingrediente:", error);
+        setError("Error al eliminar el ingrediente.");
+      }
+    },
+    []
+  );
+
+  // Manejar el agregado de un nuevo ingrediente
   const handleIngredienteAgregado = () => {
     setMensaje("Ingrediente agregado correctamente.");
     fetchData();
   };
 
+  // Guardar cambios en el backend
   const handleGuardarCambios = useCallback(async () => {
     setGuardando(true);
     setSuccess(false);
     setError(null);
     setMensaje("Guardando cambios...");
     const token = localStorage.getItem("token")?.trim();
-
     if (!token) {
       console.error("Token no encontrado.");
       setMensaje("Error: sesión no válida.");
       setGuardando(false);
       return;
     }
-
     try {
       const headers = { Authorization: `Bearer ${token}` };
       await Promise.all(
@@ -150,8 +175,8 @@ const EditarIngredientes = () => {
   }, [fetchData, ingredientes, navigate]);
 
   const handleVolverAPlatos = () => {
-    navigate('../platos')
-  }
+    navigate("../platos");
+  };
 
   return (
     <div
@@ -166,10 +191,10 @@ const EditarIngredientes = () => {
       <Button
         onClick={handleVolverAPlatos}
         sx={{
-          width:'20%',
-          bgcolor:'#14375A',
-          color: 'white',
-          marginLeft: '25px'
+          width: "20%",
+          bgcolor: "#14375A",
+          color: "white",
+          marginLeft: "25px",
         }}
       >
         Volver atrás
@@ -220,6 +245,7 @@ const EditarIngredientes = () => {
                       ingredientePlato={ingredientePlato}
                       index={index}
                       handleChange={handleChange}
+                      onEliminar={handleEliminarIngrediente} // Pasar la función de eliminación
                     />
                   ))}
                 </List>

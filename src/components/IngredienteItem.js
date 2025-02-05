@@ -13,44 +13,14 @@ import {
 import { useTheme } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-const IngredienteItem = ({ ingredientePlato, index, handleChange }) => {
+const IngredienteItem = ({ ingredientePlato, index, handleChange, onEliminar }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const getUnidadMedida = useCallback((unidad, cantidad) => {
     if (!unidad) return "";
-    return unidad.toUpperCase() === "GRAMO" && cantidad !== 1
-      ? "GRAMOS"
-      : unidad;
+    return unidad.toUpperCase() === "GRAMO" && cantidad !== 1 ? "GRAMOS" : unidad;
   }, []);
-
-  const handleEliminar = async (id, nombreIngrediente) => {
-    const token = localStorage.getItem("token")?.trim();
-    if (!token) {
-      console.error("Token no encontrado.");
-      return;
-    }
-  
-    const confirmacion = window.confirm(
-      `¿Estás seguro de que deseas eliminar el ingrediente: ${nombreIngrediente}?`
-    );
-  
-    if (!confirmacion) {
-      alert("Eliminación cancelada.");
-      return;
-    }
-  
-    try {
-      await axios.delete(`http://localhost:3000/api/v1/ingredientexplato/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert("Ingrediente eliminado exitosamente.");
-      // Aquí puedes actualizar el estado para eliminar el ingrediente de la lista.
-    } catch (error) {
-      console.error("Error eliminando el ingrediente:", error);
-    }
-  };
-  
 
   const handleEliminarIngrediente = () => {
     const ingredienteNombre = ingredientePlato.id_ingrediente.nombreIngrediente;
@@ -59,7 +29,9 @@ const IngredienteItem = ({ ingredientePlato, index, handleChange }) => {
     if (!window.confirm(`¿Estás seguro de que deseas eliminar ${ingredienteNombre}?`)) {
       return;
     }
-    handleEliminar(id, ingredienteNombre );
+
+    // Llamar a la función de eliminación pasada como prop
+    onEliminar(id);
   };
 
   return (
@@ -81,7 +53,6 @@ const IngredienteItem = ({ ingredientePlato, index, handleChange }) => {
           </Grid>
           <Grid item xs={12} md={8}>
             <Grid container spacing={2} justifyContent="space-around">
-              
               {[
                 {
                   label: "Cantidad Neta",

@@ -18,13 +18,12 @@ const API_BASE_URL = "http://localhost:3000/api/v1";
 
 const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
   const [nombreIngrediente, setNombreIngrediente] = useState("");
-  const [unidadMedida, setUnidadMedida] = useState("");
+  const [unidadMedida, setUnidadMedida] = useState(""); // Inicialmente vacío
   const [opcionesIngrediente, setOpcionesIngrediente] = useState([]);
   const [ingredientes, setIngredientes] = useState([]);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const unidadesMedida = ["GRAMOS", "KILOS", "CC", "UNIDADES", "LITROS"];
 
   useEffect(() => {
     const fetchIngredientes = async () => {
@@ -58,18 +57,26 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
     setOpcionesIngrediente(filtered);
   };
 
+  const handleSeleccionarIngrediente = (ingredienteSeleccionado) => {
+    if (ingredienteSeleccionado) {
+      setNombreIngrediente(ingredienteSeleccionado.nombreIngrediente);
+      setUnidadMedida(ingredienteSeleccionado.unidadmedida); // Usar la unidad de medida del ingrediente seleccionado
+    } else {
+      setNombreIngrediente("");
+      setUnidadMedida(""); // Limpiar la unidad de medida si no se selecciona nada
+    }
+  };
+
   const handleAgregarIngrediente = async () => {
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
-
     const token = localStorage.getItem("token")?.trim();
     if (!token) {
       console.error("Token no encontrado.");
       setLoading(false);
       return;
     }
-
     try {
       const ingredienteSeleccionado = ingredientes.find(
         (i) => i.nombreIngrediente === nombreIngrediente
@@ -79,7 +86,6 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
         setLoading(false);
         return;
       }
-
       await axios.post(
         `${API_BASE_URL}/ingredientexplato`,
         {
@@ -93,10 +99,9 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       onIngredienteAgregado();
       setNombreIngrediente("");
-      setUnidadMedida("");
+      setUnidadMedida(""); // Limpiar la unidad de medida después de agregar
       setSuccessMessage("Ingrediente agregado correctamente.");
     } catch (error) {
       console.error("Error al agregar ingrediente:", error);
@@ -124,6 +129,9 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
               setNombreIngrediente(newInputValue);
               handleBuscarIngredientes(newInputValue);
             }}
+            onChange={(event, newValue) => {
+              handleSeleccionarIngrediente(newValue);
+            }}
             renderInput={(params) => (
               <TextField {...params} label="Nombre del Ingrediente" fullWidth />
             )}
@@ -136,13 +144,9 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
               labelId="unidad-medida-label"
               value={unidadMedida}
               label="Unidad de Medida"
-              onChange={(e) => setUnidadMedida(e.target.value)}
+              disabled // Deshabilitar el select porque la unidad de medida viene del ingrediente seleccionado
             >
-              {unidadesMedida.map((unidad) => (
-                <MenuItem key={unidad} value={unidad}>
-                  {unidad}
-                </MenuItem>
-              ))}
+              <MenuItem value={unidadMedida}>{unidadMedida}</MenuItem>
             </Select>
           </FormControl>
         </Grid>

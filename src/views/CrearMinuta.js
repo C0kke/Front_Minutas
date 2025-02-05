@@ -95,6 +95,7 @@ const Minutas = () => {
   const currentYear = dayjs().year();
   const [openStructureModal, setOpenStructureModal] = useState(false); 
   const [selectedWeekStructure, setSelectedWeekStructure] = useState(null);
+  const [estructuraSemana, setEstructuraSemana] = useState(null);
 
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
@@ -161,7 +162,6 @@ const Minutas = () => {
               } 
             }
           );
-          console.log(response)
           newPlatosDisponibles[nombreDia] = response.data.filter(plato => plato.descontinuado === false);
         } catch (error) {
           console.error("Error al obtener platos disponibles:", error);
@@ -299,6 +299,35 @@ const Minutas = () => {
           if (hayErrores) break; 
       }
 
+      if (filtrandoPorEstructura && estructuraSemana) {
+        for (let i = 1; i < encabezados.length; i++) {
+          const dia = encabezados[i];
+          const diaNormalizado = dia.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const estructuraDia = estructuraSemana[diaNormalizado];
+    
+          if (estructuraDia) {
+            for (const fila of filas) {
+              const categoria = tipoPlatoPorFila[fila];
+              const platoId = data[diaNormalizado]?.[fila];
+    
+              if (platoId) {
+                const plato = platos.find(p => p._id === platoId);
+                if (plato) {
+                  const familia = plato.familia;
+                  const familiasPermitidas = estructuraDia[categoria]?.map(item => item.familia);
+    
+                  if (!familiasPermitidas.includes(familia)) {
+                    hayErrores = true;
+                    alert(`Error: El plato seleccionado para ${dia} en ${fila} no cumple con la estructura.`);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
       if (!hayErrores) {
         try {
           const token = localStorage.getItem('token')?.trim();
@@ -320,7 +349,6 @@ const Minutas = () => {
             alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
             navigate('/home');
           } else {
-            console.log(response.data)
             response.data.errors.forEach(e => alert(e.error))
           }
         } catch (error) {
@@ -371,6 +399,21 @@ const Minutas = () => {
           let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
             (plato) => plato.categoria === tipoPlatoFiltrado
           );
+
+          if (filtrandoPorEstructura && selectedWeekStructure) {
+            const dia = encabezadoNormalizado;
+            const categoria = tipoPlatoPorFila[fila];
+  
+            // Obtener las familias permitidas para este día y categoría
+            const familiasPermitidas =
+              selectedWeekStructure[dia]?.[categoria]?.map((item) => item.familia);
+  
+            if (familiasPermitidas && familiasPermitidas.length > 0) {
+              opcionesFiltradas = opcionesFiltradas.filter((plato) =>
+                familiasPermitidas.includes(plato.familia)
+              );
+            }
+          }
   
           // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
           if (tipoPlatoFiltrado === "PLATO DE FONDO") {
@@ -478,7 +521,7 @@ const Minutas = () => {
       });
     });
     return opciones;
-  }, [platosDisponibles, data, week, year]);
+  }, [platosDisponibles, data, week, year, filtrandoPorEstructura, estructuraSemana]);
 
   const groupDataByWeekAndDay = (data) => {
     return data.reduce((acc, item) => {
@@ -499,7 +542,7 @@ const Minutas = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       const groupedData = groupDataByWeekAndDay(response.data);
-      console.log("Datos agrupados:", groupedData); // Verifica los datos
+      console.log("Datos agrupados:", groupedData);
       setSelectedWeekStructure(groupedData[semana] || {});
       setOpenStructureModal(true);
     } catch (error) {
@@ -599,9 +642,9 @@ const Minutas = () => {
               <TableHead>
               <TableRow>
                 <TableCell key="empty-cell" sx={{backgroundColor: '#2E8B57', width: '15%'}}></TableCell>
-                {weekDays.map((day) => (
+                {weekDays.map((day, index) => (
                   <TableCell
-                    key={day.toString()}
+                    key={index}
                     align="center"
                     sx={{
                       width: '17%',
@@ -619,9 +662,9 @@ const Minutas = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filas.map((fila) => (
+              {filas.map((fila, index) => (
                 <TableRow 
-                  key={fila} 
+                  key={index} 
                   sx={{ 
                     '&:last-child td, &:last-child th': { border: 0 },                      
                     '&:nth-of-type(even)': { backgroundColor: 'rgba(0, 0, 0, 0.04)'},

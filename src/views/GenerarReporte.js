@@ -221,22 +221,31 @@ const GenerarReporte = () => {
         <Box className="report-content">
           <Typography variant="h4" gutterBottom>Generar Reporte</Typography>
           <form onSubmit={(e) => e.preventDefault()}>
-            <div className="form-group">
-              <FormControl sx={{ width: '100%' }}>
-                <InputLabel>Semana</InputLabel>
-                <Select
-                  value={semana}
-                  onChange={handleSemanaChange}
-                  label="Semana"
-                >
-                  {Array.from({ length: 52 }, (_, index) => (
-                    <MenuItem key={index + 1} value={index + 1}>
-                      Semana {index + 1}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
+          <div className="form-group">
+            <FormControl sx={{ width: '100%' }}>
+              <InputLabel>Semana</InputLabel>
+              <Select
+                value={semana}
+                onChange={handleSemanaChange}
+                label="Semana"
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 200, // Altura máxima del menú desplegable
+                      overflowY: 'auto', // Habilitar scroll vertical
+                    },
+                  },
+                }}
+              >
+                {/* Generar las 52 semanas */}
+                {Array.from({ length: 52 }, (_, index) => (
+                  <MenuItem key={index + 1} value={index + 1}>
+                    Semana {index + 1}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
 
             <div className="form-group">
               <TextField

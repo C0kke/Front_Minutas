@@ -9,6 +9,7 @@ const Proyeccion = () => {
   const [error, setError] = useState(null);
   const [proyeccionesConFechas, setProyeccionesConFechas] = useState({});
   const [cantidadesEditadas, setCantidadesEditadas] = useState({});
+  const [editados, setEditados] = useState(false);
   const token = localStorage.getItem('token');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
@@ -64,6 +65,7 @@ const Proyeccion = () => {
 
   const handleCantidadChange = (itemId, event) => {
     const inputValue = event.target.value;
+    setEditados(true);
     setCantidadesEditadas(prev => {
       let newValue;
       if (inputValue === "") {
@@ -81,6 +83,10 @@ const Proyeccion = () => {
 
   // Guardar cambios para una proyección específica
   const guardarProyeccion = async (proyeccionId) => {
+    if (!editados) {
+      alert("No hay cambios en los platos");
+      return;
+    }
     try {
       const proyeccion = data.find(p => p._id === proyeccionId);
       const listaActualizada = proyeccion.lista.map(item => ({
@@ -191,14 +197,14 @@ const Proyeccion = () => {
   </div>
 
   {/* Contenedor de botones */}
-  <div className="botones-container">
+  <div className="botones-container" style={{display: 'flex', gap: 20}}>
     <button
       className="exportar-excel-btn"
       onClick={() => handleExportExcel(proyeccionId)}
     >
       Exportar a Excel
     </button>
-    <button
+    <button 
       className="butoon-editar-modal-btn"
       onClick={() => guardarProyeccion(proyeccionId)}
     >

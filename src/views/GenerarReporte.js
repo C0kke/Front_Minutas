@@ -112,11 +112,21 @@ const GenerarReporte = () => {
   };
 
   const handlePlatoChange = (fecha, platoId, value) => {
+    let newValue;
+    if (value === "") {
+      newValue = "";
+    } else {
+      newValue = parseInt(value, 10);
+      if (isNaN(newValue)) {
+        newValue = 0;
+      }
+    }
+    
     setPlatosPorFecha(prevPlatos => {
       const nuevosPlatos = { ...prevPlatos };
       const platoIndex = nuevosPlatos[fecha].findIndex(p => p.id === platoId);
       if (platoIndex !== -1) {
-        nuevosPlatos[fecha][platoIndex].cantidad = value;
+        nuevosPlatos[fecha][platoIndex].cantidad = newValue;
       }
       return nuevosPlatos;
     });
@@ -167,7 +177,6 @@ const GenerarReporte = () => {
           }))
       ),
     };
-    console.log(proyeccionData);
   
     try {
        await axios.post(
@@ -300,19 +309,24 @@ const GenerarReporte = () => {
                               sx={{ flexGrow: 1, marginRight: '1rem' }}
                             />
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <TextField
-                                type="number"
-                                value={plato.cantidad || ''}
-                                onChange={(e) => {
-                                  const value = parseInt(e.target.value);
-                                  if (value >= 0) {
-                                    handlePlatoChange(fecha, plato.id, value || 0);
+                            <TextField
+                              type="number"
+                              value={plato.cantidad}
+                              onChange={(e) => {
+                                const inputValue = e.target.value; // Capturamos el valor directamente como string
+                                if (inputValue === "") {
+                                  handlePlatoChange(fecha, plato.id, "");
+                                } else {
+                                  const parsedValue = parseInt(inputValue, 10); // Convertimos a número
+                                  if (!isNaN(parsedValue) && parsedValue >= 0) {
+                                    handlePlatoChange(fecha, plato.id, parsedValue);
                                   }
-                                }}
-                                label="Cantidad"
-                                variant="outlined"
-                                sx={{ width: '100px' }}
-                              />
+                                }
+                              }}
+                              label="Cantidad"
+                              variant="outlined"
+                              sx={{ width: '100px' }}
+                            />
                               <IconButton onClick={() => handlePlatoChange(fecha, plato.id, 0)} size="small">
                                 <CloseIcon />
                               </IconButton>

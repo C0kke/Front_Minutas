@@ -550,7 +550,7 @@ const Minutas = () => {
       });
     });
     return opciones;
-  }, [platosDisponibles, week, year, filtrandoPorEstructura, estructuraSemana, semanaEstructura]);
+  }, [platosDisponibles, filtrandoPorEstructura, estructuraSemana, semanaEstructura]);
 
   const groupDataByWeekAndDay = (data) => {
     return data.reduce((acc, item) => {

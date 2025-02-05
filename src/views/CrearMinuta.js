@@ -114,7 +114,7 @@ const Minutas = () => {
     const fetchPlatos = async () => {
       try {
         const response = await axios.get('http://localhost:3000/api/v1/plato', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         const platosFiltrados = response.data.filter(plato => plato.descontinuado === false);
         setPlatos(platosFiltrados);
@@ -135,9 +135,27 @@ const Minutas = () => {
         setLoading(false);
       }
     };
-
-
     fetchPlatos();
+  }, [navigate]);
+
+  useEffect(() => {
+    const loadInitialWeekStructure = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/v1/estructura', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+  
+        const groupedData = groupDataByWeekAndDay(response.data);
+        const initialWeek = semanaEstructura;
+        setSelectedWeekStructure(groupedData[initialWeek] || {});
+      } catch (error) {
+        console.error("Error al cargar la estructura inicial:", error);
+        if (error.response && error.response.status === 404) {
+          alert(`No se encontraron estructuras para la semana "${semanaEstructura}".`);
+        }
+      }
+    };
+    loadInitialWeekStructure();
   }, [navigate]);
 
   // Obtener platos disponibles por fecha
@@ -385,6 +403,7 @@ const Minutas = () => {
       let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
       encabezados.slice(1).forEach((encabezado) => {
         const encabezadoNormalizado = encabezado
+          .toUpperCase()
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "");
   
@@ -399,30 +418,46 @@ const Minutas = () => {
           let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
             (plato) => plato.categoria === tipoPlatoFiltrado
           );
-
+          
+          console.log(`Filtrando: ${filtrandoPorEstructura}, estructura: ${selectedWeekStructure}`);
           if (filtrandoPorEstructura && selectedWeekStructure) {
             const dia = encabezadoNormalizado;
-            const categoria = tipoPlatoPorFila[fila];
-  
-            // Obtener las familias permitidas para este día y categoría
-            const familiasPermitidas =
-              selectedWeekStructure[dia]?.[categoria]?.map((item) => item.familia);
-  
-            if (familiasPermitidas && familiasPermitidas.length > 0) {
-              opcionesFiltradas = opcionesFiltradas.filter((plato) =>
-                familiasPermitidas.includes(plato.familia)
-              );
+            
+            if (!selectedWeekStructure[dia] || !selectedWeekStructure[dia][fila]) {
+              console.warn(`No hay estructura definida para ${dia} - ${fila}`);
+              opciones[fila][encabezadoNormalizado] = [];
+              return;
+            }
+            
+            const reglasEstructura = selectedWeekStructure[dia]?.[fila];
+            console.log(`REGLAS PARA ${dia}:`, reglasEstructura);
+
+            if (reglasEstructura && reglasEstructura.length > 0) {
+              opcionesFiltradas = opcionesFiltradas.filter((plato) => {
+                console.log(`Plato: ${plato.nombre} (${plato.familia} - ${plato.tipo_corte})`)
+                return reglasEstructura.some((regla) => {
+                  const cumpleFamilia = !regla.familia || plato.familia === regla.familia;
+                  const cumpleCorte = !regla.corteqlo || plato.tipo_corte === regla.corteqlo;
+                  console.log("FAM", cumpleFamilia)
+                  console.log("COR", cumpleCorte)
+                  return cumpleFamilia && cumpleCorte;
+                });
+              });
+            } else {
+              console.warn(`No se encontraron reglas para ${dia} - ${fila}`);
+              opciones[fila][encabezadoNormalizado] = [];
+              return;
             }
           }
   
-          // Restricción: No repetir platos de fondo en el mismo día ni en la misma semana
+          // Restricciones adicionales (no repetir platos, etc.)
           if (tipoPlatoFiltrado === "PLATO DE FONDO") {
             opcionesFiltradas = opcionesFiltradas.filter((plato) => {
               const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
                 const otroEncabezadoNormalizado = otroEncabezado
+                  .toUpperCase()
                   .normalize("NFD")
                   .replace(/[\u0300-\u036f]/g, "");
-  
                 if (otroEncabezadoNormalizado === encabezadoNormalizado) {
                   return filas.some((otraFila) => {
                     return (
@@ -432,15 +467,17 @@ const Minutas = () => {
                     );
                   });
                 }
-  
                 return (
                   otroEncabezadoNormalizado !== encabezadoNormalizado &&
                   Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
                 );
               });
-  
               return !yaSeleccionado;
-            });
+            }).concat(
+              platosDisponibles[encabezadoNormalizado].filter(
+                (plato) => plato.categoria === "SALSAS"
+              )
+            );
           }
           
           // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
@@ -468,7 +505,8 @@ const Minutas = () => {
               
               
               return !yaSeleccionado;
-            });
+            })
+            ;
           }
           
           // Restricción: No repetir ensaladas en el mismo día
@@ -505,15 +543,6 @@ const Minutas = () => {
               return !yaSeleccionadoEnSemana;
             });
           }
-
-          if (fila === "SOPA") {
-            opcionesFiltradas = opcionesFiltradas.concat(
-              platosDisponibles[encabezadoNormalizado].filter(
-                (plato) => plato.categoria === "CREMAS"
-              )
-            );
-          }
-          
           opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
         } else {
           opciones[fila][encabezadoNormalizado] = [];
@@ -521,7 +550,7 @@ const Minutas = () => {
       });
     });
     return opciones;
-  }, [platosDisponibles, data, week, year, filtrandoPorEstructura, estructuraSemana]);
+  }, [platosDisponibles, week, year, filtrandoPorEstructura, estructuraSemana, semanaEstructura]);
 
   const groupDataByWeekAndDay = (data) => {
     return data.reduce((acc, item) => {
@@ -541,8 +570,8 @@ const Minutas = () => {
       const response = await axios.get('http://localhost:3000/api/v1/estructura', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
+
       const groupedData = groupDataByWeekAndDay(response.data);
-      console.log("Datos agrupados:", groupedData);
       setSelectedWeekStructure(groupedData[semana] || {});
       setOpenStructureModal(true);
     } catch (error) {

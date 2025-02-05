@@ -14,6 +14,7 @@ const Usuarios = () => {
   // For the delete confirmation
 
     const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('id_user');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -120,6 +121,10 @@ const Usuarios = () => {
     };
 
     const handleDeleteUser = async () => {
+        if (newUser._id === userId) {
+            alert("No puedes eliminar el usuario actual")
+            return
+        }
         const confirmedFirst = window.confirm("¡Este proceso es irreversible! ¿Está seguro que quiere eliminar al usuario?");
         if (confirmedFirst) {
             const confirmedSecond = window.confirm("Este es el segundo paso de la confirmación. ¿Seguro que desea continuar?");
@@ -133,6 +138,7 @@ const Usuarios = () => {
                         });
                         setUsuarios((prevUsuarios) => prevUsuarios.filter(u => u._id !== newUser._id));
                         closeModal();
+
                     } catch (error) {
                         console.error("Error al eliminar usuario:", error);
                         setError(new Error("No se pudo eliminar el usuario."));

@@ -5,11 +5,11 @@
   padding: 2rem;
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .title {
-  font-size: 28px;
+  font-size: 36px;
   font-weight: 600;
   color: #000000;
   text-align: center;
@@ -18,17 +18,63 @@
   border-bottom: 2px solid #ecf0f1;
 }
 
+/* Header de búsqueda */
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.2rem;
+}
+
+.search-container label {
+  color: #1a365d; /* Azul oscuro */
+}
+
+.search-container input[type="date"],
+.search-container input[type="text"] {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.search-container input[type="date"]:focus,
+.search-container input[type="text"]:focus {
+  outline: none;
+  border-color: #009b15;
+  box-shadow: 0 0 0 2px rgba(0, 155, 21, 0.1);
+}
+
 /* Tarjetas de proyección */
 .lista-proyecciones {
   display: grid;
   gap: 1.5rem;
 }
 
+.empty {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  color: #ff9d2d;
+}
+
 .proyeccion-card {
   background: #f8f9fa;
   border-radius: 10px;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   justify-content: space-between;
 }
 
@@ -68,7 +114,7 @@
 
 .fecha-item:hover {
   transform: translateX(3px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .fecha-text {
@@ -98,7 +144,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -147,21 +193,21 @@
   padding: 1.5rem;
 }
 
-.plato-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid #eee;
-}
-
 .plato-nombre {
   flex: 1;
-  color: #000000;
+  color: #1a365d;
   word-break: break-word;
   padding-right: 1rem;
   font-weight: 500;
+}
+
+.plato-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 1rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
 }
 
 /* Input cantidad en modal */
@@ -174,7 +220,7 @@
   border-radius: 6px;
   text-align: center;
   font-weight: 500;
-  color: #000000;
+  color: #1a365d;
 }
 
 .cantidad-input:focus {
@@ -192,7 +238,8 @@
   background: #f8f8f8;
   border-radius: 0 0 12px 12px;
 }
-.butoon-editar-modal-btn{
+
+.butoon-editar-modal-btn {
   background: #e6ca17; /* Verde oscuro */
   color: white;
   padding: 0.75rem 2rem;
@@ -203,6 +250,7 @@
   transition: all 0.2s ease;
   margin-top: 25px;
 }
+
 .exportar-excel-btn {
   background: #009b15; /* Verde oscuro */
   color: white;
@@ -213,17 +261,6 @@
   font-weight: 600;
   transition: all 0.2s ease;
   margin-top: 25px;
-}
-
-.cerrar-modal-btn {
-  background: #1a365d; /* Azul oscuro */
-  color: white;
-  padding: 0.75rem 2rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s ease;
 }
 
 .exportar-excel-btn:hover {
@@ -286,7 +323,7 @@
     align-items: center; /* Alinea verticalmente los botones */
     margin-top: 10px; /* Espacio superior opcional */
   }
-  
+
   .exportar-excel-btn {
     background-color: #007bff; /* Color azul para el botón de Excel */
     color: white;
@@ -295,7 +332,7 @@
     border-radius: 4px;
     cursor: pointer;
   }
-  
+
   .butoon-editar-modal-btn {
     background-color: #28a745; /* Color verde para el botón de Editar */
     color: white;

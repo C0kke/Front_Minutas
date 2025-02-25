@@ -10,24 +10,25 @@ import { useNavigate } from 'react-router-dom';
 const MenuSemanalAprobacion = () => {
   const [menusPendientes, setMenusPendientes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMenu, setSelectedMenu] = useState(null);  
+  const [loadingBtn, setLoadingBtn] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState(null);
   const [selectedSemana, setSelectedSemana] = useState(null);
   const [error, setError] = useState(null);
-
   const [openModal, setOpenModal] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const tableRef = useRef(null);
-  const [actualizado, setActualizado] = useState(false)
+  const [actualizado, setActualizado] = useState(false);
   const token = localStorage.getItem('token')?.trim();
   const navigate = useNavigate();
+  const BACKEND_URL = process.env.REACT_APP_BACK_URL;
 
   useEffect(() => {
     const fetchMenusPendientes = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/v1/menudiario/verificar/no-aprobados', {
+        const response = await axios.get(`${BACKEND_URL}menudiario/verificar/no-aprobados`, {
           headers: {
             Authorization: `Bearer ${token}`,
-          }
+          },
         });
         setMenusPendientes(response.data);
       } catch (error) {
@@ -37,13 +38,12 @@ const MenuSemanalAprobacion = () => {
         setLoading(false);
       }
     };
-
     fetchMenusPendientes();
-  }, [actualizado,token]);
+  }, [actualizado, token]);
 
   const agruparPorSemana = (menus) => {
     const menusPorSemana = {};
-    menus.forEach(menu => {
+    menus.forEach((menu) => {
       const semana = moment(menu.fecha).week();
       const año = moment(menu.fecha).year();
       const key = `${año}-${semana}`;
@@ -58,40 +58,48 @@ const MenuSemanalAprobacion = () => {
     });
   };
 
-
   const handleAprobar = async () => {
     if (selectedSemana) {
       try {
-        await Promise.all(selectedSemana.menus.map(async (menu) => {
-          await axios.patch(`http://localhost:3000/api/v1/menudiario/Verificar/aprobado/${menu._id}`, 
-            { aprobado: true },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-        }));
-
-        setMenusPendientes(prevState => prevState.map(menu => 
-          selectedSemana.menus.some(m => m._id === menu._id) ? { ...menu, aprobado: true } : menu
-        ));
+        setLoadingBtn(false);
+        await Promise.all(
+          selectedSemana.menus.map(async (menu) => {
+            await axios.patch(
+              `${BACKEND_URL}menudiario/Verificar/aprobado/${menu._id}`,
+              { aprobado: true },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+          })
+        );
+        setMenusPendientes((prevState) =>
+          prevState.map((menu) =>
+            selectedSemana.menus.some((m) => m._id === menu._id)
+              ? { ...menu, aprobado: true }
+              : menu
+          )
+        );
         alert(`Minuta de la semana ${selectedSemana._id.semana} aprobado exitosamente`);
-       
         setSelectedMenu(null);
         setSelectedSemana(null);
         setError(null);
-
         navigate('/home');
       } catch (error) {
         console.error('Error al aprobar el menú:', error);
         setError('Hubo un error al aprobar el menú.');
+      } finally {
+        setLoadingBtn(false)
       }
     }
   };
 
   const handleSemanaClick = (semana) => {
-    if(!selectedSemana) {
+    if (selectedSemana && selectedSemana._id.semana === semana._id.semana) {
+      // Si la semana ya está seleccionada, la deseleccionamos
+      setSelectedSemana(null);
+    } else {
+      // Si seleccionamos una semana diferente, cerramos la anterior y abrimos la nueva
       setSelectedSemana(semana);
-      return;
     }
-    setSelectedSemana(null);
   };
 
   const handleMensaje = () => {
@@ -101,18 +109,22 @@ const MenuSemanalAprobacion = () => {
   const handleEnviarMensaje = async () => {
     if (selectedSemana) {
       try {
-        await axios.patch(`http://localhost:3000/api/v1/menudiario/${selectedSemana.menus[0]._id}/mensaje`, 
+        setLoadingBtn(true)
+        await axios.patch(
+          `${BACKEND_URL}menudiario/${selectedSemana.menus[0]._id}/mensaje`,
           { mensaje },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         alert('Mensaje enviado exitosamente');
         setOpenModal(false);
-        setSelectedSemana(null)
+        setSelectedSemana(null);
         setMensaje('');
-        setActualizado(true)
+        setActualizado(true);
       } catch (error) {
         console.error('Error al enviar el mensaje:', error);
         setError('Hubo un error al enviar el mensaje.');
+      } finally {
+        setLoadingBtn(false)
       }
     }
   };
@@ -126,64 +138,70 @@ const MenuSemanalAprobacion = () => {
   return (
     <Box>
       <Header />
-      <div className='menu-pendiente'>
+      <div className="menu-pendiente">
         <h1>Menús Pendientes de Aprobación</h1>
-
         {error && <Alert severity="error">{error}</Alert>}
-
         {menusPendientes.length === 0 ? (
           <p>No hay menús pendientes de aprobación.</p>
         ) : (
           <div>
             <ul>
-              {menusAgrupados.map(semana => (
+              {menusAgrupados.map((semana) => (
                 <li key={`${semana._id.año}-${semana._id.semana}`}>
                   <Box className="item">
-                    <Button 
-                      onClick={() => handleSemanaClick(semana)} 
-                      className='semanaContainer'
+                    <Button
+                      onClick={() => handleSemanaClick(semana)}
+                      className="semanaContainer"
                       sx={{
                         width: '15rem',
                         height: '3rem',
                         color: 'white',
                         my: '2px',
                         borderRadius: '25px',
-                        backgroundColor: semana.menus[0]?.mensaje !== "sin mensaje" ? '#FB8C00' : '#008000',
+                        backgroundColor:
+                          semana.menus[0]?.mensaje !== 'sin mensaje' ? '#FB8C00' : '#008000',
                         '&:hover': {
-                          backgroundColor: semana.menus[0]?.mensaje !== "sin mensaje" ? '#FB8C00' : '#008000',
+                          backgroundColor:
+                            semana.menus[0]?.mensaje !== 'sin mensaje' ? '#FB8C00' : '#008000',
                         },
-                      }}  
-                      >
+                      }}
+                    >
                       Semana {semana._id.semana} - {semana._id.año}
                     </Button>
                     <p>
-                      {semana.menus[0]?.mensaje !== 'sin mensaje'? (
-                        "Esperando edición"
-                      ) : ""}
+                      {semana.menus[0]?.mensaje !== 'sin mensaje' ? 'Esperando edición' : ''}
                     </p>
                   </Box>
                   {selectedSemana && selectedSemana._id.semana === semana._id.semana && (
-                      <>
-                        <TablaMinutaAprobacion semana={selectedSemana} tableRef={tableRef} />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Button 
-                        className='buttons'
-                        onClick={() => handleAprobar()}
-                        sx={{
-                          mt: 2,
-                          backgroundColor: '#4CAF50',
-                          color: 'white',
-                          '&:hover': {
-                            backgroundColor: '#45a049',
-                          },
+                    <>
+                      <TablaMinutaAprobacion semana={selectedSemana} tableRef={tableRef} />
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: 50,
                         }}
                       >
-                        Aprobar Menú
-                      </Button>
-
-                        <Button 
-                          className='buttons'
+                        <Button
+                          className="buttons"
+                          onClick={() => handleAprobar()}
+                          disabled={loadingBtn}
+                          sx={{
+                            mt: 2,
+                            backgroundColor: '#4CAF50',
+                            color: 'white',
+                            '&:hover': {
+                              backgroundColor: '#45a049',
+                            },
+                          }}
+                        >
+                          Aprobar Menú
+                        </Button>
+                        <Button
+                          className="buttons"
                           onClick={() => handleMensaje()}
+                          disabled={loadingBtn}
                           sx={{
                             mt: 2,
                             backgroundColor: 'FF9800', // Color naranja
@@ -193,10 +211,9 @@ const MenuSemanalAprobacion = () => {
                             },
                           }}
                         >
-                          Feedback Rechazo
+                          RECHAZAR MENÚ
                         </Button>
                       </div>
-                     
                     </>
                   )}
                 </li>
@@ -205,7 +222,6 @@ const MenuSemanalAprobacion = () => {
           </div>
         )}
       </div>
-
       <Modal open={openModal} onClose={() => setOpenModal(false)}>
         <Box
           sx={{
@@ -220,7 +236,7 @@ const MenuSemanalAprobacion = () => {
             borderRadius: 2,
           }}
         >
-          <h2 style={{ color: 'black' }}>Enviar Feedback de Rechazo de minuta </h2>
+          <h2 style={{ color: 'black' }}>Enviar Feedback de Rechazo de minuta</h2>
           <TextField
             fullWidth
             label="Mensaje de Rechazo"
@@ -228,9 +244,7 @@ const MenuSemanalAprobacion = () => {
             onChange={(e) => setMensaje(e.target.value)}
             multiline
             rows={4}
-            sx={{ mt: 2 ,
-              color:"black"
-            }}
+            sx={{ mt: 2, color: 'black' }}
           />
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
             <Button

@@ -14,7 +14,7 @@ import {
   Autocomplete,
 } from "@mui/material";
 
-const API_BASE_URL = "http://localhost:3000/api/v1";
+const BACKEND_URL = process.env.REACT_APP_BACK_URL;
 
 const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
   const [nombreIngrediente, setNombreIngrediente] = useState("");
@@ -33,7 +33,7 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
         return;
       }
       try {
-        const response = await axios.get(`${API_BASE_URL}/ingrediente`, {
+        const response = await axios.get(`${BACKEND_URL}ingrediente`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setIngredientes(response.data);
@@ -60,10 +60,10 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
   const handleSeleccionarIngrediente = (ingredienteSeleccionado) => {
     if (ingredienteSeleccionado) {
       setNombreIngrediente(ingredienteSeleccionado.nombreIngrediente);
-      setUnidadMedida(ingredienteSeleccionado.unidadmedida); // Usar la unidad de medida del ingrediente seleccionado
+      setUnidadMedida(ingredienteSeleccionado.unidadmedida); 
     } else {
       setNombreIngrediente("");
-      setUnidadMedida(""); // Limpiar la unidad de medida si no se selecciona nada
+      setUnidadMedida(""); 
     }
   };
 
@@ -87,13 +87,13 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
         return;
       }
       await axios.post(
-        `${API_BASE_URL}/ingredientexplato`,
+        `${BACKEND_URL}ingredientexplato`,
         {
           id_plato: platoId,
           id_ingrediente: ingredienteSeleccionado._id,
-          porcion_neta: 0,
-          peso_bruto: 0,
-          rendimiento: 0,
+          porcion_neta: 1,
+          peso_bruto: 1,
+          rendimiento: 100,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -106,8 +106,7 @@ const AgregarIngrediente = ({ platoId, onIngredienteAgregado }) => {
     } catch (error) {
       console.error("Error al agregar ingrediente:", error);
       setError(
-        error.response?.data?.message ||
-          "Ocurrió un error. Por favor, inténtalo nuevamente."
+        error.response?.data?.message || "Ocurrió un error. Por favor, inténtalo nuevamente."
       );
     } finally {
       setLoading(false);

@@ -1,6 +1,15 @@
 import React from 'react';
 import { Button } from '@mui/material';
 import ExcelJS from 'exceljs';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+let theme = createTheme({
+    palette: {
+        green: {
+            main: '#2e8b57',
+        },
+    },
+});
 
 const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }) => {
     const exportToExcel = async () => {
@@ -161,9 +170,11 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
     };
 
     return (
-        <Button variant="contained" color="primary" onClick={exportToExcel}>
-            {buttonLabel || 'Exportar a Excel'}
-        </Button>
+        <ThemeProvider theme={theme}>
+            <Button variant="contained" color='green' sx={{color:'white'}} onClick={exportToExcel}>
+                {buttonLabel || 'Exportar a Excel'}
+            </Button>
+        </ThemeProvider>
     );
 };
 

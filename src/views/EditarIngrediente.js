@@ -10,9 +10,15 @@ import {
   CardContent,
   CircularProgress,
   Grid,
+  Modal as MuiModal,
   List,
   Typography,
   useMediaQuery,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import IngredienteItem from "../components/IngredienteItem.js";
@@ -27,16 +33,26 @@ const EditarIngredientes = () => {
   const [guardando, setGuardando] = useState(false);
   const [success, setSuccess] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  
+  const [platoEditado, setPlatoEditado] = useState({});
+
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [categorias, setCategorias] = useState([]);
+  const [familias, setFamilias] = useState([]);
+  const [tiposCorte, setTiposCorte] = useState([]);
+  const [nuevoTipoCorte, setNuevoTipoCorte] = useState("");
+
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const BACKEND_URL = process.env.REACT_APP_BACK_URL;
+  const token = localStorage.getItem("token")?.trim();
 
   // Función para cargar los datos iniciales
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     setMensaje("Cargando datos...");
-    const token = localStorage.getItem("token")?.trim();
     if (!token) {
       console.error("Token no encontrado.");
       setMensaje("Sesión no válida. Redirigiendo...");
@@ -46,15 +62,20 @@ const EditarIngredientes = () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const platoResponse = await axios.get(
-        `http://localhost:3000/api/v1/plato/${platoId}`,
+        `${BACKEND_URL}plato/${platoId}`,
         { headers }
       );
-      setPlato(platoResponse.data);
+      if (JSON.stringify(platoResponse.data) !== JSON.stringify(plato)) {
+        setPlato(platoResponse.data);
+      }
       const ingredientesResponse = await axios.get(
-        `http://localhost:3000/api/v1/ingredientexplato/plato/${platoId}`,
+      `${BACKEND_URL}ingredientexplato/plato/${platoId}`,
         { headers }
       );
-      setIngredientes(ingredientesResponse.data);
+      
+      if (JSON.stringify(ingredientesResponse.data) !== JSON.stringify(ingredientes)) {
+        setIngredientes(ingredientesResponse.data);
+      }
       setMensaje("Datos cargados correctamente.");
     } catch (error) {
       console.error("Error al obtener datos:", error);
@@ -70,13 +91,64 @@ const EditarIngredientes = () => {
 
   useEffect(() => {
     if (platoId) {
-      fetchData();
+        fetchData();
     } else {
-      console.error("No se encontró el id del plato");
-      setMensaje("Redirigiendo a la lista de platos...");
-      navigate("/platos");
+        console.error("No se encontró el id del plato");
+        setMensaje("Redirigiendo a la lista de platos...");
+        navigate("/platos");
     }
   }, [fetchData, navigate, platoId]);
+
+  useEffect(() => {
+    const fetchOpciones = async () => {
+        try {
+            const response = await axios.get(`${BACKEND_URL}plato`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Ordenar platos alfabéticamente
+            const sortedPlatos = response.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+
+            //Obtener tipos de cortes 
+            const tipodecortesUnicos = new Set();
+            sortedPlatos.forEach(plato => {
+                tipodecortesUnicos.add(plato.tipo_corte);
+            });
+       
+            setTiposCorte([...tipodecortesUnicos]);
+
+            //Obtener familias unicas
+            const FamiliasUnicas = new Set();
+            sortedPlatos.forEach(plato => {
+                FamiliasUnicas.add(plato.familia);
+            });
+            
+            setFamilias([...FamiliasUnicas]);
+
+
+            // Obtener categorías únicas
+            const categoriasUnicas = new Set();
+            sortedPlatos.forEach(plato => {
+                categoriasUnicas.add(plato.categoria);
+            });
+
+            setCategorias([...categoriasUnicas]);
+
+        } catch (error) {
+            console.error("Error al obtener Opciones:", error);
+            if (error.response && error.response.status === 401) {
+                console.error("Token inválido. Redirigiendo al login.");
+                localStorage.removeItem('token');
+                localStorage.setItem('error', 'error en la sesion')
+                navigate("/login");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchOpciones();
+}, [navigate]);
 
   // Manejar cambios en los campos de los ingredientes
   const handleChange = useCallback(
@@ -105,7 +177,7 @@ const EditarIngredientes = () => {
       }
 
       try {
-        await axios.delete(`http://localhost:3000/api/v1/ingredientexplato/${id}`, {
+        await axios.delete(`${BACKEND_URL}ingredientexplato/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -123,10 +195,39 @@ const EditarIngredientes = () => {
     []
   );
 
+  const handleEditarPlato = () => {
+    setPlatoEditado(plato); // Inicializamos con los datos actuales del plato
+    setModalAbierto(true);
+  };
+  
+  const handleChangePlato = (field, value) => {
+    setPlatoEditado((prev) => ({ ...prev, [field]: value }));
+  };
+
   // Manejar el agregado de un nuevo ingrediente
   const handleIngredienteAgregado = () => {
     setMensaje("Ingrediente agregado correctamente.");
     fetchData();
+  };
+
+  const handleGuardarPlato = async () => {
+    try {
+      const token = localStorage.getItem("token")?.trim();
+      if (!token) {
+        console.error("Token no encontrado.");
+        return;
+      }
+  
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.put(`${BACKEND_URL}plato/${plato._id}`, platoEditado, { headers });
+  
+      setPlato(platoEditado); // Actualizamos el estado local
+      setModalAbierto(false);
+      alert("Cambios guardados exitosamente.");
+    } catch (error) {
+      console.error("Error al guardar cambios:", error);
+      alert("Error al guardar los cambios. Intenta nuevamente más tarde.");
+    }
   };
 
   // Guardar cambios en el backend
@@ -147,7 +248,7 @@ const EditarIngredientes = () => {
       await Promise.all(
         ingredientes.map((ingredienteEditado) =>
           axios.put(
-            `http://localhost:3000/api/v1/ingredientexplato/${ingredienteEditado._id}`,
+            `${BACKEND_URL}ingredientexplato/${ingredienteEditado._id}`,
             {
               id_plato: ingredienteEditado.id_plato,
               id_ingrediente: ingredienteEditado.id_ingrediente._id,
@@ -178,6 +279,44 @@ const EditarIngredientes = () => {
     navigate("../platos");
   };
 
+  const handleEstadoPlato = async () => {
+    if (!plato) return; // Asegúrate de que plato no sea null
+  
+    // Actualiza el estado local
+    const nuevoEstado = !plato.descontinuado;
+    setPlato((prevPlato) => ({
+      ...prevPlato,
+      descontinuado: nuevoEstado,
+    }));
+  
+    // Opcional: Envía el cambio al backend
+    try {
+      const token = localStorage.getItem("token")?.trim();
+      if (!token) {
+        console.error("Token no encontrado.");
+        return;
+      }
+  
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.put(
+        `${BACKEND_URL}plato/${platoId}`,
+        {
+          ...plato, 
+          descontinuado: nuevoEstado
+        },
+        { headers }
+      );
+  
+      console.log("Estado del plato actualizado en el backend");
+    } catch (error) {
+      console.error("Error al actualizar el estado del plato:", error);
+      // Si falla el backend, puedes revertir el estado local si es necesario
+      setPlato((prevPlato) => ({
+        ...prevPlato,
+        descontinuado: !nuevoEstado,
+      }));
+    }
+  };
   return (
     <div
       style={{
@@ -188,17 +327,54 @@ const EditarIngredientes = () => {
       }}
     >
       <Header />
-      <Button
-        onClick={handleVolverAPlatos}
+      <Box
         sx={{
-          width: "20%",
-          bgcolor: "#14375A",
-          color: "white",
-          marginLeft: "25px",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          ml: 5,
+          mr: 8
         }}
       >
-        Volver atrás
-      </Button>
+        <Button
+          onClick={handleVolverAPlatos}
+          sx={{
+            width: "20%",
+            bgcolor: "#14375A",
+            color: "white",
+            marginLeft: "25px",
+          }}
+        >
+          Volver atrás
+        </Button>
+        <Button
+          onClick={handleEditarPlato}
+          sx={{
+            width: "20%",
+            bgcolor: "#14375A",
+            color: "white",
+            marginLeft: "25px",
+          }}
+        >
+          Editar plato
+        </Button>
+        <Button
+          onClick={handleEstadoPlato}
+          sx={{
+            width: "20%",
+            bgcolor: "#14375A",
+            color: "white",
+            marginLeft: "25px",
+          }}
+        >
+          {plato?.descontinuado ? (
+            "ACTIVAR "
+          ) : (
+            "DESCONTINUAR "
+          )}
+           PLATO
+        </Button>
+      </Box>
       <Box
         sx={{
           flexGrow: 1,
@@ -234,6 +410,10 @@ const EditarIngredientes = () => {
             {error}
           </Alert>
         )}
+         <AgregarIngrediente
+          platoId={platoId}
+          onIngredienteAgregado={handleIngredienteAgregado}
+        />
         <Grid container justifyContent="center">
           <Grid item xs={12}>
             <Card sx={{ border: "1px solid #bdbdbd" }}>
@@ -253,10 +433,6 @@ const EditarIngredientes = () => {
             </Card>
           </Grid>
         </Grid>
-        <AgregarIngrediente
-          platoId={platoId}
-          onIngredienteAgregado={handleIngredienteAgregado}
-        />
         <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
           <Button
             variant="contained"
@@ -272,6 +448,115 @@ const EditarIngredientes = () => {
           </Button>
         </Box>
       </Box>
+      <div>
+      {modalAbierto && (
+        <MuiModal open={modalAbierto} onClose={() => setModalAbierto(false)}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h6" gutterBottom color="#2E8B57"> 
+            Editar Plato
+          </Typography>
+          <TextField
+            label="Nombre"
+            value={platoEditado.nombre || ""}
+            onChange={(e) => handleChangePlato("nombre", e.target.value.toUpperCase())}
+            fullWidth
+            margin="normal"
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="categoria-label">Categoría</InputLabel>
+            <Select
+              labelId="categoria-label"
+              value={platoEditado.categoria || ""}
+              onChange={(e) => handleChangePlato("categoria", e.target.value)}
+            >
+              {categorias.map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {cat}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="familia-label">Familia</InputLabel>
+            <Select
+              labelId="familia-label"
+              value={platoEditado.familia || ""}
+              onChange={(e) => handleChangePlato("familia", e.target.value)}
+            >
+              {familias.map((fam) => (
+                <MenuItem key={fam} value={fam}>
+                  {fam}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="tipo-corte-label">Tipo de corte</InputLabel>
+            <Select
+              labelId="tipo-corte-label"
+              value={platoEditado.tipo_corte || ""}
+              onChange={(e) => handleChangePlato("tipo_corte", e.target.value)}
+            >
+              {tiposCorte.map((tipo) => (
+                <MenuItem key={tipo} value={tipo}>
+                  {tipo}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            label="Agregar nuevo tipo de corte"
+            value={nuevoTipoCorte}
+            onChange={(e) => setNuevoTipoCorte(e.target.value.toUpperCase())}
+            fullWidth
+            margin="normal"
+          />
+          <Button
+            onClick={() => {
+              if (nuevoTipoCorte.trim()) {
+                setTiposCorte((prev) => [...prev, nuevoTipoCorte]);
+                setNuevoTipoCorte("");
+              }
+            }}
+            variant="contained"
+            color="success"
+            fullWidth
+            margin="normal"
+          >
+            Agregar
+          </Button>
+          <Box display="flex" justifyContent="space-between" marginTop={2}>
+            <Button
+              onClick={handleGuardarPlato}
+              variant="contained"
+              color="primary"
+            >
+              Guardar
+            </Button>
+            <Button
+              onClick={() => setModalAbierto(false)}
+              variant="contained"
+              color="error"
+            >
+              Cancelar
+            </Button>
+          </Box>
+        </Box>
+      </MuiModal>
+      )}
+      </div>
     </div>
   );
 };

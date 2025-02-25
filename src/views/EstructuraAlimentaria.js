@@ -273,14 +273,14 @@ const Estructura = () => {
                                     <TextField
                                       label="Familia"
                                       value={entry.familia}
-                                      onChange={(e) => handleCellChange(dia, fila, index, "familia", e.target.value)}
+                                      onChange={(e) => handleCellChange(dia, fila, index, "familia", e.target.value.toUpperCase())}
                                     />
                                   </Grid>
                                   <Grid item xs={4.5}>
                                     <TextField
                                       label="Tipo de corte"
                                       value={entry.corteqlo}
-                                      onChange={(e) => handleCellChange(dia, fila, index, "corteqlo", e.target.value)}
+                                      onChange={(e) => handleCellChange(dia, fila, index, "corteqlo", e.target.value.toUpperCase())}
                                     />
                                   </Grid>
                                   <Grid item>

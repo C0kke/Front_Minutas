@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Modal, TextField, Typography, MenuItem } from "@mui/material";
-import Header from "../components/Header";
+import { Box, Button, Modal, TextField, Typography, MenuItem, Alert } from "@mui/material";
+import { Eye, EyeOff } from "lucide-react"; // Importar íconos de ojo
+import Header from "../components/Header"; // Importar Header desde la ruta correcta
+
+const BACKEND_URL = process.env.REACT_APP_BACK_URL; // Constante para la URL del backend
 
 const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [modalCrearIsOpen, setModalCrearIsOpen] = useState(false);
-    const [ error , setError] = useState(null); // Declare error state
-    const [newUser, setNewUser] = useState({ name: '', username: '', email: '', password: '', role: '' }); // Declare new user state
-   
-  // For the delete confirmation
+    const [error, setError] = useState(null);
+    const [newUser, setNewUser] = useState({ name: '', username: '', email: '', password: '', role: '' });
+    const [originalUser, setOriginalUser] = useState(null); // Guardar el estado original del usuario
+    const [passwordError, setPasswordError] = useState(""); // Mensaje de error para la contraseña
+    const [isPasswordVisible, setPasswordVisible] = useState(false); // Estado para mostrar/ocultar la contraseña
+    const [firstFocus, setFirstFocus] = useState(true); // Estado para controlar el primer foco en la contraseña
 
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('id_user');
@@ -20,7 +25,7 @@ const Usuarios = () => {
     useEffect(() => {
         const fetchUsuarios = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/v1/user', {
+                const response = await axios.get(`${BACKEND_URL}user`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUsuarios(response.data);
@@ -42,54 +47,88 @@ const Usuarios = () => {
         fetchUsuarios();
     }, [navigate, token]);
 
-
     const closeModal = () => {
         setModalIsOpen(false);
+        setPasswordError("");
+        setPasswordVisible(false); // Resetear visibilidad de la contraseña
+        setFirstFocus(true); // Reiniciar el estado del primer foco
     };
 
     const closeModalCrear = () => {
-        
         setModalCrearIsOpen(false);
+        setPasswordError("");
+        setPasswordVisible(false); // Resetear visibilidad de la contraseña
+        setFirstFocus(true); // Reiniciar el estado del primer foco
     };
 
     const openModal = (user) => {
-        setNewUser(user);  // Cargar los datos del usuario en el estado para editar
+        setNewUser(user);
+        setOriginalUser({ ...user }); // Guardar el estado original del usuario
         setModalIsOpen(true);
     };
 
     const openModalCrear = () => {
-        setNewUser({ name: '', username: '', email: '', password: '', role: '' });  // Resetear a un objeto vacío para crear un nuevo usuario
+        setNewUser({ name: '', username: '', email: '', password: '', role: '' });
         setModalCrearIsOpen(true);
     };
 
     const handleCreateUserChange = (event) => {
         const { name, value } = event.target;
         setNewUser((prevUser) => ({ ...prevUser, [name]: value }));
+
+        // Validar la contraseña mientras se escribe
+        if (name === "password") {
+            validatePassword(value);
+        }
+    };
+
+    const validatePassword = (password) => {
+        if (password.length < 6 || !/\d/.test(password)) {
+            setPasswordError("La contraseña debe tener al menos 6 caracteres y 1 número.");
+        } else {
+            setPasswordError("");
+        }
+    };
+
+    const handlePasswordFocus = () => {
+        if (firstFocus) {
+            setNewUser((prevUser) => ({ ...prevUser, password: "" })); // Borrar la contraseña solo la primera vez
+            setFirstFocus(false); // Desactivar el borrado automático después del primer foco
+        }
+    };
+
+    const togglePasswordVisibility = () => {
+        setPasswordVisible(!isPasswordVisible); // Alternar visibilidad de la contraseña
+    };
+
+    const hasChanges = () => {
+        return JSON.stringify(newUser) !== JSON.stringify(originalUser);
     };
 
     const handleCreateUser = async () => {
+        if (passwordError) {
+            alert("La contraseña no cumple con los requisitos.");
+            return;
+        }
+
         try {
-            const response = await axios.post('http://localhost:3000/api/v1/user', newUser, {
+            const response = await axios.post(`${BACKEND_URL}user`, newUser, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUsuarios((prevUsuarios) => [...prevUsuarios, response.data]);
-            alert("Usuario Creado con exito")
+            alert("Usuario Creado con éxito");
             closeModalCrear();
         } catch (error) {
             console.error("Error al crear usuario:", error);
-            
-            if (error.response.status === 400){
-                alert("TIENES QUE LLENAR TODOS LOS CAMPOS")
-            return
+
+            if (error.response?.status === 400) {
+                alert("TIENES QUE LLENAR TODOS LOS CAMPOS");
+                return;
             }
-            // Verifica si el error tiene la estructura esperada para un error de MongoDB
-            if (error.response.data.error.errorResponse.errmsg) {
-                const errorMessage = error.response.data.error.errorResponse.errmsg
-    ;
-                console.log(errorMessage)
-                console.log("alo")
-                
-                // Captura el error específico y le pasa un mensaje más claro al usuario
+
+            if (error.response?.data?.error?.errorResponse?.errmsg) {
+                const errorMessage = error.response.data.error.errorResponse.errmsg;
+
                 if (errorMessage.includes('username')) {
                     alert("El nombre de usuario ya está en uso.");
                 } else if (errorMessage.includes('email')) {
@@ -98,17 +137,26 @@ const Usuarios = () => {
                     alert("No se pudo crear el usuario debido a un error desconocido.");
                 }
             } else {
-                // Si el error no tiene una respuesta esperada, muestra un mensaje genérico
                 alert("No se pudo crear el usuario.");
             }
         }
     };
 
-    const handleEditUser = async() => {
+    const handleEditUser = async () => {
+        if (!hasChanges()) {
+            alert("No hay cambios para guardar.");
+            return;
+        }
+
+        if (passwordError) {
+            alert("La contraseña no cumple con los requisitos.");
+            return;
+        }
+
         const confirmed = window.confirm("¿Está seguro de que desea editar este usuario?");
         if (confirmed) {
             try {
-                const response = await axios.put(`http://localhost:3000/api/v1/user/${newUser._id}`, newUser, {
+                const response = await axios.put(`${BACKEND_URL}user/${newUser._id}`, newUser, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUsuarios((prevUsuarios) => prevUsuarios.map(u => u._id === newUser._id ? response.data : u));
@@ -122,23 +170,22 @@ const Usuarios = () => {
 
     const handleDeleteUser = async () => {
         if (newUser._id === userId) {
-            alert("No puedes eliminar el usuario actual")
-            return
+            alert("No puedes eliminar el usuario actual");
+            return;
         }
+
         const confirmedFirst = window.confirm("¡Este proceso es irreversible! ¿Está seguro que quiere eliminar al usuario?");
         if (confirmedFirst) {
             const confirmedSecond = window.confirm("Este es el segundo paso de la confirmación. ¿Seguro que desea continuar?");
             if (confirmedSecond) {
                 const confirmedThird = window.confirm("¡Última confirmación! ¿Realmente desea eliminar este usuario?");
-                console.log(error)
                 if (confirmedThird) {
                     try {
-                        await axios.delete(`http://localhost:3000/api/v1/user/${newUser._id}`, {
+                        await axios.delete(`${BACKEND_URL}user/${newUser._id}`, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
                         setUsuarios((prevUsuarios) => prevUsuarios.filter(u => u._id !== newUser._id));
                         closeModal();
-
                     } catch (error) {
                         console.error("Error al eliminar usuario:", error);
                         setError(new Error("No se pudo eliminar el usuario."));
@@ -151,9 +198,9 @@ const Usuarios = () => {
     return (
         <div>
             <Header />
-          
+
             <Button
-                onClick={openModalCrear}  // Cambié esta parte para abrir el modal de crear usuario
+                onClick={openModalCrear}
                 variant="contained"
                 sx={{ marginBottom: '16px', backgroundColor: '#2E8B57', color: 'white', '&:hover': { backgroundColor: '#1A5230' } }}
             >
@@ -202,15 +249,33 @@ const Usuarios = () => {
                         fullWidth
                         margin="normal"
                     />
-                    <TextField
-                        label="Contraseña"
-                        name="password"
-                        type="password"
-                        value={newUser.password}
-                        onChange={handleCreateUserChange}
-                        fullWidth
-                        margin="normal"
-                    />
+                    <Box position="relative">
+                        <TextField
+                            label="Contraseña"
+                            name="password"
+                            type={isPasswordVisible ? "text" : "password"}
+                            value={newUser.password}
+                            onChange={handleCreateUserChange}
+                            fullWidth
+                            margin="normal"
+                        />
+                        <span
+                            onClick={togglePasswordVisibility}
+                            style={{
+                                position: "absolute",
+                                right: 10,
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                cursor: "pointer",
+                                color: "#2E8B57", // Color verde para el ícono de ojo
+                            }}
+                        >
+                            {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </span>
+                    </Box>
+                    {passwordError && (
+                        <Alert severity="error">{passwordError}</Alert>
+                    )}
                     <TextField
                         select
                         label="Rol"
@@ -229,7 +294,12 @@ const Usuarios = () => {
                             Cancelar
                         </Button>
                         <Box>
-                            <Button onClick={handleCreateUser} variant="contained" sx={{ backgroundColor: '#2E8B57', color: 'white', '&:hover': { backgroundColor: '#1A5230' } }}>
+                            <Button
+                                onClick={handleCreateUser}
+                                variant="contained"
+                                disabled={!!passwordError}
+                                sx={{ backgroundColor: '#2E8B57', color: 'white', '&:hover': { backgroundColor: '#1A5230' } }}
+                            >
                                 Crear
                             </Button>
                         </Box>
@@ -272,15 +342,38 @@ const Usuarios = () => {
                         fullWidth
                         margin="normal"
                     />
-                    <TextField
-                        label="Contraseña"
-                        name="password"
-                        type="password"
-                        value={newUser.password}
-                        onChange={handleCreateUserChange}
-                        fullWidth
-                        margin="normal"
-                    />
+                    <Box position="relative">
+                        <TextField
+                            label="Contraseña"
+                            name="password"
+                            type={isPasswordVisible ? "text" : "password"}
+                            value={newUser.password}
+                            onChange={handleCreateUserChange}
+                            onFocus={handlePasswordFocus} // Borrar solo la primera vez
+                            fullWidth
+                            margin="normal"
+                        />
+                        {!firstFocus ?
+                            <span
+                                onClick={togglePasswordVisibility}
+                                style={{
+                                    position: "absolute",
+                                    right: 10,
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                    cursor: "pointer",
+                                    color: "#2E8B57", // Color verde para el ícono de ojo
+                                }}
+                            >
+                                {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </span>
+                        : 
+                            <p></p>
+                        }
+                    </Box>
+                    {passwordError && (
+                        <Alert severity="error">{passwordError}</Alert>
+                    )}
                     <TextField
                         select
                         label="Rol"
@@ -299,7 +392,12 @@ const Usuarios = () => {
                             Cancelar
                         </Button>
                         <Box>
-                            <Button onClick={handleEditUser} variant="contained" sx={{ backgroundColor: '#2E8B57', color: 'white', '&:hover': { backgroundColor: '#1A5230' } }}>
+                            <Button
+                                onClick={handleEditUser}
+                                variant="contained"
+                                disabled={!hasChanges() || !!passwordError}
+                                sx={{ backgroundColor: '#2E8B57', color: 'white', '&:hover': { backgroundColor: '#1A5230' } }}
+                            >
                                 Editar
                             </Button>
                             <Button onClick={handleDeleteUser} variant="contained" color="error" sx={{ marginLeft: 2 }}>

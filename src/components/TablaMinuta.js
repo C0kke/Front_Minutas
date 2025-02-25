@@ -41,7 +41,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
   const [error, setError] = useState(null);
   const [tablaData, setTablaData] = useState({});
   const token = localStorage.getItem("token")?.trim();
-
+  const BACKEND_URL = process.env.REACT_APP_BACK_URL;
   const [filasOrdenadas, setFilasOrdenadas] = useState([]);
   // Obtener los platos segun los ids
   useEffect(() => {
@@ -55,7 +55,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
               menu.listaplatos.map(async (item) => {
                 if (!nombresPlatos[item.platoId]) {
                   const response = await axios.get(
-                    `http://localhost:3000/api/v1/plato/${item.platoId}`,
+                    `${BACKEND_URL}plato/${item.platoId}`,
                     {
                       headers: { Authorization: `Bearer ${token}` },
                     }
@@ -234,7 +234,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
 
   return (
     <div>
-      <TableContainer component={Paper} ref={tableRef}>
+      <TableContainer component={Paper} ref={tableRef} >
         <ExportToExcel
           data={prepareDataForExcel()}
           fileName={`PLANIFICACIÓN DE MINUTA ${semana._id.semana} - ${semana._id.año}`}
@@ -243,7 +243,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
           encabezadosFecha={encabezadosFecha}
           buttonLabel="Exportar a Excel"
         />
-        <Table sx={{ minWidth: 650 }} aria-label="tabla de aprobación de minuta">
+        <Table sx={{ minWidth: 650, mt: 2}} aria-label="tabla de aprobación de minuta">
           <TableHead>
             <TableRow>
               <StyledTableCell className="encabezado" sx={{ textWrap: "nowrap" }}>

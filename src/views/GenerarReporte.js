@@ -29,9 +29,11 @@ const GenerarReporte = () => {
   const [sucursal, setSucursal] = useState([]);
   const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingBtn, setLoadingBtn] = useState(false);
   const [platosPorFecha, setPlatosPorFecha] = useState({});
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
   const [semana, setSemana] = useState("");
+  const BACKEND_URL = process.env.REACT_APP_BACK_URL;
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token')?.trim();
@@ -40,7 +42,7 @@ const GenerarReporte = () => {
     const fetchSucursales = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:3000/api/v1/sucursal', {
+        const response = await axios.get(`${BACKEND_URL}sucursal`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSucursales(response.data);
@@ -58,9 +60,8 @@ const GenerarReporte = () => {
     const selectedWeek = e.target.value;
     setSemana(selectedWeek);
 
-    // Calcular las fechas de la semana (lunes y domingo)
-    const startOfWeek = moment().isoWeek(selectedWeek).startOf('isoWeek'); // Lunes
-    const endOfWeek = moment().isoWeek(selectedWeek).endOf('isoWeek'); // Domingo
+    const startOfWeek = moment().isoWeek(selectedWeek).startOf('isoWeek'); 
+    const endOfWeek = moment().isoWeek(selectedWeek).endOf('isoWeek'); 
 
     setFechaInicio(startOfWeek.format("YYYY-MM-DD"));
     setFechaFin(endOfWeek.format("YYYY-MM-DD"));
@@ -70,9 +71,7 @@ const GenerarReporte = () => {
     if (fechaInicio && fechaFin ) {
       setLoading(true);
       try {
-        
-
-        const response = await axios.get('http://localhost:3000/api/v1/menudiario/reporte/obtener-platos', {
+        const response = await axios.get(`${BACKEND_URL}menudiario/reporte/obtener-platos`, {
           params: {
             fechaInicio: fechaInicio,
             fechaFin: fechaFin,
@@ -81,8 +80,8 @@ const GenerarReporte = () => {
             Authorization: `Bearer ${token}`,
           }
         });
+
         // Agrupar platos por fecha
-        console.log(response.data)
         const platosAgrupados = {};
         response.data.forEach(menu => {
           const fecha = moment(menu.fecha).tz("America/New_York").add(1, 'days').format("DD-MM-YYYY");
@@ -131,6 +130,7 @@ const GenerarReporte = () => {
       return nuevosPlatos;
     });
   };
+
   const handleSubmit = async () => {
     const platosInvalidos = Object.entries(platosPorFecha).flatMap(([_, platos]) =>
       platos.filter(plato => !plato.cantidad || plato.cantidad <= 0)
@@ -161,26 +161,26 @@ const GenerarReporte = () => {
           }))
       ),
     };
-    console.log(reportData);
   
     const proyeccionData = {
-      fecha: new Date(), // Fecha principal de la proyección
+      fecha: new Date(), 
       nombreSucursal: sucursalObj.nombresucursal,
       lista: Object.entries(platosPorFecha).flatMap(([fecha, platos]) =>
         platos
           .filter(plato => plato.cantidad > 0)
           .map(plato => ({
             platoid : plato.id,
-            fecha, // Fecha del plato
-            Nombreplato: plato.nombre, // Nombre del plato
-            cantidad: plato.cantidad.toString(), // Cantidad convertida a string
+            fecha, 
+            Nombreplato: plato.nombre, 
+            cantidad: plato.cantidad.toString(), 
           }))
       ),
     };
   
     try {
+      setLoadingBtn(true);
        await axios.post(
-        'http://localhost:3000/api/v1/menudiario/reporte/calcular-ingredientes',
+        `${BACKEND_URL}menudiario/reporte/calcular-ingredientes`,
         reportData,
         {
           headers: {
@@ -193,7 +193,7 @@ const GenerarReporte = () => {
   
       // Crear la proyección
       await axios.post(
-        'http://localhost:3000/api/v1/proyeccion',
+        `${BACKEND_URL}proyeccion`,
         proyeccionData,
         {
           headers: {
@@ -204,9 +204,11 @@ const GenerarReporte = () => {
   
       alert('Proyección creada correctamente.');
       
-      navigate("/home");
+      navigate("/proyecciones");
     } catch (error) {
       console.error("Error al generar el reporte o crear la proyección:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -231,13 +233,12 @@ const GenerarReporte = () => {
                 MenuProps={{
                   PaperProps: {
                     style: {
-                      maxHeight: 200, // Altura máxima del menú desplegable
-                      overflowY: 'auto', // Habilitar scroll vertical
+                      maxHeight: 200, 
+                      overflowY: 'auto', 
                     },
                   },
                 }}
               >
-                {/* Generar las 52 semanas */}
                 {Array.from({ length: 52 }, (_, index) => (
                   <MenuItem key={index + 1} value={index + 1}>
                     Semana {index + 1}
@@ -267,27 +268,6 @@ const GenerarReporte = () => {
                 fullWidth
                 InputLabelProps={{ shrink: true }}
               />
-            </div>
-
-            <div className="form-group">
-              <FormControl sx={{ width: '100%' }}>
-                <InputLabel>Sucursal</InputLabel>
-                {loading ? (
-                  <CircularProgress size={24} />
-                ) : (
-                  <Select
-                    value={sucursal.nombresucursal}
-                    onChange={handleSucursalChange}
-                    label="Sucursal"
-                  >
-                    {sucursales.map((s) => (
-                      <MenuItem key={s._id} value={s._id}>
-                        {s.nombresucursal}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                )}
-              </FormControl>
             </div>
 
             <div className="form-group">
@@ -322,11 +302,11 @@ const GenerarReporte = () => {
                               type="number"
                               value={plato.cantidad}
                               onChange={(e) => {
-                                const inputValue = e.target.value; // Capturamos el valor directamente como string
+                                const inputValue = e.target.value; 
                                 if (inputValue === "") {
                                   handlePlatoChange(fecha, plato.id, "");
                                 } else {
-                                  const parsedValue = parseInt(inputValue, 10); // Convertimos a número
+                                  const parsedValue = parseInt(inputValue, 10);
                                   if (!isNaN(parsedValue) && parsedValue >= 0) {
                                     handlePlatoChange(fecha, plato.id, parsedValue);
                                   }
@@ -345,13 +325,37 @@ const GenerarReporte = () => {
                       </AccordionDetails>
                     </Accordion>
                   ))}
+                  <div className="form-group">
+                    <FormControl sx={{ width: '100%' }}>
+                      <InputLabel>Elegir Sucursal</InputLabel>
+                      {loading ? (
+                        <CircularProgress size={24} />
+                      ) : (
+                        <Select
+                          value={sucursal.nombresucursal}
+                          onChange={handleSucursalChange}
+                          label="Sucursal"
+                        >
+                          {sucursales.map((s) => (
+                            <MenuItem key={s._id} value={s._id}>
+                              {s.nombresucursal}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      )}
+                    </FormControl>
+                  </div>
                 </div>
               )
             )}
 
             <div className="form-group">
-              <Button variant="contained" color="primary" onClick={handleSubmit}>
-                Generar Reporte
+              <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loadingBtn}>
+                {loadingBtn ?(
+                  <CircularProgress size={14}/>
+                ) : (
+                  'Generar Reporte'
+                )}
               </Button>
             </div>
           </form>

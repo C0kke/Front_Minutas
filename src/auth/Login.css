@@ -1,13 +1,22 @@
-/* Login Container */
+/* Estilo para el mensaje de error */
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: -10px; /* Ajusta el espacio entre el input y el mensaje */
+  margin-bottom: 10px;
+  text-align: left; /* Alinea el texto a la izquierda */
+}
+
+/* Resto del CSS sin cambios */
 .Login {
   text-align: center;
-  background-color: rgba(230, 236, 241, 0.915); /* Fondo semitransparente */
-  color: #2E8B57; /* Verde manzana */
+  background-color: rgba(230, 236, 241, 0.915);
+  color: #2E8B57;
   padding: 50px;
-  border-radius: 15px; /* Bordes más redondeados */
+  border-radius: 15px;
   width: 400px;
   margin: 50px auto;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Sombra */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
 .app-logo {
@@ -21,7 +30,6 @@
   border-radius: 10px;
 }
 
-/* Formulario */
 .Login form {
   display: flex;
   flex-direction: column;
@@ -33,27 +41,34 @@
   width: 100%;
 }
 
-.Login label {
-  font-size: 18px;
-  color: #1E3A5F; /* Azul marino */
-  display: block;
-  margin-bottom: 5px;
-}
-
 .Login input {
   padding: 10px;
   font-size: 16px;
-  border: 1px solid #2E8B57; /* Verde manzana */
+  border: 1px solid #2E8B57;
   border-radius: 5px;
   width: 100%;
-  box-sizing: border-box; /* Asegura que el padding no expanda el input */
+  box-sizing: border-box;
+}
+
+.password-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #2E8B57;
 }
 
 .Login button {
   padding: 15px;
   font-size: 16px;
   cursor: pointer;
-  background-color: #2E8B57; /* Verde manzana */
+  background-color: #2E8B57;
   color: white;
   border: none;
   border-radius: 5px;
@@ -62,22 +77,69 @@
 }
 
 .Login button:hover {
-  background-color: #1E3A5F; /* Azul marino */
-  transform: translateY(-2px); /* Efecto de elevación */
+  background-color: #1E3A5F;
+  transform: translateY(-2px);
 }
 
 .Login button:active {
-  background-color: #164057; /* Azul marino oscuro */
+  background-color: #164057;
   transform: translateY(0);
 }
 
-/* Título */
 .Login h2 {
   font-size: 36px;
   margin-bottom: 20px;
-  color: #1E3A5F; /* Azul marino */
+  color: #1E3A5F;
 }
 
 .Login header {
   background-color: white;
+}
+
+/* Media Queries para Responsividad */
+@media (max-width: 768px) {
+  .Login {
+    width: 90%;
+    padding: 30px;
+    margin: 20px auto;
+  }
+
+  .app-logo {
+    height: 8em;
+    padding: 0.5rem 1rem;
+  }
+
+  .Login h2 {
+    font-size: 28px;
+  }
+
+  .Login label {
+    font-size: 16px;
+  }
+
+  .Login button {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .Login {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .Login h2 {
+    font-size: 24px;
+  }
+
+  .Login input {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .Login button {
+    padding: 8px;
+    font-size: 12px;
+  }
 }

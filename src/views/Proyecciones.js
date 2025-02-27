@@ -179,6 +179,12 @@ const Proyeccion = () => {
   const handleExportExcel = async (proyeccionId) => {
     try {
       setLoadingBtn(true);
+      // Buscar el objeto de la proyección
+      const proyeccion = data.find(p => p._id === proyeccionId);
+      if (!proyeccion) {
+        throw new Error('Proyección no encontrada');
+      }
+
       const response = await axios.get(
         `${BACKEND_URL}proyeccion/${proyeccionId}/reporte-insumos`,
         {
@@ -190,7 +196,7 @@ const Proyeccion = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `reporte-insumos-${proyeccionId}.xlsx`);
+      link.setAttribute('download', `reporte-insumos-${proyeccion.nombreSucursal}-${proyeccion.fecha}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -205,6 +211,12 @@ const Proyeccion = () => {
   const handleExportExcelDia = async (proyeccionId, fecha) => {
     try {
       setLoadingBtn(true);
+      // Buscar el objeto de la proyección
+      const proyeccion = data.find(p => p._id === proyeccionId);
+      if (!proyeccion) {
+        throw new Error('Proyección no encontrada');
+      }
+
       const response = await axios.get(
         `${BACKEND_URL}proyeccion/${proyeccionId}/reporte-insumos?fecha=${fecha}`,
         {
@@ -216,7 +228,7 @@ const Proyeccion = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `reporte-insumos-${proyeccionId}-${fecha}.xlsx`);
+      link.setAttribute('download', `reporte-insumos-${proyeccion.nombreSucursal}-${fecha}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();

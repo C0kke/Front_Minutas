@@ -165,6 +165,8 @@ const Proyeccion = () => {
   };
 
   const handleFechaClick = (proyeccionId, fecha) => {
+    if (loadingBtn) return;
+    console.log(loadingBtn)
     const proyeccion = data.find(p => p._id === proyeccionId);
     setFechaSeleccionada({
       fecha,
@@ -189,6 +191,32 @@ const Proyeccion = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `reporte-insumos-${proyeccionId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error al descargar el archivo:', error);
+      alert('Error al generar el reporte. Intenta nuevamente más tarde.');
+    } finally {
+      setLoadingBtn(false);
+    }
+  };
+
+  const handleExportExcelDia = async (proyeccionId, fecha) => {
+    try {
+      setLoadingBtn(true);
+      const response = await axios.get(
+        `${BACKEND_URL}proyeccion/${proyeccionId}/reporte-insumos?fecha=${fecha}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+  
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `reporte-insumos-${proyeccionId}-${fecha}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -263,13 +291,19 @@ const Proyeccion = () => {
                   </div>
                   <div className="fechas-list">
                     {fechas.map((fecha) => (
-                      <div
-                        key={fecha}
-                        className="fecha-item"
-                        onClick={() => handleFechaClick(proyeccion._id, fecha)}
-                      >
-                        <span className="fecha-text">{fecha}</span>
-                        <button className="ver-detalle-btn">Ver proyección</button>
+                      <div className="fecha-item">
+                        <div
+                          key={fecha}
+                          className=""
+                          onClick={() => handleFechaClick(proyeccion._id, fecha)}
+                        >
+                          <span className="fecha-text">{fecha}</span>
+                        </div>
+                        <div>
+                          <button className="ver-detalle-btn" onClick={() => handleExportExcelDia(proyeccion._id, fecha)} disabled={loadingBtn}>
+                            {loadingBtn ? 'Cargando...' : 'Exportar día'}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -14,7 +14,12 @@ import {
   Grid2, 
   Checkbox, 
   Typography, 
-  Modal 
+  Modal, 
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -96,11 +101,14 @@ const Minutas = () => {
   const [openStructureModal, setOpenStructureModal] = useState(false); 
   const [selectedWeekStructure, setSelectedWeekStructure] = useState(null);
   const [estructuraSemana, setEstructuraSemana] = useState(null);
+  const [sucursales, setSucursales] = useState([]);
+  const [sucursal, setSucursal] = useState(null);
 
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
   const [semanaEstructura, setSemanaEstructura] = useState(dayjs().week() % 5);
   const [filtrandoPorEstructura, setFiltrandoPorEstructura] = useState(true);
+  const BACKEND_URL = process.env.REACT_APP_BACK_URL;
 
   const [weekDays, setWeekDays] = useState(generateWeekDays(currentYear, dayjs().week()));  
   const [loading ,setLoading] = useState(true);
@@ -113,7 +121,7 @@ const Minutas = () => {
   useEffect(() => {
     const fetchPlatos = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/v1/plato', {
+        const response = await axios.get(`${BACKEND_URL}plato`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const platosFiltrados = response.data.filter(plato => plato.descontinuado === false);
@@ -138,10 +146,38 @@ const Minutas = () => {
     fetchPlatos();
   }, [navigate]);
 
+    // Obtención de sucursales
+    useEffect(() => {
+      const fetchSucursales = async () => {
+        try {
+          const response = await axios.get(`${BACKEND_URL}sucursal`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setSucursales(response.data);
+        } catch (error) {
+          console.error("Error al obtener sucursales:", error);
+          if (error.response && error.response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.setItem('error', 'error de sesion');
+            navigate("/login");
+          } else if (error.response) {
+            setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
+          } else if (error.request) {
+            setError(new Error("No se recibió respuesta del servidor."));
+          } else {
+            setError(new Error("Error al configurar la solicitud."));
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchSucursales();
+    }, [navigate]);
+  
   useEffect(() => {
     const loadInitialWeekStructure = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/v1/estructura', {
+        const response = await axios.get(`${BACKEND_URL}estructura`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
   
@@ -167,7 +203,7 @@ const Minutas = () => {
         const fechaFormateada = date.format('YYYY-MM-DD');
         try {
           const response = await axios.get(
-            `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles`,
+            `${BACKEND_URL}menudiario/Verificar/platos-disponibles`,
             { 
               params: {
                 fecha: fechaFormateada,
@@ -215,6 +251,10 @@ const Minutas = () => {
     setFiltrandoPorEstructura(event.target.checked);
   };
 
+  const handleSucursalChange = (event) => {
+    setSucursal(event.target.value.nombresucursal);
+  };
+
   const handleAutocompleteChange = (event, value, row, col) => {
     const colNormalizado = col.toUpperCase()
       .normalize("NFD")
@@ -230,7 +270,30 @@ const Minutas = () => {
     });
   };
 
+  useEffect(() => {
+    const loadWeekStructure = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}estructura`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        const groupedData = groupDataByWeekAndDay(response.data);
+        const structureForWeek = groupedData[semanaEstructura] || {};
+        setSelectedWeekStructure(structureForWeek); // Establecer la estructura para la semana seleccionada
+      } catch (error) {
+        console.error("Error al cargar la estructura:", error);
+        if (error.response && error.response.status === 404) {
+          alert(`No se encontraron estructuras para la semana "${semanaEstructura}".`);
+        }
+      }
+    };
+
+    if (semanaEstructura) {
+      loadWeekStructure();
+    }
+  }, [semanaEstructura]);
+
   const handleCrearMinuta = async () => {
+    setLoading(true);
     const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
     let datosCompletos = true;
     const minutasAEnviar = [];
@@ -267,7 +330,7 @@ const Minutas = () => {
           fecha: fechaDia,
           semana: week,
           year: year,
-          estado: "Activo",
+          id_sucursal: sucursal,
           listaplatos: listaplatos,
           aprobado: false,
         };
@@ -282,6 +345,7 @@ const Minutas = () => {
         if (minuta.listaplatos.length === 0) {
           hayErrores = true;
           alert(`Error : La minuta para ${minuta.nombre} no tiene platos.`);
+          setLoading(false);
         }
 
         const fechaISO = dayjs(minuta.fecha).format('YYYY-MM-DD');
@@ -309,6 +373,7 @@ const Minutas = () => {
                           const fechaActual = dayjs(fecha).format('dddd DD [de] MMMM');
                           const otraFechaFormateada = dayjs(otraFecha).format('dddd DD [de] MMMM');
                           alert(`Error: La combinación de ensaladas del ${fechaActual} ya existe en la fecha ${otraFechaFormateada}.`);
+                          setLoading(false);
                           break; 
                       }
                   }
@@ -337,6 +402,7 @@ const Minutas = () => {
                   if (!familiasPermitidas.includes(familia)) {
                     hayErrores = true;
                     alert(`Error: El plato seleccionado para ${dia} en ${fila} no cumple con la estructura.`);
+                    setLoading(false);
                     break;
                   }
                 }
@@ -349,7 +415,7 @@ const Minutas = () => {
       if (!hayErrores) {
         try {
           const token = localStorage.getItem('token')?.trim();
-          const response = await axios.post('http://localhost:3000/api/v1/menudiario/validate-menus', minutasAEnviar, {
+          const response = await axios.post(`${BACKEND_URL}menudiario/validate-menus`, minutasAEnviar, {
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
@@ -357,7 +423,7 @@ const Minutas = () => {
           });
           if (response.data.valid === true){
             for (const minuta of minutasAEnviar) {
-              await axios.post('http://localhost:3000/api/v1/menudiario', minuta, {
+              await axios.post(`${BACKEND_URL}menudiario`, minuta, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                   'Content-Type': 'application/json',
@@ -365,9 +431,14 @@ const Minutas = () => {
               }); 
             }
             alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
+            setLoading(false);
             navigate('/home');
           } else {
-            response.data.errors.forEach(e => alert(e.error))
+           alert(response.data.map(
+            (er) => er.error
+           ));
+           console.log(response.data)
+            setLoading(false);
           }
         } catch (error) {
           console.error("Error al enviar las minutas:", error);
@@ -380,177 +451,27 @@ const Minutas = () => {
             alert(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`);
           } else if (error.request) {
             alert("No se recibió respuesta del servidor.");
+            setLoading(false);
           } else {
             alert("Se produjo un error al crear la minuta. Por favor, inténtalo de nuevo.");
+            setLoading(false);
           }
         }
       } else {
         if(hayErrores){
           alert("Se encontraron errores en algunas minutas. No se creará ninguna minuta.");
+          setLoading(false);
         } else {
           alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
+          setLoading(false);
         }
       }
     } else {
       alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
+      setLoading(false);
     }
   };
 
-  const opcionesFiltradasPorFila = useMemo(() => {
-    const opciones = {};
-  
-    filas.forEach((fila) => {
-      let tipoPlatoFiltrado = tipoPlatoPorFila[fila];
-      encabezados.slice(1).forEach((encabezado) => {
-        const encabezadoNormalizado = encabezado
-          .toUpperCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "");
-  
-        if (!opciones[fila]) {
-          opciones[fila] = {};
-        }
-  
-        if (
-          platosDisponibles[encabezadoNormalizado] &&
-          platosDisponibles[encabezadoNormalizado].length > 0
-        ) {
-          let opcionesFiltradas = platosDisponibles[encabezadoNormalizado].filter(
-            (plato) => plato.categoria === tipoPlatoFiltrado
-          );
-          
-          console.log(`Filtrando: ${filtrandoPorEstructura}, estructura: ${selectedWeekStructure}`);
-          if (filtrandoPorEstructura && selectedWeekStructure) {
-            const dia = encabezadoNormalizado;
-            
-            if (!selectedWeekStructure[dia] || !selectedWeekStructure[dia][fila]) {
-              console.warn(`No hay estructura definida para ${dia} - ${fila}`);
-              opciones[fila][encabezadoNormalizado] = [];
-              return;
-            }
-            
-            const reglasEstructura = selectedWeekStructure[dia]?.[fila];
-            console.log(`REGLAS PARA ${dia}:`, reglasEstructura);
-
-            if (reglasEstructura && reglasEstructura.length > 0) {
-              opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-                console.log(`Plato: ${plato.nombre} (${plato.familia} - ${plato.tipo_corte})`)
-                return reglasEstructura.some((regla) => {
-                  const cumpleFamilia = !regla.familia || plato.familia === regla.familia;
-                  const cumpleCorte = !regla.corteqlo || plato.tipo_corte === regla.corteqlo;
-                  console.log("FAM", cumpleFamilia)
-                  console.log("COR", cumpleCorte)
-                  return cumpleFamilia && cumpleCorte;
-                });
-              });
-            } else {
-              console.warn(`No se encontraron reglas para ${dia} - ${fila}`);
-              opciones[fila][encabezadoNormalizado] = [];
-              return;
-            }
-          }
-  
-          // Restricciones adicionales (no repetir platos, etc.)
-          if (tipoPlatoFiltrado === "PLATO DE FONDO") {
-            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-              const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
-                const otroEncabezadoNormalizado = otroEncabezado
-                  .toUpperCase()
-                  .normalize("NFD")
-                  .replace(/[\u0300-\u036f]/g, "");
-                if (otroEncabezadoNormalizado === encabezadoNormalizado) {
-                  return filas.some((otraFila) => {
-                    return (
-                      otraFila !== fila &&
-                      tipoPlatoPorFila[otraFila] === "PLATO DE FONDO" &&
-                      data[encabezadoNormalizado]?.[otraFila] === plato._id
-                    );
-                  });
-                }
-                return (
-                  otroEncabezadoNormalizado !== encabezadoNormalizado &&
-                  Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
-                );
-              });
-              return !yaSeleccionado;
-            }).concat(
-              platosDisponibles[encabezadoNormalizado].filter(
-                (plato) => plato.categoria === "SALSAS"
-              )
-            );
-          }
-          
-          // Restricción: No repetir guarniciones en el mismo día ni en la misma semana
-          if (tipoPlatoFiltrado === "GUARNICIÓN") {
-            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-              const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
-                const otroEncabezadoNormalizado = otroEncabezado
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
-                
-                if (otroEncabezadoNormalizado === encabezadoNormalizado) {
-                  return filas.some((otraFila) => {
-                    return (
-                      otraFila !== fila &&
-                      tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
-                      data[encabezadoNormalizado]?.[otraFila] === plato._id
-                    );
-                  });
-                }
-                return (
-                  otroEncabezadoNormalizado !== encabezadoNormalizado &&
-                  Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
-                );
-              });
-              
-              
-              return !yaSeleccionado;
-            })
-            ;
-          }
-          
-          // Restricción: No repetir ensaladas en el mismo día
-          if (tipoPlatoFiltrado === "ENSALADA") {
-            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-              const yaSeleccionadoEnDia = filas.some((otraFila) => {
-                return (
-                  otraFila !== fila &&
-                  tipoPlatoPorFila[otraFila] === "ENSALADA" &&
-                  data[encabezadoNormalizado]?.[otraFila] === plato._id
-                );
-              });
-              return !yaSeleccionadoEnDia;
-            });
-          }
-
-          // HIPOCALORICO, VEGETARIANA y VEGANA: no repetir en la misma semana
-          if (["HIPOCALORICO", "VEGANA/VEGETARIANA"].includes(tipoPlatoFiltrado)) {
-            opcionesFiltradas = opcionesFiltradas.filter((plato) => {
-              const yaSeleccionadoEnSemana = encabezados.slice(1).some((otroEncabezado) => {
-                const otroEncabezadoNormalizado = otroEncabezado
-                  .normalize("NFD")
-                  .replace(/[\u0300-\u036f]/g, "");
-    
-                if (otroEncabezadoNormalizado !== encabezadoNormalizado) {
-                  return (
-                    !data[otroEncabezadoNormalizado]?.["VEGETARIANO"] === plato._id ||
-                    !data[otroEncabezadoNormalizado]?.["VEGANO"] === plato._id ||
-                    Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
-                  );
-                }
-                return false;
-              });
-              return !yaSeleccionadoEnSemana;
-            });
-          }
-          opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
-        } else {
-          opciones[fila][encabezadoNormalizado] = [];
-        }
-      });
-    });
-    return opciones;
-  }, [platosDisponibles, filtrandoPorEstructura, estructuraSemana, semanaEstructura]);
 
   const groupDataByWeekAndDay = (data) => {
     return data.reduce((acc, item) => {
@@ -565,27 +486,146 @@ const Minutas = () => {
     }, {});
   };
 
-  const handleViewStructureByWeek = async (semana) => {
-    try {
-      const response = await axios.get('http://localhost:3000/api/v1/estructura', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  const opcionesFiltradasPorFila = useMemo(() => {
+    const opciones = {};
+  
+    // Función para aplicar restricciones adicionales
+    const aplicarRestricciones = (opcionesIniciales, fila, encabezadoNormalizado, tipoPlatoFiltrado) => {
+      return opcionesIniciales.filter((plato) => {
+        // No repetir platos de fondo en la misma semana
+        if (tipoPlatoFiltrado === "PLATO DE FONDO") {
+          const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+            const otroEncabezadoNormalizado = otroEncabezado.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+              return filas.some((otraFila) => {
+                return (
+                  otraFila !== fila &&
+                  tipoPlatoPorFila[otraFila] === "PLATO DE FONDO" &&
+                  data[encabezadoNormalizado]?.[otraFila] === plato._id
+                );
+              });
+            }
+            return (
+              otroEncabezadoNormalizado !== encabezadoNormalizado &&
+              Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+            );
+          });
+          return !yaSeleccionado;
+        }
+  
+        // No repetir guarniciones en el mismo día ni en la misma semana
+        if (tipoPlatoFiltrado === "GUARNICIÓN") {
+          const yaSeleccionado = encabezados.slice(1).some((otroEncabezado) => {
+            const otroEncabezadoNormalizado = otroEncabezado.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (otroEncabezadoNormalizado === encabezadoNormalizado) {
+              return filas.some((otraFila) => {
+                return (
+                  otraFila !== fila &&
+                  tipoPlatoPorFila[otraFila] === "GUARNICIÓN" &&
+                  data[encabezadoNormalizado]?.[otraFila] === plato._id
+                );
+              });
+            }
+            return (
+              otroEncabezadoNormalizado !== encabezadoNormalizado &&
+              Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id)
+            );
+          });
+          return !yaSeleccionado;
+        }
+  
+        // Restricción: No repetir ensaladas en el mismo día
+        if (tipoPlatoFiltrado === "ENSALADA") {
+          const yaSeleccionadoEnDia = filas.some((otraFila) => {
+            return (
+              otraFila !== fila &&
+              tipoPlatoPorFila[otraFila] === "ENSALADA" &&
+              data[encabezadoNormalizado]?.[otraFila] === plato._id
+            );
+          });
+          return !yaSeleccionadoEnDia;
+        }
+  
+        // HIPOCALORICO, VEGETARIANA y VEGANA: no repetir en la misma semana
+        if (["HIPOCALORICO", "VEGANA/VEGETARIANA"].includes(tipoPlatoFiltrado)) {
+          const yaSeleccionadoEnSemana = encabezados.slice(1).some((otroEncabezado) => {
+            const otroEncabezadoNormalizado = otroEncabezado.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (otroEncabezadoNormalizado !== encabezadoNormalizado) {
+              return Object.values(data[otroEncabezadoNormalizado] || {}).includes(plato._id);
+            }
+            return false;
+          });
+          return !yaSeleccionadoEnSemana;
+        }
+  
+        return true;
       });
-
-      const groupedData = groupDataByWeekAndDay(response.data);
-      setSelectedWeekStructure(groupedData[semana] || {});
-      setOpenStructureModal(true);
-    } catch (error) {
-      console.error("Error al obtener la estructura:", error);
-      if (error.response && error.response.status === 404) {
-        alert(`No se encontraron estructuras para la semana "${semana}".`);
+    };
+  
+    // Función para filtrar por estructura (solo para PLATO DE FONDO y GUARNICIÓN)
+    const filtrarPorEstructura = (opcionesFiltradas, fila, encabezadoNormalizado, tipoPlatoFiltrado) => {
+      if (!["PLATO DE FONDO", "GUARNICIÓN"].includes(tipoPlatoFiltrado)) {
+        return opcionesFiltradas; // No aplicar estructura a otros tipos
       }
+  
+      if (filtrandoPorEstructura && selectedWeekStructure) {
+        const reglasEstructura = selectedWeekStructure[encabezadoNormalizado]?.[fila];
+        if (reglasEstructura && reglasEstructura.length > 0) {
+          return opcionesFiltradas.filter((plato) =>
+            reglasEstructura.some((regla) => {
+              const cumpleFamilia = !regla.familia || plato.familia === regla.familia;
+              const cumpleCorte = !regla.corteqlo || plato.tipo_corte === regla.corteqlo;
+              return cumpleFamilia && cumpleCorte;
+            })
+          );
+        } else {
+          return []; // Si no hay reglas, no mostrar opciones
+        }
+      }
+  
+      return opcionesFiltradas;
+    };
+  
+    // Construcción de las opciones finales
+    filas.forEach((fila) => {
+      const tipoPlatoFiltrado = tipoPlatoPorFila[fila];
+      encabezados.slice(1).forEach((encabezado) => {
+        const encabezadoNormalizado = encabezado.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+        if (!opciones[fila]) {
+          opciones[fila] = {};
+        }
+  
+        // Paso 1: Filtrar por categoría
+        let opcionesFiltradas = platosDisponibles[encabezadoNormalizado]?.filter(
+          (plato) => plato.categoria === tipoPlatoFiltrado
+        ) || [];
+  
+        // Paso 2: Aplicar restricciones adicionales
+        opcionesFiltradas = aplicarRestricciones(opcionesFiltradas, fila, encabezadoNormalizado, tipoPlatoFiltrado);
+  
+        // Paso 3: Aplicar filtrado por estructura (solo para PLATO DE FONDO y GUARNICIÓN)
+        opcionesFiltradas = filtrarPorEstructura(opcionesFiltradas, fila, encabezadoNormalizado, tipoPlatoFiltrado);
+  
+        opciones[fila][encabezadoNormalizado] = opcionesFiltradas;
+      });
+    });
+  
+    return opciones;
+  }, [platosDisponibles, filtrandoPorEstructura, selectedWeekStructure, data]);
+  
+    const handleViewStructureByWeek = () => {
+    if (!selectedWeekStructure) {
+      alert("No hay estructura disponible para esta semana.");
+      return;
     }
+    setOpenStructureModal(true); // Abrir el modal
   };
 
   const handleCloseStructureModal = () => {
     setOpenStructureModal(false);
-    setSelectedWeekStructure(null);
   };
+
 
   const getValueForAutocomplete = (row, col) => {
     const dia = col.toUpperCase();
@@ -613,7 +653,7 @@ const Minutas = () => {
             width: '100%',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
           }}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
+           <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Box
                 sx={{
                   display: 'flex',
@@ -629,34 +669,57 @@ const Minutas = () => {
                   width: '100rem',
                 }}
               >
-                <Box display={'flex'} gap={1}>
+                <Box display={'flex'} gap={1} justifyContent={'initial'}>
                   <Typography color='#2E8B57' mt={2} width={'10em'}>{filtrandoPorEstructura ? "Filtrando activado" : "Filtrando desactivado"}</Typography>
-                  <Checkbox checked={filtrandoPorEstructura} onChange={handleCheckChange}></Checkbox>
-                  <TextField label="Estructura N° (1-5)" type="number" value={semanaEstructura} onChange={handleStructureWeekChange} sx={{ width: '9rem' }} disabled={!filtrandoPorEstructura} />
+                  <TextField label="Sem. Estructura" type="number" value={semanaEstructura} onChange={handleStructureWeekChange} sx={{ width: '7rem' }} disabled={!filtrandoPorEstructura} />
                   <Button 
                     variant='contained'
                     sx={{
-                      height: '3rem',
+                      height: '3.5rem',
                       borderRadius: '4px', 
-                      mt: 0.2, 
-                      fontSize: '1rem',
+                      fontSize: '12px',
+                      width: '100px'
                     }}
                     onClick={() => handleViewStructureByWeek(semanaEstructura)}
                   >
                     Ver Estructura
                   </Button>
+                  <Checkbox checked={filtrandoPorEstructura} onChange={handleCheckChange}></Checkbox>
                 </Box>
-                <Box display={'flex'} gap={5}>
-                  <TextField label="Nombre" type="text" value={`Minuta Semana ${week} - ${year}`} sx={{ width: '15rem' }} />
-                  <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '7rem' }} />
-                  <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '9rem' }} />
+                <Typography label="Nombre" type="text" sx={{ width: '15rem', color: "#1C2D58", fontSize: "20px", ml: 2 }}>{`Minuta Semana ${week} - ${year}`} </Typography>
+                <Box display={'flex'} gap={2}>
+                  <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '5rem'}} />
+                  <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '7rem' }} />
+                  <FormControl sx={{ width: '12rem', mt: 0.4 }}>
+                    <InputLabel>Sucursal</InputLabel>
+                    {loading ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <Select
+                        value={sucursal}
+                        onChange={handleSucursalChange}
+                        label="Sucursal"
+                        sx={{
+                          '& .MuiSelect-select': {
+                            paddingTop: '10.5px', // Ajuste para centrar el texto
+                          },
+                        }}
+                      >
+                        {sucursales.map((s) => (
+                          <MenuItem key={s._id} value={s._id}>
+                            {s.nombresucursal}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  </FormControl>
                   <Button
                     variant="contained"
                     sx={{
-                      height: '3rem',
+                      height: '3.5rem',
                       borderRadius: '4px', 
-                      mt: 0.2, 
-                      fontSize: '1rem',
+                      fontSize: '12px',
+                      width: '100px'
                     }}
                     onClick={handleCrearMinuta}
                   >
@@ -665,6 +728,7 @@ const Minutas = () => {
                 </Box>
               </Box>
             </LocalizationProvider>
+
 
             <TableContainer component={Paper} sx={{ width: '100%', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
               <Table sx={{ width: '100%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">

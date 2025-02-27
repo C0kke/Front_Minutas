@@ -30,6 +30,7 @@ const WeekStructureModal = ({ open, onClose, weekStructure }) => {
           p: 4,
           overflowY: 'auto',
           maxHeight: '90vh',
+          borderRadius: '15px'
         }}
       >
         <Typography variant="h6" gutterBottom>

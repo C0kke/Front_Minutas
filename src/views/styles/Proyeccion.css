@@ -102,7 +102,6 @@
 
 .fecha-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 1rem;
   background: white;
@@ -110,6 +109,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid #e0e0e0;
+  width: 80%;
 }
 
 .fecha-item:hover {
@@ -122,19 +122,25 @@
   font-weight: 500;
 }
 
-.ver-detalle-btn {
+.exportar-dia-btn {
   background: #1a365d; /* Azul oscuro */
   color: white;
   border: none;
-  padding: 0.5rem 1.5rem;
+  padding: 0 1rem;
+  height: 90%;
+  margin-top: 0.5%;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-weight: 500;
+  font-weight: 200;
 }
 
-.ver-detalle-btn:hover {
-  background: #122547;
+.proyeccion-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  gap: 2;
 }
 
 /* Modal */
@@ -239,7 +245,7 @@
   border-radius: 0 0 12px 12px;
 }
 
-.butoon-editar-modal-btn {
+.editar-btn {
   background: #e6ca17; /* Verde oscuro */
   color: white;
   padding: 0.75rem 2rem;

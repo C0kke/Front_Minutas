@@ -146,33 +146,35 @@ const Minutas = () => {
     fetchPlatos();
   }, [navigate]);
 
-    // Obtención de sucursales
-    useEffect(() => {
-      const fetchSucursales = async () => {
-        try {
-          const response = await axios.get(`${BACKEND_URL}sucursal`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setSucursales(response.data);
-        } catch (error) {
-          console.error("Error al obtener sucursales:", error);
-          if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.setItem('error', 'error de sesion');
-            navigate("/login");
-          } else if (error.response) {
-            setError(new Error(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`));
-          } else if (error.request) {
-            setError(new Error("No se recibió respuesta del servidor."));
-          } else {
-            setError(new Error("Error al configurar la solicitud."));
-          }
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchSucursales();
-    }, [navigate]);
+  useEffect(() => {
+  const fetchSucursales = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}sucursal`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const sucursalesData = response.data;
+
+      // Establecer "Central" como sucursal por defecto
+      const sucursalCentral = sucursalesData.find(
+        (s) => s.nombresucursal.toLowerCase() === 'central'
+      );
+      setSucursales(sucursalesData);
+      setSucursal(sucursalCentral || null); // Usar "Central" si existe
+    } catch (error) {
+      console.error("Error al obtener sucursales:", error);
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.setItem('error', 'error de sesion');
+        navigate("/login");
+      } else {
+        setError(new Error("Error al configurar la solicitud."));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchSucursales();
+}, [navigate]);
   
   useEffect(() => {
     const loadInitialWeekStructure = async () => {
@@ -251,8 +253,8 @@ const Minutas = () => {
     setFiltrandoPorEstructura(event.target.checked);
   };
 
-  const handleSucursalChange = (event) => {
-    setSucursal(event.target.value.nombresucursal);
+  const handleSucursalChange = (event, value) => {
+    setSucursal(value); // Almacena el objeto completo de la sucursal
   };
 
   const handleAutocompleteChange = (event, value, row, col) => {
@@ -294,10 +296,16 @@ const Minutas = () => {
 
   const handleCrearMinuta = async () => {
     setLoading(true);
+
+    if (!sucursal) {
+      alert("Debe seleccionar una sucursal");
+      return;
+    }
+
     const firstDayOfWeek = dayjs().year(year).isoWeek(week).startOf('isoWeek');
     let datosCompletos = true;
     const minutasAEnviar = [];
-
+  
     // Verificar que los datos estén completos
     for (let i = 1; i < encabezados.length; i++) {
       const dia = encabezados[i];
@@ -306,12 +314,12 @@ const Minutas = () => {
         break;
       }
     }
-
+  
     if (datosCompletos) {
       for (let i = 1; i < encabezados.length; i++) {
         const dia = encabezados[i];
         const listaplatos = [];
-
+  
         if (data && data[dia]) {
           Object.entries(data[dia]).forEach(([fila, platoId]) => {
             if (platoId) {
@@ -322,149 +330,67 @@ const Minutas = () => {
             }
           });
         }
-
+  
         const fechaDia = firstDayOfWeek.add(i - 1, 'day').toISOString();
+        const nombreMinuta = `Minuta ${dia} Semana ${week} - ${sucursal?.nombresucursal || ''} - ${year}`;
 
         const minutaDia = {
-          nombre: `Minuta ${dia} Semana ${week}`,
+          nombre: nombreMinuta,
           fecha: fechaDia,
           semana: week,
           year: year,
-          id_sucursal: sucursal,
+          id_sucursal: sucursal?._id, // Enviar el _id de la sucursal
           listaplatos: listaplatos,
           aprobado: false,
         };
         minutasAEnviar.push(minutaDia);
       }
-
-      // Validacion de errores
-      let hayErrores = false;
-      const ensaladas = {};
-      for (const minuta of minutasAEnviar) {
-        // Error: Minuta vacia
-        if (minuta.listaplatos.length === 0) {
-          hayErrores = true;
-          alert(`Error : La minuta para ${minuta.nombre} no tiene platos.`);
+  
+      // Validación de errores y envío de datos...
+      try {
+        const token = localStorage.getItem('token')?.trim();
+        const response = await axios.post(`${BACKEND_URL}menudiario/validate-menus`, minutasAEnviar, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        if (response.data.valid === true) {
+          for (const minuta of minutasAEnviar) {
+            await axios.post(`${BACKEND_URL}menudiario`, minuta, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+          }
+          alert(`MINUTA PARA SEMANA ${week} - ${sucursal?.nombresucursal || ''} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
+          setLoading(false);
+          navigate('/home');
+        } else {
+          console.log(response.data);
+          alert(response.data.errors[0].error);
           setLoading(false);
         }
-
-        const fechaISO = dayjs(minuta.fecha).format('YYYY-MM-DD');
-        ensaladas[fechaISO] = [];
-
-        minuta.listaplatos.forEach(plato => {
-          if (plato.fila.startsWith("SALAD BAR")) {
-            ensaladas[fechaISO].push(plato.platoId);
-          }
-        });
-      }
-
-      // Verificar combinaciones de ensaladas repetidas en otros dias
-      for (const fecha of Object.keys(ensaladas)) {
-          const combinacionActual = ensaladas[fecha];
-          if (combinacionActual && combinacionActual.length > 0) { 
-              for (const otraFecha of Object.keys(ensaladas)) {
-                  if (fecha !== otraFecha) {
-                      const otraCombinacion = ensaladas[otraFecha];
-                      const sonIguales = combinacionActual.length === otraCombinacion.length &&
-                          combinacionActual.every(ensaladaId => otraCombinacion.includes(ensaladaId));
-          
-                      if (sonIguales) {
-                          hayErrores = true;
-                          const fechaActual = dayjs(fecha).format('dddd DD [de] MMMM');
-                          const otraFechaFormateada = dayjs(otraFecha).format('dddd DD [de] MMMM');
-                          alert(`Error: La combinación de ensaladas del ${fechaActual} ya existe en la fecha ${otraFechaFormateada}.`);
-                          setLoading(false);
-                          break; 
-                      }
-                  }
-              }
-          }
-          if (hayErrores) break; 
-      }
-
-      if (filtrandoPorEstructura && estructuraSemana) {
-        for (let i = 1; i < encabezados.length; i++) {
-          const dia = encabezados[i];
-          const diaNormalizado = dia.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-          const estructuraDia = estructuraSemana[diaNormalizado];
-    
-          if (estructuraDia) {
-            for (const fila of filas) {
-              const categoria = tipoPlatoPorFila[fila];
-              const platoId = data[diaNormalizado]?.[fila];
-    
-              if (platoId) {
-                const plato = platos.find(p => p._id === platoId);
-                if (plato) {
-                  const familia = plato.familia;
-                  const familiasPermitidas = estructuraDia[categoria]?.map(item => item.familia);
-    
-                  if (!familiasPermitidas.includes(familia)) {
-                    hayErrores = true;
-                    alert(`Error: El plato seleccionado para ${dia} en ${fila} no cumple con la estructura.`);
-                    setLoading(false);
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      if (!hayErrores) {
-        try {
-          const token = localStorage.getItem('token')?.trim();
-          const response = await axios.post(`${BACKEND_URL}menudiario/validate-menus`, minutasAEnviar, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
-          });
-          if (response.data.valid === true){
-            for (const minuta of minutasAEnviar) {
-              await axios.post(`${BACKEND_URL}menudiario`, minuta, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  'Content-Type': 'application/json',
-                }
-              }); 
-            }
-            alert(`MINUTA PARA SEMANA ${week} - ${year} CREADA CON ÉXITO Y ESPERA APROBACIÓN`);
-            setLoading(false);
-            navigate('/home');
-          } else {
-           alert(response.data.map(
-            (er) => er.error
-           ));
-           console.log(response.data)
-            setLoading(false);
-          }
-        } catch (error) {
-          console.error("Error al enviar las minutas:", error);
-
-          if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.setItem('error', 'error de sesion');
-            navigate("/login");
-          } else if (error.response) {
-            alert(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`);
-          } else if (error.request) {
-            alert("No se recibió respuesta del servidor.");
-            setLoading(false);
-          } else {
-            alert("Se produjo un error al crear la minuta. Por favor, inténtalo de nuevo.");
-            setLoading(false);
-          }
-        }
-      } else {
-        if(hayErrores){
-          alert("Se encontraron errores en algunas minutas. No se creará ninguna minuta.");
+      } catch (error) {
+        console.error("Error al enviar las minutas:", error);
+  
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.setItem('error', 'error de sesion');
+          navigate("/login");
+        } else if (error.response) {
+          alert(`Error del servidor: ${error.response.status} - ${error.response.data.message || 'Detalles no disponibles'}`);
+        } else if (error.request) {
+          alert("No se recibió respuesta del servidor.");
           setLoading(false);
         } else {
-          alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
+          alert("Se produjo un error al crear la minuta. Por favor, inténtalo de nuevo.");
           setLoading(false);
         }
+      } finally {
+        setLoading(false);
       }
     } else {
       alert("Faltan datos para completar la minuta de la semana. Por favor, rellene todos los campos.");
@@ -626,7 +552,6 @@ const Minutas = () => {
     setOpenStructureModal(false);
   };
 
-
   const getValueForAutocomplete = (row, col) => {
     const dia = col.toUpperCase();
     const platoId = data[dia]?.[row];
@@ -686,31 +611,23 @@ const Minutas = () => {
                   </Button>
                   <Checkbox checked={filtrandoPorEstructura} onChange={handleCheckChange}></Checkbox>
                 </Box>
-                <Typography label="Nombre" type="text" sx={{ width: '15rem', color: "#1C2D58", fontSize: "20px", ml: 2 }}>{`Minuta Semana ${week} - ${year}`} </Typography>
+                <Typography label="Nombre" type="text" sx={{ width: '20rem', color: "#1C2D58", fontSize: "20px", ml: 2 }}> {`Minuta Semana ${week} - ${sucursal?.nombresucursal || ''} - ${year}`} </Typography>
                 <Box display={'flex'} gap={2}>
                   <TextField label="Año" type="number" value={year} onChange={handleYearChange} sx={{ width: '5rem'}} />
                   <TextField label="Semana (1-52)" type="number" value={week} onChange={handleWeekChange} sx={{ width: '7rem' }} />
                   <FormControl sx={{ width: '12rem', mt: 0.4 }}>
-                    <InputLabel>Sucursal</InputLabel>
                     {loading ? (
                       <CircularProgress size={24} />
                     ) : (
-                      <Select
-                        value={sucursal}
-                        onChange={handleSucursalChange}
-                        label="Sucursal"
-                        sx={{
-                          '& .MuiSelect-select': {
-                            paddingTop: '10.5px', // Ajuste para centrar el texto
-                          },
-                        }}
-                      >
-                        {sucursales.map((s) => (
-                          <MenuItem key={s._id} value={s._id}>
-                            {s.nombresucursal}
-                          </MenuItem>
-                        ))}
-                      </Select>
+                      <Autocomplete
+                        options={sucursales} // Lista de sucursales obtenida del backend
+                        getOptionLabel={(option) => option.nombresucursal} // Mostrar el nombre de la sucursal
+                        value={sucursal} // Valor actual (objeto completo de la sucursal)
+                        onChange={handleSucursalChange} // Controlador para manejar la selección
+                        renderInput={(params) => (
+                          <TextField {...params} label="Seleccionar Sucursal" />
+                        )}
+                      />
                     )}
                   </FormControl>
                   <Button
@@ -734,14 +651,14 @@ const Minutas = () => {
               <Table sx={{ width: '100%', fontFamily: 'Roboto, sans-serif', margin: '0 auto', border: '1px solid rgb(4, 109, 0)', minWidth: '1000px' }} aria-label="simple table">
               <TableHead>
               <TableRow>
-                <TableCell key="empty-cell" sx={{backgroundColor: '#2E8B57', width: '15%'}}></TableCell>
+                <TableCell key="empty-cell" sx={{backgroundColor: '#009b15', width: '15%'}}></TableCell>
                 {weekDays.map((day, index) => (
                   <TableCell
                     key={index}
                     align="center"
                     sx={{
                       width: '17%',
-                      backgroundColor: '#2E8B57',
+                      backgroundColor: '#009b15',
                       color: 'white',
                       textTransform: 'uppercase',
                       fontWeight: 'bold',

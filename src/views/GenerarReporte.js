@@ -22,11 +22,12 @@ import Header from '../components/Header'
 import moment from 'moment';
 import 'moment-timezone';
 import CloseIcon from '@mui/icons-material/Close';
+import mongoose from 'mongoose';
 
 const GenerarReporte = () => {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
-  const [sucursal, setSucursal] = useState([]);
+  const [sucursal, setSucursal] = useState(null);
   const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingBtn, setLoadingBtn] = useState(false);
@@ -68,19 +69,30 @@ const GenerarReporte = () => {
   };
 
   const handleFechaChange = async () => {
-    if (fechaInicio && fechaFin ) {
+    if (!sucursal) {
+      alert("Debe seleccionar una sucursal antes de continuar.");
+      return;
+    }
+  
+    if (fechaInicio && fechaFin) {
       setLoading(true);
       try {
         const response = await axios.get(`${BACKEND_URL}menudiario/reporte/obtener-platos`, {
           params: {
-            fechaInicio: fechaInicio,
-            fechaFin: fechaFin,
+            fechaInicio,
+            fechaFin,
+            sucursalId: sucursal?._id.toString(),
           },
           headers: {
             Authorization: `Bearer ${token}`,
-          }
+          },
         });
-
+  
+        // Validar la respuesta
+        if (!response.data || !Array.isArray(response.data)) {
+          throw new Error("La respuesta del servidor no contiene datos válidos.");
+        }
+  
         // Agrupar platos por fecha
         const platosAgrupados = {};
         response.data.forEach(menu => {
@@ -94,15 +106,15 @@ const GenerarReporte = () => {
               platosAgrupados[fecha].push({
                 id: plato.id,
                 nombre: plato.nombre,
-                cantidad: 0
+                cantidad: 0,
               });
             }
           });
         });
         setPlatosPorFecha(platosAgrupados);
-
       } catch (error) {
         console.error("Error al obtener platos:", error);
+        alert("Ocurrió un error al cargar los platos. Por favor, inténtalo de nuevo.");
         setPlatosPorFecha({});
       } finally {
         setLoading(false);
@@ -141,16 +153,10 @@ const GenerarReporte = () => {
       return;
     }
   
-    const sucursalObj = sucursales.find(s => s._id === sucursal);
-    if (!sucursalObj) {
-      alert("Es obligatorio seleccionar una sucursal antes de continuar.");
-      return;
-    }
-  
     const reportData = {
       fechaInicio,
       fechaFin,
-      sucursal: sucursalObj.nombresucursal,
+      sucursal: sucursal.nombresucursal,
       platosConCantidad: Object.entries(platosPorFecha).flatMap(([fecha, platos]) =>
         platos
           .filter(plato => plato.cantidad > 0)
@@ -164,7 +170,7 @@ const GenerarReporte = () => {
   
     const proyeccionData = {
       fecha: new Date(), 
-      nombreSucursal: sucursalObj.nombresucursal,
+      nombreSucursal: sucursal.nombresucursal,
       lista: Object.entries(platosPorFecha).flatMap(([fecha, platos]) =>
         platos
           .filter(plato => plato.cantidad > 0)
@@ -189,7 +195,7 @@ const GenerarReporte = () => {
         }
       );
   
-      alert(`Reporte para ${sucursalObj.nombresucursal} generado correctamente en la ruta 'Downloads/archivos'`);
+      alert(`Reporte para ${sucursal.nombresucursal} generado correctamente en la ruta 'Downloads/archivos'`);
   
       // Crear la proyección
       await axios.post(
@@ -213,7 +219,9 @@ const GenerarReporte = () => {
   };
 
   const handleSucursalChange = (event) => {
-    setSucursal(event.target.value);
+    const selectedId = event.target.value;
+    const selectedSucursal = sucursales.find(s => s._id === selectedId);
+    setSucursal(selectedSucursal || null);
   };
 
   return (
@@ -271,6 +279,27 @@ const GenerarReporte = () => {
             </div>
 
             <div className="form-group">
+              <FormControl sx={{ width: '100%' }}>
+                <InputLabel>Elegir Sucursal</InputLabel>
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  <Select
+                  value={sucursal ? sucursal._id : ""}
+                  onChange={handleSucursalChange}
+                  fullWidth
+                  >
+                    {sucursales.map((s) => (
+                      <MenuItem key={s._id} value={s._id}>
+                        {s.nombresucursal}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              </FormControl>
+            </div>
+
+            <div className="form-group">
               <Button variant="contained" onClick={handleFechaChange}>
                 Cargar Platos
               </Button>
@@ -325,26 +354,6 @@ const GenerarReporte = () => {
                       </AccordionDetails>
                     </Accordion>
                   ))}
-                  <div className="form-group">
-                    <FormControl sx={{ width: '100%' }}>
-                      <InputLabel>Elegir Sucursal</InputLabel>
-                      {loading ? (
-                        <CircularProgress size={24} />
-                      ) : (
-                        <Select
-                          value={sucursal.nombresucursal}
-                          onChange={handleSucursalChange}
-                          label="Sucursal"
-                        >
-                          {sucursales.map((s) => (
-                            <MenuItem key={s._id} value={s._id}>
-                              {s.nombresucursal}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      )}
-                    </FormControl>
-                  </div>
                 </div>
               )
             )}

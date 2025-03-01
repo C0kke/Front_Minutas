@@ -12,7 +12,9 @@ const MenuSemanalAprobacion = () => {
   const [loading, setLoading] = useState(true);
   const [loadingBtn, setLoadingBtn] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState(null);
-  const [selectedSemana, setSelectedSemana] = useState(null);
+  const [selectedSemanaSucursal, setSelectedSemanaSucursal] = useState(null);
+  const [sucursalesDict, setSucursalesDict] = useState({});
+
   const [error, setError] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [mensaje, setMensaje] = useState('');
@@ -41,29 +43,55 @@ const MenuSemanalAprobacion = () => {
     fetchMenusPendientes();
   }, [actualizado, token]);
 
-  const agruparPorSemana = (menus) => {
-    const menusPorSemana = {};
-    menus.forEach((menu) => {
-      const semana = moment(menu.fecha).week();
-      const año = moment(menu.fecha).year();
-      const key = `${año}-${semana}`;
-      if (!menusPorSemana[key]) {
-        menusPorSemana[key] = [];
+  useEffect(() => {
+    const fetchSucursales = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}sucursal`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const dict = {};
+        response.data.forEach((sucursal) => {
+          dict[sucursal._id] = sucursal.nombresucursal;
+        });
+        setSucursalesDict(dict);
+      } catch (error) {
+        console.error("Error al obtener sucursales:", error);
       }
-      menusPorSemana[key].push(menu);
-    });
-    return Object.entries(menusPorSemana).map(([key, menus]) => {
-      const [año, semana] = key.split('-');
-      return { _id: { año: parseInt(año), semana: parseInt(semana) }, menus };
-    });
-  };
+    };
+    fetchSucursales();
+  }, [token]);
+
+  const agruparPorSemanaYSucursal = (menus) => {
+  const menusPorSemanaYSucursal = {};
+  menus.forEach((menu) => {
+    const semana = moment(menu.fecha).week();
+    const año = moment(menu.fecha).year();
+    const sucursal = sucursalesDict[menu.id_sucursal._id] || '';
+    const key = `${año}-${semana}-${sucursal}`;
+    if (!menusPorSemanaYSucursal[key]) {
+      menusPorSemanaYSucursal[key] = [];
+    }
+    menusPorSemanaYSucursal[key].push(menu);
+  });
+
+  // Verificación temporal
+  console.log('Menus agrupados:', menusPorSemanaYSucursal);
+
+  return Object.entries(menusPorSemanaYSucursal).map(([key, menus]) => {
+    const [año, semana, sucursal] = key.split('-');
+    return {
+      _id: { año: parseInt(año), semana: parseInt(semana), sucursal },
+      menus,
+    };
+  });
+};
 
   const handleAprobar = async () => {
-    if (selectedSemana) {
+    if (selectedSemanaSucursal) {
       try {
-        setLoadingBtn(false);
+        setLoadingBtn(true);
         await Promise.all(
-          selectedSemana.menus.map(async (menu) => {
+          selectedSemanaSucursal.menus.map(async (menu) => {
             await axios.patch(
               `${BACKEND_URL}menudiario/Verificar/aprobado/${menu._id}`,
               { aprobado: true },
@@ -73,32 +101,36 @@ const MenuSemanalAprobacion = () => {
         );
         setMenusPendientes((prevState) =>
           prevState.map((menu) =>
-            selectedSemana.menus.some((m) => m._id === menu._id)
+            selectedSemanaSucursal.menus.some((m) => m._id === menu._id)
               ? { ...menu, aprobado: true }
               : menu
           )
         );
-        alert(`Minuta de la semana ${selectedSemana._id.semana} aprobado exitosamente`);
+        alert(`Minuta de la semana ${selectedSemanaSucursal._id.semana} - ${selectedSemanaSucursal._id.sucursal} aprobada exitosamente`);
         setSelectedMenu(null);
-        setSelectedSemana(null);
+        setSelectedSemanaSucursal(null);
         setError(null);
         navigate('/home');
       } catch (error) {
         console.error('Error al aprobar el menú:', error);
         setError('Hubo un error al aprobar el menú.');
       } finally {
-        setLoadingBtn(false)
+        setLoadingBtn(false);
       }
     }
   };
 
-  const handleSemanaClick = (semana) => {
-    if (selectedSemana && selectedSemana._id.semana === semana._id.semana) {
-      // Si la semana ya está seleccionada, la deseleccionamos
-      setSelectedSemana(null);
+  const handleSemanaSucursalClick = (semanaSucursal) => {
+    if (
+      selectedSemanaSucursal &&
+      selectedSemanaSucursal._id.semana === semanaSucursal._id.semana &&
+      selectedSemanaSucursal._id.sucursal === semanaSucursal._id.sucursal
+    ) {
+      // Si ya está seleccionada, deseleccionar
+      setSelectedSemanaSucursal(null);
     } else {
-      // Si seleccionamos una semana diferente, cerramos la anterior y abrimos la nueva
-      setSelectedSemana(semana);
+      // Seleccionar nueva semana y sucursal
+      setSelectedSemanaSucursal(semanaSucursal);
     }
   };
 
@@ -107,24 +139,24 @@ const MenuSemanalAprobacion = () => {
   };
 
   const handleEnviarMensaje = async () => {
-    if (selectedSemana) {
+    if (selectedSemanaSucursal) {
       try {
-        setLoadingBtn(true)
+        setLoadingBtn(true);
         await axios.patch(
-          `${BACKEND_URL}menudiario/${selectedSemana.menus[0]._id}/mensaje`,
+          `${BACKEND_URL}menudiario/${selectedSemanaSucursal.menus[0]._id}/mensaje`,
           { mensaje },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         alert('Mensaje enviado exitosamente');
         setOpenModal(false);
-        setSelectedSemana(null);
+        setSelectedSemanaSucursal(null);
         setMensaje('');
         setActualizado(true);
       } catch (error) {
         console.error('Error al enviar el mensaje:', error);
         setError('Hubo un error al enviar el mensaje.');
       } finally {
-        setLoadingBtn(false)
+        setLoadingBtn(false);
       }
     }
   };
@@ -133,24 +165,24 @@ const MenuSemanalAprobacion = () => {
     return <div>Cargando menús...</div>;
   }
 
-  const menusAgrupados = agruparPorSemana(menusPendientes);
+  const menusAgrupados = agruparPorSemanaYSucursal(menusPendientes);
 
   return (
     <Box>
       <Header />
       <div className="menu-pendiente">
-        <h1>Menús Pendientes de Aprobación</h1>
-        {error && <Alert severity="error">{error}</Alert>}
+      <h1 className="title" style={{ color: '#008000' }}>Menús Pendientes de Aprobación</h1>
+      {error && <Alert severity="error">{error}</Alert>}
         {menusPendientes.length === 0 ? (
           <p>No hay menús pendientes de aprobación.</p>
         ) : (
           <div>
             <ul>
-              {menusAgrupados.map((semana) => (
-                <li key={`${semana._id.año}-${semana._id.semana}`}>
+              {menusAgrupados.map((semanaSucursal) => (
+                <li style={{justifyContent: "center"}} key={`${semanaSucursal._id.año}-${semanaSucursal._id.semana}-${semanaSucursal._id.nombreSucursal}`}>
                   <Box className="item">
                     <Button
-                      onClick={() => handleSemanaClick(semana)}
+                      onClick={() => handleSemanaSucursalClick(semanaSucursal)}
                       className="semanaContainer"
                       sx={{
                         width: '15rem',
@@ -159,63 +191,65 @@ const MenuSemanalAprobacion = () => {
                         my: '2px',
                         borderRadius: '25px',
                         backgroundColor:
-                          semana.menus[0]?.mensaje !== 'sin mensaje' ? '#FB8C00' : '#008000',
+                          semanaSucursal.menus[0]?.mensaje !== 'sin mensaje' ? '#FB8C00' : '#008000',
                         '&:hover': {
                           backgroundColor:
-                            semana.menus[0]?.mensaje !== 'sin mensaje' ? '#FB8C00' : '#008000',
+                            semanaSucursal.menus[0]?.mensaje !== 'sin mensaje' ? '#FB8C00' : '#008000',
                         },
                       }}
                     >
-                      Semana {semana._id.semana} - {semana._id.año}
+                      Semana {semanaSucursal._id.semana} - {semanaSucursal._id.sucursal}
                     </Button>
                     <p>
-                      {semana.menus[0]?.mensaje !== 'sin mensaje' ? 'Esperando edición' : ''}
+                      {semanaSucursal.menus[0]?.mensaje !== 'sin mensaje' ? 'Esperando edición' : ''}
                     </p>
                   </Box>
-                  {selectedSemana && selectedSemana._id.semana === semana._id.semana && (
-                    <>
-                      <TablaMinutaAprobacion semana={selectedSemana} tableRef={tableRef} />
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          marginBottom: 50,
-                        }}
-                      >
-                        <Button
-                          className="buttons"
-                          onClick={() => handleAprobar()}
-                          disabled={loadingBtn}
-                          sx={{
-                            mt: 2,
-                            backgroundColor: '#4CAF50',
-                            color: 'white',
-                            '&:hover': {
-                              backgroundColor: '#45a049',
-                            },
+                  {selectedSemanaSucursal &&
+                    selectedSemanaSucursal._id.semana === semanaSucursal._id.semana &&
+                    selectedSemanaSucursal._id.sucursal === semanaSucursal._id.sucursal && (
+                      <>
+                        <TablaMinutaAprobacion semana={selectedSemanaSucursal} tableRef={tableRef} />
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: 50,
                           }}
                         >
-                          Aprobar Menú
-                        </Button>
-                        <Button
-                          className="buttons"
-                          onClick={() => handleMensaje()}
-                          disabled={loadingBtn}
-                          sx={{
-                            mt: 2,
-                            backgroundColor: 'FF9800', // Color naranja
-                            color: 'white',
-                            '&:hover': {
-                              backgroundColor: '#FB8C00', // Más oscuro al pasar el mouse
-                            },
-                          }}
-                        >
-                          RECHAZAR MENÚ
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                          <Button
+                            className="buttons"
+                            onClick={() => handleAprobar()}
+                            disabled={loadingBtn}
+                            sx={{
+                              mt: 2,
+                              backgroundColor: '#4CAF50',
+                              color: 'white',
+                              '&:hover': {
+                                backgroundColor: '#45a049',
+                              },
+                            }}
+                          >
+                            Aprobar Menú
+                          </Button>
+                          <Button
+                            className="buttons"
+                            onClick={() => handleMensaje()}
+                            disabled={loadingBtn}
+                            sx={{
+                              mt: 2,
+                              backgroundColor: '#FF9800', // Color naranja
+                              color: 'white',
+                              '&:hover': {
+                                backgroundColor: '#FB8C00', // Más oscuro al pasar el mouse
+                              },
+                            }}
+                          >
+                            RECHAZAR MENÚ
+                          </Button>
+                        </div>
+                      </>
+                    )}
                 </li>
               ))}
             </ul>
@@ -236,7 +270,7 @@ const MenuSemanalAprobacion = () => {
             borderRadius: 2,
           }}
         >
-          <h2 style={{ color: 'black' }}>Enviar Feedback de Rechazo de minuta</h2>
+          <h2 style={{ color: 'black' }}>Enviar Feedback de Rechazo de Minuta</h2>
           <TextField
             fullWidth
             label="Mensaje de Rechazo"

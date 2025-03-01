@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import './styles/Proyeccion.css';
 import Header from "../components/Header";
-import { CircularProgress, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import dayjs from 'dayjs';
 
 const Proyeccion = () => {
@@ -11,7 +11,7 @@ const Proyeccion = () => {
   const [loadingBtn, setLoadingBtn] = useState(false);
   const [error, setError] = useState(null);
   const [sucursales, setSucursales] = useState([]);
-  const [sucursal, setSucursal] = useState(null);  
+  const [sucursal, setSucursal] = useState(null);
   const [proyeccionesConFechas, setProyeccionesConFechas] = useState({});
   const [cantidadesEditadas, setCantidadesEditadas] = useState({});
   const [editados, setEditados] = useState(false);
@@ -37,7 +37,7 @@ const Proyeccion = () => {
           const fechaB = new Date(b.fecha);
           return fechaB - fechaA; // Orden descendente
         });
-  
+
         setData(sortedProyecciones);
 
         // Inicializar cantidades
@@ -99,7 +99,6 @@ const Proyeccion = () => {
     // Filtrar por fecha
     if (filtroFecha) {
       const fechaFiltrada = dayjs(filtroFecha, 'YYYY-MM-DD').format('DD-MM-YYYY');
-      console.log(fechaFiltrada)
       filtradas = filtradas.filter(proyeccion =>
         proyeccion.lista.some(item => item.fecha === fechaFiltrada)
       );
@@ -165,8 +164,6 @@ const Proyeccion = () => {
   };
 
   const handleFechaClick = (proyeccionId, fecha) => {
-    if (loadingBtn) return;
-    console.log(loadingBtn)
     const proyeccion = data.find(p => p._id === proyeccionId);
     setFechaSeleccionada({
       fecha,
@@ -179,12 +176,6 @@ const Proyeccion = () => {
   const handleExportExcel = async (proyeccionId) => {
     try {
       setLoadingBtn(true);
-      // Buscar el objeto de la proyección
-      const proyeccion = data.find(p => p._id === proyeccionId);
-      if (!proyeccion) {
-        throw new Error('Proyección no encontrada');
-      }
-
       const response = await axios.get(
         `${BACKEND_URL}proyeccion/${proyeccionId}/reporte-insumos`,
         {
@@ -196,7 +187,7 @@ const Proyeccion = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `reporte-insumos-${proyeccion.nombreSucursal}-${proyeccion.fecha}.xlsx`);
+      link.setAttribute('download', `reporte-insumos-${proyeccionId}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -211,12 +202,6 @@ const Proyeccion = () => {
   const handleExportExcelDia = async (proyeccionId, fecha) => {
     try {
       setLoadingBtn(true);
-      // Buscar el objeto de la proyección
-      const proyeccion = data.find(p => p._id === proyeccionId);
-      if (!proyeccion) {
-        throw new Error('Proyección no encontrada');
-      }
-
       const response = await axios.get(
         `${BACKEND_URL}proyeccion/${proyeccionId}/reporte-insumos?fecha=${fecha}`,
         {
@@ -224,11 +209,11 @@ const Proyeccion = () => {
           responseType: 'blob',
         }
       );
-  
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `reporte-insumos-${proyeccion.nombreSucursal}-${fecha}.xlsx`);
+      link.setAttribute('download', `reporte-insumos-${fecha}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -251,8 +236,8 @@ const Proyeccion = () => {
     }
   };
 
-  if (loading) return <div className="loading">Cargando...</div>;
-  if (error) return <div className="error">{error}</div>;
+  if (loading) return <div>Cargando...</div>;
+  if (error) return <div>{error}</div>;
 
   const proyeccionesFiltradas = filtrarProyecciones();
 
@@ -274,20 +259,13 @@ const Proyeccion = () => {
           </div>
           <div className="search-container">
             <label htmlFor="filtro-sucursal">Buscar por Sucursal:</label>
-            <FormControl sx={{width:'200px'}}>
-              <InputLabel>Buscar por Sucursal</InputLabel>
-              <Select
-                value={sucursal || ""} 
-                onChange={handleSucursalChange}
-              >
-                <MenuItem value="">Todas</MenuItem>
-                {sucursales.map((s) => (
-                  <MenuItem key={s._id} value={s.nombresucursal}>
-                    {s.nombresucursal}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <input
+              type="text"
+              id="filtro-sucursal"
+              placeholder="Escribe el nombre de la sucursal..."
+              value={filtroSucursal}
+              onChange={(e) => setFiltroSucursal(e.target.value)}
+            />
           </div>
         </div>
         {/* Listado principal */}
@@ -303,19 +281,17 @@ const Proyeccion = () => {
                   </div>
                   <div className="fechas-list">
                     {fechas.map((fecha) => (
-                      <div className="fecha-item">
+                      <div className="proyeccion-item">
                         <div
                           key={fecha}
-                          className=""
+                          className="fecha-item"
                           onClick={() => handleFechaClick(proyeccion._id, fecha)}
                         >
                           <span className="fecha-text">{fecha}</span>
                         </div>
-                        <div>
-                          <button className="ver-detalle-btn" onClick={() => handleExportExcelDia(proyeccion._id, fecha)} disabled={loadingBtn}>
-                            {loadingBtn ? 'Cargando...' : 'Exportar día'}
-                          </button>
-                        </div>
+                        <button className="exportar-dia-btn" onClick={() => handleExportExcelDia(proyeccion._id, fecha)} disabled={loadingBtn}>
+                          {loadingBtn ? 'Cargando...' : 'Exportar día'}
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -333,7 +309,7 @@ const Proyeccion = () => {
                       )}
                     </button>
                     <button
-                      className="butoon-editar-modal-btn"
+                      className="editar-btn"
                       onClick={() => guardarProyeccion(proyeccion._id)}
                       disabled={loadingBtn}
                     >
@@ -357,7 +333,7 @@ const Proyeccion = () => {
           <div className="modal-overlay">
             <div className="modal-contenido">
               <div className="modal-header">
-                <h2>{fechaSeleccionada?.sucursal} {fechaSeleccionada?.fecha}</h2>
+                <h2>{fechaSeleccionada?.sucursal} - {dayjs(fechaSeleccionada?.fecha, 'DD-MM-YYYY').format('DD/MM/YYYY')}</h2>
                 <button
                   className="cerrar-modal"
                   onClick={() => setModalAbierto(false)}

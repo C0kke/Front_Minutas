@@ -78,6 +78,7 @@ const generateWeekDays = (year, week) => {
   }
   return weekDays;
 };
+const BACKEND_URL = process.env.REACT_APP_BACK_URL;
 
 const EditarMinuta = () => {
   const [menus, setMenus] = useState([]);
@@ -85,6 +86,9 @@ const EditarMinuta = () => {
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedWeek, setSelectedWeek] = useState(dayjs().week());
+  const [sucursales, setSucursales] = useState([]);
+  const [selectedSucursal, setSelectedSucursal] = useState(null);
+  const [sucursalDict, setSucursalDict] = useState({});
   const [weekDays, setWeekDays] = useState(
     generateWeekDays(selectedYear, selectedWeek)
   );
@@ -101,7 +105,7 @@ const EditarMinuta = () => {
   useEffect(() => {
     const fetchPlatos = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/v1/plato", {
+        const response = await axios.get(`${BACKEND_URL}plato`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const platosFiltrados = response.data.filter(plato => plato.descontinuado === false);
@@ -118,29 +122,33 @@ const EditarMinuta = () => {
     const fetchMenus = async () => {
       try {
         const menusResponse = await axios.get(
-          "http://localhost:3000/api/v1/menudiario",
+          `${BACKEND_URL}menudiario`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
         const menusNoAprobados = menusResponse.data.filter(
-          (menu) => menu.aprobado === false
+          (menu) => !menu.aprobado
         );
-        
-        const weeksAndYears = menusNoAprobados.map((menu) => {
+  
+        // Agrupar los menús por semana, año y id_sucursal
+        const weeksAndYearsAndSucursales = menusNoAprobados.map((menu) => {
           const menuDate = dayjs(menu.fecha);
           return {
-              week: menu.semana,
-              year: menuDate.year(),
+            week: menu.semana,
+            year: menuDate.year(),
+            id_sucursal: menu.id_sucursal.toString(), // Convertir ObjectId a string
           };
         });
-
+  
         // Filtrar duplicados y ordenar
-        const uniqueWeeksAndYears = Array.from(
-            new Set(weeksAndYears.map(JSON.stringify))
-        ).map(JSON.parse).sort((a, b) => a.year - b.year || a.week - b.week);
-
-        setAvailableWeeksAndYears(uniqueWeeksAndYears);
+        const uniqueWeeksAndYearsAndSucursales = Array.from(
+          new Set(weeksAndYearsAndSucursales.map(JSON.stringify))
+        ).map(JSON.parse).sort((a, b) => 
+          a.year - b.year || a.week - b.week || a.id_sucursal.localeCompare(b.id_sucursal)
+        );
+  
+        setAvailableWeeksAndYears(uniqueWeeksAndYearsAndSucursales);
         setAllMenus(menusNoAprobados);
       } catch (error) {
         console.error("Error al obtener menús:", error);
@@ -150,14 +158,41 @@ const EditarMinuta = () => {
   }, [token]);
 
   useEffect(() => {
-    if (availableWeeksAndYears.length > 0) {
-        const initialWeekAndYear = availableWeeksAndYears[0];
-        setSelectedWeek(initialWeekAndYear.week);
-        setSelectedYear(initialWeekAndYear.year);
-        setWeekDays(generateWeekDays(initialWeekAndYear.year, initialWeekAndYear.week));
-        setMenus(allMenus.filter((menu) => menu.semana === initialWeekAndYear.week));
-    }
-  }, [availableWeeksAndYears, allMenus]);
+    const fetchSucursales = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}sucursal`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const sucursalesData = response.data;
+        setSucursales(sucursalesData);
+        console.log(sucursalesData)
+        // Crear el diccionario de sucursales
+        const dict = {};
+        sucursalesData.forEach((sucursal) => {
+          dict[sucursal._id.toString()] = sucursal.nombresucursal;
+        });
+        setSucursalDict(dict);
+      } catch (error) {
+        console.error("Error al obtener sucursales:", error);
+      }
+    };
+    fetchSucursales();
+    console.log(setSucursalDict)
+  }, [navigate]);
+
+  useEffect(() => {
+  if (availableWeeksAndYears.length > 0) {
+    const initialWeekAndYearAndSucursal = availableWeeksAndYears[0];
+    setSelectedWeek(initialWeekAndYearAndSucursal.week);
+    setSelectedYear(initialWeekAndYearAndSucursal.year);
+    setSelectedSucursal(
+      sucursales.find(
+        (s) => s._id.toString() === initialWeekAndYearAndSucursal.id_sucursal
+      )
+    );
+    setWeekDays(generateWeekDays(initialWeekAndYearAndSucursal.year, initialWeekAndYearAndSucursal.week));
+  }
+}, [availableWeeksAndYears, sucursales]);
 
   useEffect(() => {
     setMenus(allMenus.filter((menu) => menu.semana === selectedWeek));
@@ -171,6 +206,16 @@ const EditarMinuta = () => {
   }, [allMenus]);
 
   useEffect(() => {
+    if (selectedWeek && selectedYear && selectedSucursal) {
+      setMenus(allMenus.filter((menu) => 
+        menu.semana === selectedWeek &&
+        dayjs(menu.fecha).year() === selectedYear &&
+        menu.id_sucursal.toString() === selectedSucursal._id.toString()
+      ));
+    }
+  }, [selectedWeek, selectedYear, selectedSucursal, allMenus]);
+
+  useEffect(() => {
     const fetchPlatosDisponibles = async () => {
         setLoading(true);
         try {
@@ -178,7 +223,7 @@ const EditarMinuta = () => {
             for (const day of weekDays) {
                 const fechaFormateada = day.format("YYYY-MM-DD");
                 const response = await axios.get(
-                    `http://localhost:3000/api/v1/menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
+                    `${BACKEND_URL}menudiario/Verificar/platos-disponibles?fecha=${fechaFormateada}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 const nombreDia = day
@@ -310,7 +355,7 @@ const EditarMinuta = () => {
       try {
         for (const menu of minutasAEnviar) {
           await axios.put(
-            `http://localhost:3000/api/v1/menudiario/${menu._id}`,
+            `${BACKEND_URL}menudiario/${menu._id}`,
             menu,
             { headers: { Authorization: `Bearer ${token}` } }
           );
@@ -523,34 +568,33 @@ const EditarMinuta = () => {
                         Semana y Año
                     </InputLabel>
                     <Select
-                        labelId="week-year-select-label"
-                        id="week-year-select"
-                        value={JSON.stringify({ week: selectedWeek, year: selectedYear })}
-                        label="Semana y Año"
-                        onChange={handleWeekChange}
-                        sx={{
-                            bgcolor: "white",
-                            borderRadius: "4px",
-                            "& .MuiSelect-select": {
-                                fontWeight: "bold",
-                                color: "#1565c0",
-                            },
-                        }}
+                      value={JSON.stringify({ week: selectedWeek, year: selectedYear, id_sucursal: selectedSucursal?._id })}
+                      onChange={(event) => {
+                        const selectedWeekAndYearAndSucursal = JSON.parse(event.target.value);
+                        setSelectedWeek(selectedWeekAndYearAndSucursal.week);
+                        setSelectedYear(selectedWeekAndYearAndSucursal.year);
+                        setSelectedSucursal(
+                          sucursales.find(
+                            (s) => s._id.toString() === selectedWeekAndYearAndSucursal.id_sucursal
+                          )
+                        );
+                        setWeekDays(
+                          generateWeekDays(
+                            selectedWeekAndYearAndSucursal.year,
+                            selectedWeekAndYearAndSucursal.week
+                          )
+                        );
+                      }}
+                      sx={{ width: '100%' }}
+                      defaultValue={availableWeeksAndYears.length > 0 ? JSON.stringify(availableWeeksAndYears[0]) : ""}
                     >
-                        {availableWeeksAndYears.map((weekAndYear) => (
-                            <MenuItem
-                              key={`${weekAndYear.week}-${weekAndYear.year}`}
-                              value={JSON.stringify(weekAndYear)}
-                              sx={{
-                                fontWeight: "bold",
-                                color: "#1565c0",
-                              }}
-                            >
-                              Semana {weekAndYear.week} - {weekAndYear.year}
-                            </MenuItem>
-                        ))}
+                      {availableWeeksAndYears.map((weekAndYear) => (
+                        <MenuItem key={`${weekAndYear.week}-${weekAndYear.year}-${weekAndYear.id_sucursal}`} value={JSON.stringify(weekAndYear)}>
+                          Semana {weekAndYear.week} - {weekAndYear.year} - {sucursalDict[weekAndYear.id_sucursal]}
+                        </MenuItem>
+                      ))}
                     </Select>
-                </FormControl>
+                  </FormControl>
                 <Button
                   onClick={handleOpenFeedback}
                   variant="contained"

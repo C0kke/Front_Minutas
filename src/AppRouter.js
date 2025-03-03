@@ -14,6 +14,7 @@ import Proyeccion from './views/Proyecciones';
 import EditarMinuta from './views/EditarMinuta';
 import Usuarios from './views/Usuarios';
 import Estructura from './views/EstructuraAlimentaria';
+import Sucursales from './views/Sucursales';
 
 function AppRouter() {
   const token = localStorage.getItem('token');
@@ -35,6 +36,7 @@ function AppRouter() {
         <Route path="/proyecciones" element={token ? <Proyeccion /> : <Navigate to="/login" />} />
         <Route path="/usuarios" element={token ? <Usuarios /> : <Navigate to="/login" />} />
         <Route path="/estructura" element={token ? <Estructura /> : <Navigate to="/login" />} />
+        <Route path="/sucursales" element={token ? <Sucursales /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

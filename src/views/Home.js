@@ -72,6 +72,9 @@ const Home = () => {
           <button className="home-button" onClick={() => navigate("/platos")}>
             Ver Platos
           </button>
+          <button className="home-button" onClick={() => navigate("/sucursales")}>
+            Ver Sucursales
+          </button>
         </>
       );
     } else if ( role === "logistica") {

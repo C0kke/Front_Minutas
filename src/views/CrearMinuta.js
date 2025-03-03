@@ -106,7 +106,8 @@ const Minutas = () => {
 
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(dayjs().week());
-  const [semanaEstructura, setSemanaEstructura] = useState(dayjs().week() % 5);
+  const semEstructuraPrimary = (dayjs().week() % 5);
+  const [semanaEstructura, setSemanaEstructura] = useState((semEstructuraPrimary != 0) ? semEstructuraPrimary : 5);
   const [filtrandoPorEstructura, setFiltrandoPorEstructura] = useState(true);
   const BACKEND_URL = process.env.REACT_APP_BACK_URL;
 

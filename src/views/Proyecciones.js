@@ -24,6 +24,8 @@ const Proyeccion = () => {
   const [filtroFecha, setFiltroFecha] = useState("");
   const [filtroSucursal, setFiltroSucursal] = useState("");
 
+  const [ingredientesExpandidos, setIngredientesExpandidos] = useState({});
+
   // Cargar datos iniciales
   useEffect(() => {
     const fetchData = async () => {
@@ -83,6 +85,17 @@ const Proyeccion = () => {
     if (data.length > 0) actualizarProyeccionesConFechas();
   }, [data]);
 
+  const fetchIngredientes = async (platoid) => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}ingredientexplato/plato/${platoid}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error al cargar los ingredientes:", error);
+      return [];
+    }
+  };
   const agruparPorFecha = (lista) => {
     const agrupado = {};
     lista.forEach((item) => {
@@ -131,6 +144,25 @@ const Proyeccion = () => {
     });
   };
 
+  const handlePlatoClick = async (platoId, platoid) => {
+    if (ingredientesExpandidos[platoId]) {
+      setIngredientesExpandidos(prev => ({ ...prev, [platoId]: null }));
+    } else {
+      setLoadingBtn(true);
+      const ingredientes = await fetchIngredientes(platoid);
+      const plato = fechaSeleccionada?.platos.find(p => p._id === platoId);
+      const cantidadProyectada = cantidadesEditadas[platoId] || plato.cantidad;
+  
+      const ingredientesCalculados = ingredientes.map(ingrediente => ({
+        ...ingrediente,
+        cantidadCompra: ingrediente.peso_bruto * cantidadProyectada
+      }));
+  
+      setIngredientesExpandidos(prev => ({ ...prev, [platoId]: ingredientesCalculados }));
+      setLoadingBtn(false);
+    }
+  };
+  
   const guardarProyeccion = async (proyeccionId) => {
     if (!editados) {
       alert("No hay cambios en los platos");
@@ -327,7 +359,7 @@ const Proyeccion = () => {
             <div className="empty">No hay proyecciones disponibles</div>
           )}
         </div>
-
+  
         {/* Modal */}
         {modalAbierto && (
           <div className="modal-overlay">
@@ -336,17 +368,25 @@ const Proyeccion = () => {
                 <h2>{fechaSeleccionada?.sucursal} - {dayjs(fechaSeleccionada?.fecha, 'DD-MM-YYYY').format('DD/MM/YYYY')}</h2>
                 <button
                   className="cerrar-modal"
-                  onClick={() => setModalAbierto(false)}
+                  onClick={() => {
+                    setModalAbierto(false);
+                  }}
                 >
                   ×
                 </button>
               </div>
-
+  
               <div className="modal-body">
                 {fechaSeleccionada?.platos.map((plato) => (
                   <div key={plato._id} className="plato-item">
                     <div className="plato-info">
-                      <span className="plato-nombre">{plato.Nombreplato}</span>
+                      <span
+                        className="plato-nombre"
+                        style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                        onClick={() => handlePlatoClick(plato._id, plato.platoid)}
+                      >
+                        {plato.Nombreplato}
+                      </span>
                       <input
                         type="number"
                         className="cantidad-input"
@@ -355,6 +395,15 @@ const Proyeccion = () => {
                         min="0"
                       />
                     </div>
+                    {ingredientesExpandidos[plato._id] && (
+                      <ul className="ingredientes-lista">
+                        {ingredientesExpandidos[plato._id].map((ingrediente, index) => (
+                          <li key={index}>
+                            {ingrediente.peso_bruto ? `${ingrediente.id_ingrediente.nombreIngrediente} - CANTIDAD PROYECTADA: ${ingrediente.cantidadCompra} ${ingrediente.id_ingrediente.unidadmedida}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>

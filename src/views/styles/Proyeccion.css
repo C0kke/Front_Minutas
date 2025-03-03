@@ -1,4 +1,3 @@
-/* Estilos generales */
 .proyeccion-container {
   max-width: 1200px;
   margin: 2rem auto;
@@ -11,14 +10,13 @@
 .title {
   font-size: 36px;
   font-weight: 600;
-  color: #000000;
+  color: #009b15;
   text-align: center;
   margin-bottom: 30px;
   padding-bottom: 20px;
   border-bottom: 2px solid #ecf0f1;
 }
 
-/* Header de búsqueda */
 .search-header {
   display: flex;
   justify-content: space-between;
@@ -89,7 +87,7 @@
 
 .proyeccion-header h3 {
   margin: 0;
-  color: #1a365d; /* Azul oscuro */
+  color: #009b15;
   font-size: 1.25rem;
   font-weight: 600;
 }
@@ -160,11 +158,12 @@
 .modal-contenido {
   background: white;
   width: 90%;
-  max-width: 800px; /* Ancho aumentado */
+  max-width: 800px;
   max-height: 80vh;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
+  padding: 2rem;
 }
 
 .modal-header {
@@ -173,7 +172,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #1a365d; /* Azul oscuro */
+  background: #1a365d;
   border-radius: 12px 12px 0 0;
 }
 
@@ -211,7 +210,6 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 1rem 0;
   margin-bottom: 0.5rem;
   border-bottom: 1px solid #eee;
 }
@@ -267,6 +265,15 @@
   font-weight: 600;
   transition: all 0.2s ease;
   margin-top: 25px;
+}
+
+.plato-item {
+  width: 100%;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+  color: black;
 }
 
 .exportar-excel-btn:hover {

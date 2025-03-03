@@ -4,6 +4,8 @@ import axios from "axios";
 import './styles/Home.css'; // Asegúrate de importar el CSS
 import Header from "../components/Header";
 
+const BACKEND_URL = process.env.REACT_APP_BACK_URL;
+
 const Home = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -25,7 +27,7 @@ const Home = () => {
     }
   
     try {
-      const response = await axios.get(`http://localhost:3000/api/v1/user/${userId}`, {
+      const response = await axios.get(`${BACKEND_URL}user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(response.data);

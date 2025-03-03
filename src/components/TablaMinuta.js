@@ -43,8 +43,15 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
   const token = localStorage.getItem("token")?.trim();
   const BACKEND_URL = process.env.REACT_APP_BACK_URL;
   const [filasOrdenadas, setFilasOrdenadas] = useState([]);
-  // Obtener los platos segun los ids
+
+
   useEffect(() => {
+    if (!semana || !semana.menus || semana.menus.length === 0) {
+      console.error("Datos de semana inválidos:", semana);
+      setError("No se encontraron menús para esta semana.");
+      return;
+    }
+
     const obtenerNombresPlatos = async () => {
       setLoading(true);
       try {
@@ -74,6 +81,7 @@ const TablaMinutaAprobacion = ({ semana, tableRef }) => {
         setLoading(false);
       }
     };
+
     obtenerNombresPlatos();
   }, [semana, token]);
 

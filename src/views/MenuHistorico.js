@@ -9,30 +9,55 @@ const MinutaLista = () => {
   const [error, setError] = useState(null);
   const [selectedSemana, setSelectedSemana] = useState(null);
   const [selectedAño, setSelectedAño] = useState(null);
+  const [selectedSucursal, setSelectedSucursal] = useState(null); // Estado para la sucursal seleccionada
   const [filterSemana, setFilterSemana] = useState('');
   const [filterAño, setFilterAño] = useState('2025');
   const [allWeeks, setAllWeeks] = useState([]);
   const [mostrarTabla, setMostrarTabla] = useState(false);
   const [minutasAgrupadas, setMinutasAgrupadas] = useState({});
+  const [sucursalesDict, setSucursalesDict] = useState({}); // Diccionario de sucursales
   const tablaMinutaRef = useRef(null);
   const token = localStorage.getItem('token');
+  const BACKEND_URL = process.env.REACT_APP_BACK_URL;
 
+  // Obtener el diccionario de sucursales
+  useEffect(() => {
+    const fetchSucursales = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}sucursal`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const dict = {};
+        response.data.forEach((sucursal) => {
+          dict[sucursal._id] = sucursal.nombresucursal; // Mapear ID a nombre
+        });
+        setSucursalesDict(dict);
+      } catch (error) {
+        console.error("Error al obtener sucursales:", error);
+      }
+    };
+    fetchSucursales();
+  }, [token]);
+
+  // Obtener las minutas
   useEffect(() => {
     const fetchMinutas = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:3000/api/v1/menudiario', {
-          headers: { Authorization: `Bearer ${token}` }
+        const response = await axios.get(`${BACKEND_URL}menudiario`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        const groupedMinutas = groupBySemanaYAño(response.data.filter((menu) => menu.aprobado === true)); 
+
+        // Agrupar minutas por semana, año y sucursal
+        const groupedMinutas = groupBySemanaAñoYSucursal(response.data.filter((menu) => menu.aprobado === true));
         setMinutasAgrupadas(groupedMinutas);
 
-        // Se obtienen las semanas de cada minuta una única vez
+        // Obtener las semanas únicas con su respectiva sucursal
         const semanasUnicas = Object.keys(groupedMinutas).map(key => {
-            const [año, semana] = key.split('-');
-            return { semana: Number(semana), año: Number(año) };
-          });
-          setAllWeeks(semanasUnicas);
+          const [año, semana, sucursalId] = key.split('-');
+          return { semana: Number(semana), año: Number(año), sucursalId };
+        });
+        setAllWeeks(semanasUnicas);
       } catch (error) {
         setError("Error al cargar las minutas");
         console.error('Error fetching minutas:', error);
@@ -44,11 +69,13 @@ const MinutaLista = () => {
     fetchMinutas();
   }, [token]);
 
-  const groupBySemanaYAño = (data) => {
+  // Función para agrupar las minutas por semana, año y sucursal
+  const groupBySemanaAñoYSucursal = (data) => {
     return data.reduce((acc, minuta) => {
       const semana = minuta.semana;
       const año = minuta.year;
-      const key = `${año}-${semana}`;
+      const sucursalId = minuta.id_sucursal; // Usar el ID de la sucursal
+      const key = `${año}-${semana}-${sucursalId}`;
       if (!acc[key]) {
         acc[key] = [];
       }
@@ -57,25 +84,22 @@ const MinutaLista = () => {
     }, {});
   };
 
-  const handleSemanaClick = (semana, año) => {
-    if (selectedSemana === semana) {
-      setMostrarTabla(!mostrarTabla);
-    }
-    
+  const handleSemanaClick = (semana, año, sucursalId) => {
     setSelectedSemana(semana);
     setSelectedAño(año);
+    setSelectedSucursal(sucursalId); // Guardar la sucursal seleccionada
     setMostrarTabla(true);
   };
 
   // Filtrar por semana y año
   const filteredWeeks = filterSemana || filterAño
     ? allWeeks.filter((semana) => {
-        const matchSemana =
-          !filterSemana || semana.semana.toString().includes(filterSemana);
-        const matchAño = !filterAño || semana.año.toString().includes(filterAño);
-        return matchSemana && matchAño;
-      })
-    : [];
+      const matchSemana =
+        !filterSemana || semana.semana.toString().includes(filterSemana);
+      const matchAño = !filterAño || semana.año.toString().includes(filterAño);
+      return matchSemana && matchAño;
+    })
+  : [];
 
   const formatMinutasForTable = (minutas) => {
     if (!minutas) return [];
@@ -96,6 +120,7 @@ const MinutaLista = () => {
   if (error) {
     return <div>{error}</div>;
   }
+
 
   return (
     <div>
@@ -136,15 +161,18 @@ const MinutaLista = () => {
         <div className="weeks-container">
           {(filterSemana && filterAño.length > 0) && (
             <div className="filtered-weeks">
-              {filteredWeeks.map((semana) => (
-                <button
-                  key={`${semana.año}-${semana.semana}`}
-                  onClick={() => handleSemanaClick(semana.semana, semana.año)}
-                  className="week-button"
-                >
-                  Semana {semana.semana} - {semana.año}
-                </button>
-              ))}
+              {filteredWeeks.map((semana) => {
+                const sucursalNombre = sucursalesDict[semana.sucursalId] || 'Sin Sucursal'; // Obtener nombre de la sucursal
+                return (
+                  <button
+                    key={`${semana.año}-${semana.semana}-${semana.sucursalId}`}
+                    onClick={() => handleSemanaClick(semana.semana, semana.año, semana.sucursalId)}
+                    className="week-button"
+                  >
+                    Semana {semana.semana} - {sucursalNombre} - {semana.año}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -161,9 +189,9 @@ const MinutaLista = () => {
           <div className="tabla-minuta-container">
             <TablaMinutaAprobacion
               semana={{
-                _id: { semana: selectedSemana, año: selectedAño },
+                _id: { semana: selectedSemana, año: selectedAño, sucursalId: selectedSucursal },
                 menus: formatMinutasForTable(
-                  minutasAgrupadas[`${selectedAño}-${selectedSemana}`]
+                  minutasAgrupadas[`${selectedAño}-${selectedSemana}-${selectedSucursal}`]
                 ),
               }}
               ref={tablaMinutaRef}

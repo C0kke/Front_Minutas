@@ -54,7 +54,7 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
         currentRow++;
         worksheet.mergeCells(currentRow, 2, currentRow, encabezadosFecha.length + 2);
         const titleRow = worksheet.getRow(currentRow);
-        titleRow.getCell(2).value = 'MINUTA SEMANAL S' + semana._id.semana;
+        titleRow.getCell(2).value = `MINUTA SEMANAL S${semana._id.semana} ${semana._id.año} - ${semana._id.sucursal}`;
         titleRow.eachCell((cell) => {
             if (cell.address !== 'A' + currentRow) {
                 cell.fill = {
@@ -121,7 +121,6 @@ const ExportToExcel = ({ data, fileName, buttonLabel, semana, encabezadosFecha }
                 if (colNumber === 2) {
                     const category = row.FILA;
                     const color = colors[category] || 'FFFFFF'; 
-                    console.log(category, color)
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',

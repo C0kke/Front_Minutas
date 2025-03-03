@@ -155,12 +155,12 @@ const Minutas = () => {
       });
       const sucursalesData = response.data;
 
-      // Establecer "Central" como sucursal por defecto
+      // "Central" como sucursal por defecto
       const sucursalCentral = sucursalesData.find(
         (s) => s.nombresucursal.toLowerCase() === 'central'
       );
       setSucursales(sucursalesData);
-      setSucursal(sucursalCentral || null); // Usar "Central" si existe
+      setSucursal(sucursalCentral || null);
     } catch (error) {
       console.error("Error al obtener sucursales:", error);
       if (error.response && error.response.status === 401) {
@@ -210,9 +210,10 @@ const Minutas = () => {
             { 
               params: {
                 fecha: fechaFormateada,
-                filtrar: filtrandoPorEstructura, // 'true' or 'false'
+                filtrar: filtrandoPorEstructura,
                 semana: semanaEstructura,
-                dia: nombreDia, // Use the Spanish day name
+                dia: nombreDia,
+                sucursal: sucursal?._id,
               },
               headers: { 
                 Authorization: `Bearer ${token}` 
@@ -227,7 +228,7 @@ const Minutas = () => {
       setPlatosDisponibles(newPlatosDisponibles);
     };
     obtenerPlatosDisponibles();
-  }, [year, week, filtrandoPorEstructura, semanaEstructura]);
+  }, [year, week, filtrandoPorEstructura, semanaEstructura, sucursal]);
 
   const handleYearChange = (event) => {
     const newYear = parseInt(event.target.value, 10) || currentYear;
@@ -281,7 +282,7 @@ const Minutas = () => {
         });
         const groupedData = groupDataByWeekAndDay(response.data);
         const structureForWeek = groupedData[semanaEstructura] || {};
-        setSelectedWeekStructure(structureForWeek); // Establecer la estructura para la semana seleccionada
+        setSelectedWeekStructure(structureForWeek);
       } catch (error) {
         console.error("Error al cargar la estructura:", error);
         if (error.response && error.response.status === 404) {
@@ -340,7 +341,7 @@ const Minutas = () => {
           fecha: fechaDia,
           semana: week,
           year: year,
-          id_sucursal: sucursal?._id, // Enviar el _id de la sucursal
+          id_sucursal: sucursal?._id,
           listaplatos: listaplatos,
           aprobado: false,
         };
@@ -370,7 +371,6 @@ const Minutas = () => {
           setLoading(false);
           navigate('/home');
         } else {
-          console.log(response.data);
           alert(response.data.errors[0].error);
           setLoading(false);
         }
@@ -506,7 +506,7 @@ const Minutas = () => {
             })
           );
         } else {
-          return []; // Si no hay reglas, no mostrar opciones
+          return []; 
         }
       }
   
@@ -546,7 +546,7 @@ const Minutas = () => {
       alert("No hay estructura disponible para esta semana.");
       return;
     }
-    setOpenStructureModal(true); // Abrir el modal
+    setOpenStructureModal(true);
   };
 
   const handleCloseStructureModal = () => {
@@ -621,10 +621,10 @@ const Minutas = () => {
                       <CircularProgress size={24} />
                     ) : (
                       <Autocomplete
-                        options={sucursales} // Lista de sucursales obtenida del backend
-                        getOptionLabel={(option) => option.nombresucursal} // Mostrar el nombre de la sucursal
-                        value={sucursal} // Valor actual (objeto completo de la sucursal)
-                        onChange={handleSucursalChange} // Controlador para manejar la selección
+                        options={sucursales}
+                        getOptionLabel={(option) => option.nombresucursal} 
+                        value={sucursal}
+                        onChange={handleSucursalChange} 
                         renderInput={(params) => (
                           <TextField {...params} label="Seleccionar Sucursal" />
                         )}
